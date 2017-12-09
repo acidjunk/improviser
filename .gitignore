@@ -104,7 +104,7 @@ ENV/
 .idea/
 
 # Lilypond
-.eps
-.count
-.tex
-.texi
+*.eps
+*.count
+*.tex
+*.texi
