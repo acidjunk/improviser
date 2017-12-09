@@ -40,6 +40,7 @@ riff_fields = {
     'number_of_bars': fields.Integer,
     'notes': fields.String,
     'chord': fields.String,
+    'image': fields.String
 }
 
 
@@ -61,6 +62,8 @@ class RiffListResource(Resource):
     @marshal_with(riff_fields)
     def get(self):
         riffs = Riff.query.all()
+        for riff in riffs:
+            riff.image = f'http://127.0.0.1:5000/static/rendered/large/riff_{riff.id}_c.png'
         return riffs
 
 @api.route('/api/populate')
