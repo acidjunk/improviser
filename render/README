@@ -1,0 +1,12 @@
+The renderer uses lilypond to produce png's form the riff defined in the DB.
+
+In most cases you can render by using:
+python render_preview.py 
+
+It will render all needed files for the webviews to ../static/images/rendered/
+If you want to re-render a exercise or riff; just set isRendered to 0 and run python render_preview.py again.
+
+Other script:
+you can use copy_local_to_server.sh to copy a complete render to the server from your local workstation.
+This of course means that you didn't do any changes on the server in default riffs and exercises.
+

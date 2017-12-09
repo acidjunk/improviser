@@ -102,3 +102,9 @@ ENV/
 
 # Pycharm
 .idea/
+
+# Lilypond
+.eps
+.count
+.tex
+.texi

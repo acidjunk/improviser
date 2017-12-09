@@ -8,6 +8,8 @@ The REST API server for the improviser-client
     pip install -r requirements.txt
     createdb improviser
     createuser improviser -sP
+    python app.py db upgrade
+    python app.py runserver --debug
     
 
 ## Version handling

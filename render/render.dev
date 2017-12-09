@@ -1,0 +1,14 @@
+#This config file will be used when render.conf is absent
+#please keep GIT clean off passwords and use a untracked render.conf for production versions
+[settings]
+db_user=root
+db_pass=
+db_host=localhost
+db_name=kreato
+render_path=/webdir/kreato/rendered_sheets
+web_path=rendered_sheets
+cleanLilyPondGarbage=0
+
+[logs]
+level=debug
+logbasepath=log
