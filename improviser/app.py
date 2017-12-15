@@ -1,3 +1,6 @@
+import datetime
+import uuid
+
 import os
 from flask import Flask, flash
 from flask_admin.actions import action
@@ -7,6 +10,8 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_restplus import Api, Resource, fields, marshal_with
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql.base import UUID
+
 
 from render.render import Render
 
@@ -18,7 +23,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://improviser:improviser@localh
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# setup DB
 db = SQLAlchemy(app)
+db.UUID = UUID
+
 api = Api(app)
 manager = Manager(app)
 migrate = Migrate(app, db)
@@ -32,21 +40,27 @@ def version():
 
 
 riff_fields = {
+    'id': fields.String,
     'name': fields.String,
     'number_of_bars': fields.Integer,
     'notes': fields.String,
     'chord': fields.String,
-    'image': fields.String
+    'image': fields.String,
+    'render_valid': fields.Boolean,
+    'render_date': fields.DateTime,
+
 }
 
 
 class Riff(db.Model):
     __tablename__ = 'riffs'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = db.Column(db.String(255), unique=True, index=True)
     number_of_bars = db.Column(db.Integer())
     notes = db.Column(db.String(255))
     chord = db.Column(db.String(255), index=True)
+    render_valid = db.Column(db.Boolean, default=False)
+    render_date= db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Riff %r>' % self.name
@@ -138,8 +152,10 @@ class RenderRiff(Resource):
                 if not myRenderer.render():
                     print(f"Error: couldn't render riff.id: {riff.id}")
 
-            # riff.rendered = datetime.datetime.now()
-            # db.session.commit()
+            # internal bookkeeping
+            riff.render_date = datetime.datetime.now()
+            riff.render_valid = True
+            db.session.commit()
 
 
 class RiffAdminView(ModelView):
