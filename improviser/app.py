@@ -1,8 +1,5 @@
-import datetime
-import uuid
-
 import os
-from flask import Flask, flash, abort
+from flask import Flask, flash
 from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin
@@ -10,7 +7,6 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_restplus import Api, Resource, fields, marshal_with
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID
 
 from render.render import Render
 
@@ -129,7 +125,7 @@ class RenderRiff(Resource):
         for riff in riffs:
             print(riff)
 
-            render_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'improviser', 'static',
+            render_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static',
                                        'rendered')
             myRenderer = Render(render_path)
             keys = ['c']  # only c for now
