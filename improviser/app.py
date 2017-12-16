@@ -3,7 +3,7 @@ import uuid
 
 import os
 import sys
-from flask import Flask, flash
+from flask import Flask, flash, request
 from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin
@@ -17,9 +17,9 @@ from sqlalchemy.dialects.postgresql.base import UUID
 sys.path.append('../')
 from improviser.render.render import Render  # noqa
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://improviser:improviser@localhost/improviser'
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
