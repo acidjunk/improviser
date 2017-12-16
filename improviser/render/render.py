@@ -19,7 +19,7 @@
 #
 # This script will produce a set of scales based on one predefined scale in all keys
 
-import os,sys
+import os, sys
 
 
 class Render:

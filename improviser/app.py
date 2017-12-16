@@ -2,6 +2,7 @@ import datetime
 import uuid
 
 import os
+import sys
 from flask import Flask, flash
 from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
@@ -13,7 +14,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql.base import UUID
 
 
-from .render.render import Render
+sys.path.append('../')
+from improviser.render.render import Render  # noqa
 
 VERSION = '0.1.0'
 
