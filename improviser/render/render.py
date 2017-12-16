@@ -21,6 +21,7 @@
 
 import os,sys
 
+
 class Render:
     def __init__(self, renderPath, name="riff"):
         self.renderPath = renderPath

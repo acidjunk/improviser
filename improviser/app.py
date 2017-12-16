@@ -13,7 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql.base import UUID
 
 
-from improviser.render.render import Render
+from .render.render import Render
 
 VERSION = '0.1.0'
 
