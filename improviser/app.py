@@ -34,6 +34,7 @@ manager = Manager(app)
 migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 admin = Admin(app, name='Improviser', template_mode='bootstrap3')
+renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'rendered'))
 
 
 @app.context_processor
@@ -54,6 +55,19 @@ riff_fields = {
 }
 
 
+def render(riff):
+    keys = ['c', 'f', 'g']  # only c,f,g for now
+
+    for key in keys:
+        renderer.name = "riff_%s_%s" % (riff.id, key)
+        notes = riff.notes.split(" ")
+        renderer.addNotes(notes)
+        renderer.set_cleff('treble')
+        renderer.doTranspose(key)
+        if not renderer.render():
+            print(f"Error: couldn't render riff.id: {riff.id}")
+
+
 class Riff(db.Model):
     __tablename__ = 'riffs'
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
@@ -62,7 +76,7 @@ class Riff(db.Model):
     notes = db.Column(db.String(255))
     chord = db.Column(db.String(255), index=True)
     render_valid = db.Column(db.Boolean, default=False)
-    render_date= db.Column(db.DateTime)
+    render_date = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Riff %r>' % self.name
@@ -73,10 +87,15 @@ class RiffListResource(Resource):
 
     @marshal_with(riff_fields)
     def get(self):
-        riffs = Riff.query.all()
+        args = request.args
+        if args:
+            riffs = Riff.query.filter(Riff.name.contains(args["search_phrase"])).all()
+        else:
+            riffs = Riff.query.all()
         for riff in riffs:
             riff.image = f'http://127.0.0.1:5000/static/rendered/large/riff_{riff.id}_c.png'
         return riffs
+
 
 @api.route('/api/populate')
 class PopulateAppResource(Resource):
@@ -94,6 +113,12 @@ class PopulateAppResource(Resource):
         lily.append(("r4 es''16 d''8 c''16 c''8 bes'8 r4 bes'8 r16 bes'16 r4 r8 c''16 r16 r4", "medium", 2, "Funk 2"))
 
         # easy
+        lily.append(("c' d' e' f' g' a' b' c'' d'' e'' f'' g'' a'' b'' c'''", "easy", 2, "plain scale easy"))
+        lily.append(("c' d' e' g' a' c'' d'' e'' g'' a'' c'''", "easy", 2, "pentatonic scale easy"))
+        lily.append(("c' d' e' fis' g' a' b' c'' d'' e'' fis'' g'' a'' b'' c'''", "easy", 2, "lydian easy"))
+        lily.append(("c' d' e' f' g' a' bes' c'' d'' e'' f'' g'' a'' bes'' c'''", "easy", 2, "mixolydian easy"))
+        lily.append(("c'4 d' ees' e' f' g' a' c'' d'' ees'' e'' f'' g'' a''4 c'''2", "easy", 2, "major blues scale"))
+
         lily.append(("c' d' ees' f' g' aes' b' c'' c'' d'' ees'' f'' g'' ges'' b'' c'''", "easy", 2,
                      "natural harmonic minor easy"))
         lily.append(("c' d' ees' f' g' a' b' c'' c'' d'' ees'' f'' g'' a'' b'' c'''", "easy", 2,
@@ -122,6 +147,16 @@ class PopulateAppResource(Resource):
         lily.append(("c'8 f' bes' g' c'' f'' d'' g'' c''' d''' a'' e'' d'' g'' f'' c''8", "hard", 2,
                      "fourths in key hard"))
 
+
+
+
+
+
+
+
+
+
+
         for li in lily:
             riff = Riff(name=li[3], number_of_bars=li[2], notes=li[0], chord=li[1])
             try:
@@ -130,7 +165,7 @@ class PopulateAppResource(Resource):
                 print(f"Added {riff.name}")
             except Exception as error:
                 db.session.rollback()
-                print(f"Skipped duplicate {riff.name}")
+                print(f"Skipped {riff.name} with {error}")
 
 
 @api.route('/api/render/all')
@@ -139,20 +174,7 @@ class RenderRiff(Resource):
     def get(self):
         riffs = Riff.query.all()
         for riff in riffs:
-            print(riff)
-
-            render_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static',
-                                       'rendered')
-            myRenderer = Render(render_path)
-            keys = ['c']  # only c for now
-            for key in keys:
-                myRenderer.name = "riff_%s_%s" % (riff.id, key)
-                notes = riff.notes.split(" ")
-                myRenderer.addNotes(notes)
-                myRenderer.set_cleff('treble')
-                myRenderer.doTranspose(key)
-                if not myRenderer.render():
-                    print(f"Error: couldn't render riff.id: {riff.id}")
+            render(riff)
 
             # internal bookkeeping
             riff.render_date = datetime.datetime.now()
@@ -171,8 +193,11 @@ class RiffAdminView(ModelView):
             query = Riff.query.filter(Riff.id.in_(ids))
             count = 0
             for riff in query.all():
-                print(riff)
-            flash('{} render of riffs successfully rescheduled.'.format(count))
+                riff.render_valid = False
+                flash('{} render of riffs successfully rescheduled.'.format(count))
+
+                # todo, move rendering to background thread, for now eagerly render it:
+                render(riff)
         except Exception as error:
             if not self.handle_view_exception(error):
                 flash('Failed to re-render riff. {error}'.format(error=str(error)))
