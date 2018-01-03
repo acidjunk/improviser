@@ -40,6 +40,14 @@ app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME') if os.getenv('MAIL_USERNAME') else 'no-reply@example.com'
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASSWORD') else 'somepassword'
 
+# More Flask Security settings
+app.config['SECURITY_REGISTERABLE'] = True
+app.config['SECURITY_REGISTER_URL'] = '/admin/create_account'
+app.config['SECURITY_LOGIN_URL'] = '/admin/login'
+app.config['SECURITY_RESET_URL'] = '/admin/reset'
+app.config['SECURITY_CHANGE_URL'] = '/admin/change'
+app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
+
 # setup DB
 db = SQLAlchemy(app)
 db.UUID = UUID
