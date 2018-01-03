@@ -4,25 +4,31 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-10 col-sm-offset-1">
-            <h1>Flask-Admin example</h1>
+            <h1>Flask-Admin stuff</h1>
             <p class="lead">
-                Authentication
-            </p>
-            <p>
-                This example shows how you can use <a href="https://pythonhosted.org/Flask-Security/index.html" target="_blank">Flask-Security</a> for authentication.
+                Choose an action
             </p>
             {% if not current_user.is_authenticated %}
-            <p>You can register as a regular user, or log in as a superuser with the following credentials:
-            <ul>
-                <li>email: <b>admin</b></li>
-                <li>password: <b>admin</b></li>
-            </ul>
             <p>
-                <a class="btn btn-primary" href="{{ url_for('security.login') }}">login</a> <a class="btn btn-default" href="{{ url_for('security.login') }}">register</a>
+                <a class="btn btn-primary" href="{{ url_for('security.login') }}">login</a> <a class="btn btn-default" href="{{ url_for('security.register') }}">register</a>
             </p>
+            {% else %}
+                <div class="panel panel-default">
+                    <div class="panel-body">
+
+                    <div class="btn-group" role="group" aria-label="...">
+                      <a class="btn btn-default" href="{{ url_for('riff.index_view') }}">Manage riffs</a>
+                      <a class="btn btn-default" href="{{ url_for('user.index_view') }}">Manage users</a>
+                      <a class="btn btn-default" href="{{ url_for('role.index_view') }}">Manage roles</a>
+                    </div>
+
+                    </div>
+                </div>
+
             {% endif %}
+
             <p>
-                <a class="btn btn-primary" href="/"><i class="glyphicon glyphicon-chevron-left"></i> Back</a>
+                <a class="btn btn-primary" href="/"><i class="glyphicon glyphicon-search"></i> Api docs</a>
             </p>
         </div>
     </div>
