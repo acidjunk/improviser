@@ -4,6 +4,7 @@ import uuid
 import os
 import sys
 from flask import Flask, flash, request, url_for
+from flask_admin import helpers as admin_helpers
 from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin
@@ -47,7 +48,7 @@ api = Api(app)
 manager = Manager(app)
 migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
-admin = Admin(app, name='Improviser', template_mode='bootstrap3')
+admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'rendered'))
 
 
@@ -142,6 +143,18 @@ user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 
+# define a context processor for merging flask-admin's template context into the
+# flask-security views.
+@security.context_processor
+def security_context_processor():
+    return dict(
+        admin_base_template=admin.base_template,
+        admin_view=admin.index_view,
+        h=admin_helpers,
+        get_url=url_for
+    )
+
+
 # Executes before the first request is processed.
 @app.before_first_request
 def before_first_request():
@@ -181,20 +194,21 @@ class PopulateAppResource(Resource):
 
         # Some fun stuff popular
         lily = []
-        lily.append(("fis''8 e''16 b'8 g' fis''. e''16 b'8 g'8.", "medium", 1, "Careless whisper 1"))
-        lily.append(("d''8 c''16 g'8 e' d''. c''16 g'4..", "medium", 1, "Careless whisper 2"))
-        lily.append(("c''8 b'16 g'8 e'. c'2", "medium", 1, "Careless whisper 3"))
-        lily.append(("b8 c' d' e' fis' g' a' b'", "medium", 1, "Careless whisper 4"))
+
+        lily.append(("fis''4 e''8 b'4 g' fis''8~ fis''4 e''8 b'4 g' r8", "medium", 1, "Careless whisper 1"))
+        lily.append(("d''4 c''8 g'4 e' d''8~ d''4 c''8 g'4 e' r8", "medium", 1, "Careless whisper 2"))
+        lily.append(("c''4 b'8 g'4 e'4 c'4~ c'1", "medium", 1, "Careless whisper 3"))
+        lily.append(("b4 c' d' e' fis' g' a' b'", "medium", 1, "Careless whisper 4"))
 
         # minor riffs only
         lily.append(("bes'8. bes'16 r4 bes'8. bes'16 r4 r8 bes'8 c''16 bes'8 es''16 r2", "medium", 2, "Funk 1"))
         lily.append(("r4 es''16 d''8 c''16 c''8 bes'8 r4 bes'8 r16 bes'16 r4 r8 c''16 r16 r4", "medium", 2, "Funk 2"))
 
         # easy
-        lily.append(("c' d' e' f' g' a' b' c'' d'' e'' f'' g'' a'' b'' c'''", "easy", 2, "plain scale easy"))
-        lily.append(("c' d' e' g' a' c'' d'' e'' g'' a'' c'''", "easy", 2, "pentatonic scale easy"))
-        lily.append(("c' d' e' fis' g' a' b' c'' d'' e'' fis'' g'' a'' b'' c'''", "easy", 2, "lydian easy"))
-        lily.append(("c' d' e' f' g' a' bes' c'' d'' e'' f'' g'' a'' bes'' c'''", "easy", 2, "mixolydian easy"))
+        lily.append(("c' d' e' f' g' a' b' c'' d'' e'' f'' g'' a'' b'' c'''2", "easy", 2, "plain scale easy"))
+        lily.append(("c' d' e' g' a' c'' d'' e'' g'' a'' c'''2", "easy", 2, "pentatonic scale easy"))
+        lily.append(("c' d' e' fis' g' a' b' c'' d'' e'' fis'' g'' a'' b'' c'''2", "easy", 2, "lydian easy"))
+        lily.append(("c' d' e' f' g' a' bes' c'' d'' e'' f'' g'' a'' bes'' c'''2", "easy", 2, "mixolydian easy"))
         lily.append(("c'4 d' ees' e' f' g' a' c'' d'' ees'' e'' f'' g'' a''4 c'''2", "easy", 2, "major blues scale"))
 
         lily.append(("c' d' ees' f' g' aes' b' c'' c'' d'' ees'' f'' g'' ges'' b'' c'''", "easy", 2,
@@ -295,6 +309,8 @@ class RolesAdminView(ModelView):
 
 
 class RiffAdminView(ModelView):
+    Riff.image = db.String
+    column_list = ['id', 'name', 'difficulty', 'number_of_bars', 'chord', 'image']
     column_default_sort = ('name', True)
     column_filters = ('number_of_bars', 'chord')
     column_searchable_list = ('name', 'chord')
@@ -319,8 +335,6 @@ class RiffAdminView(ModelView):
                 flash('Failed to re-render riff. {error}'.format(error=str(error)))
 
     def _list_thumbnail(view, context, model, name):
-        print(context)
-        print(model)
         return Markup('<img src="%s">' % url_for('static', filename=f'rendered/small/riff_{model.id}_c.png'))
 
     column_formatters = {
