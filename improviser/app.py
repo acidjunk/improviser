@@ -9,6 +9,7 @@ from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin
 from flask_login import UserMixin, current_user
+from flask_mail import Mail
 from flask_migrate import Migrate, MigrateCommand
 from flask_restplus import Api, Resource, fields, marshal_with
 from flask_script import Manager
@@ -35,7 +36,7 @@ app.config['SECURITY_PASSWORD_SALT'] = 'SALTSALTSALT'
 app.config['SECURITY_EMAIL_SENDER'] = os.getenv('SECURITY_EMAIL_SENDER') if os.getenv('SECURITY_EMAIL_SENDER') \
     else 'no-reply@example.com'
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER') if os.getenv('MAIL_SERVER') else 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
+app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME') if os.getenv('MAIL_USERNAME') else 'no-reply@example.com'
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASSWORD') else 'somepassword'
@@ -44,6 +45,9 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASS
 app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_REGISTER_URL'] = '/admin/create_account'
 app.config['SECURITY_LOGIN_URL'] = '/admin/login'
+app.config['SECURITY_POST_LOGIN_VIEW'] = '/admin'
+app.config['SECURITY_LOGOUT_URL'] = '/admin/logout'
+app.config['SECURITY_POST_LOGOUT_VIEW'] = '/admin'
 app.config['SECURITY_RESET_URL'] = '/admin/reset'
 app.config['SECURITY_CHANGE_URL'] = '/admin/change'
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
@@ -58,6 +62,7 @@ migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'rendered'))
+mail = Mail(app)
 
 
 @app.context_processor
@@ -318,7 +323,7 @@ class RolesAdminView(ModelView):
 
 class RiffAdminView(ModelView):
     Riff.image = db.String
-    column_list = ['id', 'name', 'difficulty', 'number_of_bars', 'chord', 'image']
+    column_list = ['id', 'name', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
     column_default_sort = ('name', True)
     column_filters = ('number_of_bars', 'chord')
     column_searchable_list = ('name', 'chord')
