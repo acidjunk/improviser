@@ -210,7 +210,7 @@ class PopulateAppResource(Resource):
 
         lily.append(("fis''4 e''8 b'4 g' fis''8~ fis''4 e''8 b'4 g' r8", "medium", 1, "Careless whisper 1"))
         lily.append(("d''4 c''8 g'4 e' d''8~ d''4 c''8 g'4 e' r8", "medium", 1, "Careless whisper 2"))
-        lily.append(("c''4 b'8 g'4 e'4 c'4~ c'1", "medium", 1, "Careless whisper 3"))
+        lily.append(("c''4 b'8 g'4 e'4 c'8~ c'1", "medium", 1, "Careless whisper 3"))
         lily.append(("b4 c' d' e' fis' g' a' b'", "medium", 1, "Careless whisper 4"))
 
         # minor riffs only
