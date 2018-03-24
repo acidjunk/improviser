@@ -194,7 +194,7 @@ class RiffListResource(Resource):
         else:
             riffs = Riff.query.all()
         for riff in riffs:
-            riff.image = f'http://127.0.0.1:5000/static/rendered/large/riff_{riff.id}_c.png'
+            riff.image = url_for("static", filename=f"rendered/large/riff_{riff.id}_c.png")
         return riffs
 
 
