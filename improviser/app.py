@@ -19,14 +19,15 @@ from markupsafe import Markup
 from sqlalchemy.dialects.postgresql.base import UUID
 from wtforms import PasswordField
 
-sys.path.append('../')
-from improviser.render.render import Render  # noqa
+#sys.path.append('../')
+#from improviser.render.render import Render  # noqa
 
 VERSION = '0.1.2'
+DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://improviser:improviser@localhost/improviser'
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
@@ -61,7 +62,7 @@ manager = Manager(app)
 migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
-renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'rendered'))
+#renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'rendered'))
 mail = Mail(app)
 
 
@@ -83,17 +84,17 @@ riff_fields = {
 }
 
 
-def render(riff):
-    keys = ['c', 'f', 'g']  # only c,f,g for now
-
-    for key in keys:
-        renderer.name = "riff_%s_%s" % (riff.id, key)
-        notes = riff.notes.split(" ")
-        renderer.addNotes(notes)
-        renderer.set_cleff('treble')
-        renderer.doTranspose(key)
-        if not renderer.render():
-            print(f"Error: couldn't render riff.id: {riff.id}")
+#def render(riff):
+#    keys = ['c', 'f', 'g']  # only c,f,g for now
+#
+#    for key in keys:
+#        renderer.name = "riff_%s_%s" % (riff.id, key)
+#        notes = riff.notes.split(" ")
+#        renderer.addNotes(notes)
+#        renderer.set_cleff('treble')
+#        renderer.doTranspose(key)
+#        if not renderer.render():
+#            print(f"Error: couldn't render riff.id: {riff.id}")
 
 
 # Define models
@@ -183,7 +184,7 @@ def before_first_request():
         user_datastore.add_role_to_user('acidjunk@gmail.com', 'admin')
         db.session.commit()
 
-@api.route('/api/riffs')
+@api.route('/riffs')
 class RiffListResource(Resource):
 
     @marshal_with(riff_fields)
@@ -194,11 +195,11 @@ class RiffListResource(Resource):
         else:
             riffs = Riff.query.all()
         for riff in riffs:
-            riff.image = url_for("static", filename=f"rendered/large/riff_{riff.id}_c.png", _external=True)
+            riff.image = f"https://s3.eu-central-1.amazonaws.com/improviser.education/static/rendered/large/riff_{riff.id}_c.png"
         return riffs
 
 
-@api.route('/api/populate')
+@api.route('/populate')
 class PopulateAppResource(Resource):
 
     def get(self):
@@ -263,13 +264,13 @@ class PopulateAppResource(Resource):
                 print(f"Skipped {riff.name} with {error}")
 
 
-@api.route('/api/render/all')
+@api.route('/render/all')
 class RenderRiff(Resource):
 
     def get(self):
         riffs = Riff.query.all()
         for riff in riffs:
-            render(riff)
+            #render(riff)
 
             # internal bookkeeping
             riff.render_date = datetime.datetime.now()
