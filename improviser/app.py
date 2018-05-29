@@ -205,8 +205,7 @@ class RiffListResource(Resource):
 class PopulateAppResource(Resource):
 
     def get(self):
-        #Todo: fix chord + difficulty
-
+        # Todo: fix chord + difficulty
 
         # Some fun stuff popular
         lily = []

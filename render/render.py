@@ -37,7 +37,7 @@ class Render:
         self.settings.append("""\\time 4/4\n""")  # set a very high value so all the exercises fit into 1 bar
         # self.settings.append("""\\override Staff.BarLine #'stencil = ##f\n""")
         self.settings.append("""\\override Staff.TimeSignature #'stencil = ##f\n""")
-        self.rootKeys = ['c', 'cis', 'd', 'ees', 'e', 'f', 'fis', 'g', 'aes', 'a', 'bes',
+        self.rootKeys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes',
                          'b']  # render to all keys by default
         self.paperFormat = """\paper{
             indent=0\mm
