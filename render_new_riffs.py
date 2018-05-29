@@ -11,7 +11,7 @@ from render.render import Render
 renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered'))
 
 
-ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
+ENDPOINT_RIFFS = "https://api.improviser.education/riffs?show_unrendered=true"
 
 API_USER = os.getenv('API_USER')
 API_PASS = os.getenv('API_PASS')
