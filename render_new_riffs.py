@@ -6,6 +6,11 @@ import os
 import sys
 import requests
 
+from render.render import Render
+
+renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered'))
+
+
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 
 API_USER = os.getenv('API_USER')
@@ -14,8 +19,15 @@ API_PASS = os.getenv('API_USER')
 if not API_USER or not API_PASS:
     sys.exit('Please set needed environment vars.')
 
+def render(riff):
+    print(riff)
+
+
 if __name__ == '__main__':
-    riffs = requests.get(ENDPOINT_RIFFS)
-    if riffs.status_code != 200:
+    response = requests.get(ENDPOINT_RIFFS)
+    if response.status_code != 200:
         sys.exit("Unable to query riffs")
-    print(riffs.content)
+    riffs = response.json()
+    for riff in riffs:
+        if not riff.get("render_valid"):
+            render(riff)
