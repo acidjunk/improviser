@@ -3,7 +3,7 @@ import uuid
 
 import os
 import sys
-from flask import Flask, flash, request, url_for
+from flask import Flask, abort, flash, request, url_for
 from flask_admin import helpers as admin_helpers
 from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
@@ -12,7 +12,7 @@ from flask_cors import CORS
 from flask_login import UserMixin, current_user
 from flask_mail import Mail
 from flask_migrate import Migrate, MigrateCommand
-from flask_restplus import Api, Resource, fields, marshal_with
+from flask_restplus import Api, Resource, fields, marshal_with, reqparse
 from flask_script import Manager
 from flask_security import RoleMixin, SQLAlchemyUserDatastore, Security, utils
 from flask_sqlalchemy import SQLAlchemy
@@ -70,22 +70,6 @@ mail = Mail(app)
 @app.context_processor
 def version():
     return dict(version=VERSION)
-
-
-riff_fields_new = {
-    'difficulty': fields.String,
-    'name': fields.String,
-    'number_of_bars': fields.Integer,
-    'notes': fields.String,
-    'chord': fields.String,
-}
-riff_fields_list = {
-    'id': fields.String,
-    **riff_fields_new,
-    'image': fields.String,
-    'render_valid': fields.Boolean,
-    'render_date': fields.DateTime,
-}
 
 #def render(riff):
 #    keys = ['c', 'f', 'g']  # only c,f,g for now
@@ -187,32 +171,98 @@ def before_first_request():
         user_datastore.add_role_to_user('acidjunk@gmail.com', 'admin')
         db.session.commit()
 
+
+riff_serializer = api.model('Riff', {
+    'name': fields.String(required=True, description='Unique riff name'),
+    'number_of_bars': fields.Integer(required=True, description='Number of bars'),
+    'notes': fields.String(required=True, description='Lilypond representation of the riff'),
+    'chord': fields.String(description='Chord if known'),
+})
+
+riff_render_serializer = api.model('Riff', {
+    'render_valid': fields.Boolean(required=True, description='Whether a render is deemed valid.'),
+})
+
+riff_fields = {
+    'id': fields.String,
+    'difficulty': fields.String,
+    'name': fields.String,
+    'number_of_bars': fields.Integer,
+    'notes': fields.String,
+    'chord': fields.String,
+    'image': fields.String,
+    'render_valid': fields.Boolean,
+    'render_date': fields.DateTime,
+}
+
+riff_arguments = reqparse.RequestParser()
+riff_arguments.add_argument('search_phrase', type=str, required=False,
+                            help='Return only items that contain the search_phrase')
+riff_arguments.add_argument('show_unrendered', type=bool, required=False, default=False,
+                            help='Toggle so you can see unrendered riffs also')
+
 @api.route('/riffs')
-class RiffListResource(Resource):
+class RiffResourceList(Resource):
 
     @marshal_with(riff_fields)
+    @api.expect(riff_arguments)
     def get(self):
         args = request.args
-        if args:
-            riffs = Riff.query.filter(Riff.name.contains(args["search_phrase"])).all()
+        # handle case insensitive search
+        if args.get("search_phrase"):
+            riffs_query = Riff.query.filter(Riff.name.ilike('%' + args["search_phrase"] + '%'))
         else:
-            riffs = Riff.query.all()
+            riffs_query = Riff.query
+
+        # show all riffs or only rendered?
+        show = "rendered"
+        if args.get("show_unrendered") and args["show_unrendered"] == "true":
+            show = "all"
+        if "all" not in show:
+            riffs_query = riffs_query.filter(Riff.render_valid)
+
+        riffs = riffs_query.all()
         for riff in riffs:
-            riff.image = f"https://s3.eu-central-1.amazonaws.com/improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+            riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
         return riffs
 
-# @api.route('/riffs/<string:riff_id>')
-# class RiffResource(Resource):
-#
-#     @marshal_with(riff_fields)
-#     def get(self, todo_id):
-#         return {todo_id: todos[todo_id]}
-#
-#     @marshal_with(riff_fields)
-#     def put(self, todo_id):
-#         todos[todo_id] = request.form['data']
-#         return {todo_id: todos[todo_id]}
+    @api.expect(riff_serializer)
+    def post(self):
+        riff = Riff(**api.payload)
+        try:
+            db.session.add(riff)
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
+            abort(400, 'DB error: {}'.format(str(error)))
+        return 201
 
+
+@api.route('/riffs/<string:riff_id>')
+class RiffResource(Resource):
+
+    @marshal_with(riff_fields)
+    def get(self, riff_id):
+        riff = Riff.query.filter_by(id=riff_id).first_or_404()
+        riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+        return riff
+
+    @api.expect(riff_serializer)
+    def put(self, riff_id):
+        riff = Riff.query.filter_by(id=riff_id).first_or_404()
+        # Todo implement real update
+        return 204
+
+
+@api.route('/riffs/rendered/<string:riff_id>')
+class RiffResourceRendered(Resource):
+    @api.expect(riff_render_serializer)
+    def put(self, riff_id):
+        riff = Riff.query.filter_by(id=riff_id).first_or_404()
+        riff.render_valid = api.payload["render_valid"]
+        riff.render_date = datetime.datetime.now()
+        db.session.commit()
+        return 204
 
 
 class UserAdminView(ModelView):
@@ -283,7 +333,7 @@ class RiffAdminView(ModelView):
                 flash('Failed to schedule re-render riff. {error}'.format(error=str(error)))
 
     def _list_thumbnail(view, context, model, name):
-        return Markup('<img src="%s">' % url_for('static', filename=f'rendered/small/riff_{model.id}_c.png'))
+        return Markup(f'<img src="https://www.improviser.education/static/rendered/small/riff_{model.id}_c.png">')
 
     column_formatters = {
         'image': _list_thumbnail

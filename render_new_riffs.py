@@ -14,7 +14,7 @@ renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 
 API_USER = os.getenv('API_USER')
-API_PASS = os.getenv('API_USER')
+API_PASS = os.getenv('API_PASS')
 
 if not API_USER or not API_PASS:
     sys.exit('Please set needed environment vars.')
