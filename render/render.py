@@ -105,10 +105,10 @@ class Render:
         #This renders a riff, it gets the key and major/minor from the caller
         #
         #calculate filename
-        if sys.platform=="win32": fileName=("%s\\riff_%s_%s" % (self.renderPath, self.currentKey , self.name)) 
-        else: fileName=("%s/riff_%s_%s" % (self.renderPath, self.currentKey , self.name)) 
-        
-        fHandle=open("%s.ly" % fileName, 'wb')
+        if sys.platform=="win32": fileName=("%s\\riff_%s_%s" % (self.renderPath, self.currentKey, self.name))
+        else: fileName=("%s/riff_%s_%s" % (self.renderPath, self.currentKey, self.name))
+
+        fHandle = open("%s.ly" % fileName, 'wb')
 
         # Will be set from the caller
         #fHandle.write("\\transpose c %s {\n" % self.currentKey) 
@@ -120,10 +120,10 @@ class Render:
         #    fHandle.write(setting)
         
         for riffTuple in self.riffs:
-            notes=riffTuple[0]
-            transpose=riffTuple[1].lower()
-            chord=riffTuple[2]
-            lyric=riffTuple[3]
+            notes = riffTuple[0]
+            transpose = riffTuple[1].lower()
+            chord = riffTuple[2]
+            lyric = riffTuple[3]
             #handle the transpose:
             fHandle.write("\\transpose c %s {\n" % transpose)            
             #handle the notes
