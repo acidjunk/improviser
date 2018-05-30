@@ -29,7 +29,7 @@ def render(riff):
         renderer.set_cleff('treble')
         renderer.doTranspose(key)
         if not renderer.render():
-            print(f"Error: couldn't render riff.id: {riff['id']}")
+            print("Error: couldn't render riff.id: {}".format(riff['id']))
 
 
 if __name__ == '__main__':
