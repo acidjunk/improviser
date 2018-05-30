@@ -2,7 +2,6 @@ import datetime
 import uuid
 
 import os
-import sys
 from flask import Flask, abort, flash, request, url_for
 from flask_admin import helpers as admin_helpers
 from flask_admin.actions import action
@@ -20,8 +19,7 @@ from markupsafe import Markup
 from sqlalchemy.dialects.postgresql.base import UUID
 from wtforms import PasswordField
 
-#sys.path.append('../')
-#from improviser.render.render import Render  # noqa
+
 
 VERSION = '0.1.2'
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
@@ -70,18 +68,6 @@ mail = Mail(app)
 @app.context_processor
 def version():
     return dict(version=VERSION)
-
-#def render(riff):
-#    keys = ['c', 'f', 'g']  # only c,f,g for now
-#
-#    for key in keys:
-#        renderer.name = "riff_%s_%s" % (riff.id, key)
-#        notes = riff.notes.split(" ")
-#        renderer.addNotes(notes)
-#        renderer.set_cleff('treble')
-#        renderer.doTranspose(key)
-#        if not renderer.render():
-#            print(f"Error: couldn't render riff.id: {riff.id}")
 
 
 # Define models

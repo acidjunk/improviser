@@ -8,19 +8,28 @@ import requests
 
 from render.render import Render
 
-renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered'))
-
-
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs?show_unrendered=true"
 
 API_USER = os.getenv('API_USER')
 API_PASS = os.getenv('API_PASS')
 
+renderer = Render(renderPath=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered'))
+
+
 if not API_USER or not API_PASS:
     sys.exit('Please set needed environment vars.')
 
 def render(riff):
-    print(riff)
+    keys = ['c', 'f', 'g']  # only c,f,g for now
+
+    for key in keys:
+        renderer.name = "riff_%s_%s" % (riff["id"], key)
+        notes = riff["notes"].split(" ")
+        renderer.addNotes(notes)
+        renderer.set_cleff('treble')
+        renderer.doTranspose(key)
+        if not renderer.render():
+            print(f"Error: couldn't render riff.id: {riff['id']}")
 
 
 if __name__ == '__main__':
