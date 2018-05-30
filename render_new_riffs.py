@@ -4,18 +4,27 @@ upload the rendered/changed riffs to an Amazon S3 bucket and flag the riff as re
 
 It has a check that ensures that only one instance can be running at the same time
 """
+import glob
+import json
 import os
 import sys
 
 import requests
+from boto3.s3.transfer import S3Transfer
+import boto3
 
 from render.render import Render
 
-ENDPOINT_RIFFS = "https://api.improviser.education/riffs?show_unrendered=true"
+SIZES = ['small', 'medium', 'large']
+ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
 
 API_USER = os.getenv('API_USER')
 API_PASS = os.getenv('API_PASS')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') 
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') 
+AWS_BUCKET_NAME = "improviser.education"
+
 
 renderer = Render(renderPath=RENDER_PATH)
 
@@ -27,7 +36,7 @@ if os.path.isfile(pidfile):
     sys.exit()
 open(pidfile, 'w').write(pid)
 
-if not API_USER or not API_PASS:
+if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
     sys.exit('Please set needed environment vars.')
 
 def render(riff):
@@ -43,26 +52,43 @@ def render(riff):
             print("Error: couldn't render riff.id: {}".format(riff['id']))
 
 def sync():
-    pass
+    """Sync all .png files to S3 bucket."""
+    client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    transfer = S3Transfer(client)
+    for size in SIZES:
+        os.chdir(os.path.join(RENDER_PATH, size))
+        for file in glob.glob('*.png'):
+            transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size,file))
 
+def update_riffs(riff_ids):
+    for riff_id in riff_ids:
+        print("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id))
+        print("Setting riff_id: {} to rendered -> True".format(riff_id))
+        response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), data="""{"render_valid": true}""") 
+        print(response.content)
+        if response.status_code != 204:
+            print("Error while updating riff")
+           
 def clean():
-    sizes = ['small', 'medium', 'large']
     extensions = ['eps', 'count', 'tex', 'texi', 'png']
     os.chdir(RENDER_PATH)
     os.system('rm -f *.ly')
-    for size in sizes:
+    for size in SIZES:
         for extension in extensions:
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
 
-
-
 if __name__ == '__main__':
-    response = requests.get(ENDPOINT_RIFFS)
+    response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
         sys.exit("Unable to query riffs")
+        os.unlink(pidfile)
     riffs = response.json()
+    rendered_riffs = []
     for riff in riffs:
-        render(riff)
+        if not riff["render_valid"]:
+            #render(riff)
+            rendered_riffs.append(riff["id"])
     sync()
-    #clean()
+    update_riffs(rendered_riffs)
+    clean()
     os.unlink(pidfile)

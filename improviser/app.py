@@ -244,6 +244,7 @@ class RiffResource(Resource):
 class RiffResourceRendered(Resource):
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
+        print(api.payload)
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.render_valid = api.payload["render_valid"]
         riff.render_date = datetime.datetime.now()
