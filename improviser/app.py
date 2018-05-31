@@ -19,8 +19,6 @@ from markupsafe import Markup
 from sqlalchemy.dialects.postgresql.base import UUID
 from wtforms import PasswordField
 
-
-
 VERSION = '0.1.2'
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
@@ -244,7 +242,6 @@ class RiffResource(Resource):
 class RiffResourceRendered(Resource):
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
-        print(api.payload)
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.render_valid = api.payload["render_valid"]
         riff.render_date = datetime.datetime.now()
