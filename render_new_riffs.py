@@ -40,7 +40,7 @@ if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCES
     sys.exit('Please set needed environment vars.')
 
 def render(riff):
-    keys = ['c', 'f', 'g']  # only c,f,g for now
+    keys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
 
     for key in keys:
         renderer.name = "riff_%s_%s" % (riff["id"], key)
@@ -61,20 +61,22 @@ def sync():
             transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size,file))
 
 def update_riffs(riff_ids):
+    payload = {'render_valid': True}
     for riff_id in riff_ids:
         print("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id))
         print("Setting riff_id: {} to rendered -> True".format(riff_id))
-        response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), data="""{"render_valid": true}""") 
-        print(response.content)
+        response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload) 
         if response.status_code != 204:
             print("Error while updating riff")
            
 def clean():
     extensions = ['eps', 'count', 'tex', 'texi', 'png']
     os.chdir(RENDER_PATH)
+    print("Cleaning root *.ly")
     os.system('rm -f *.ly')
     for size in SIZES:
         for extension in extensions:
+            print("Cleaning rm -f {folder}/*.{ext}".format(folder=size, ext=extension))
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
 
 if __name__ == '__main__':
@@ -85,10 +87,13 @@ if __name__ == '__main__':
     riffs = response.json()
     rendered_riffs = []
     for riff in riffs:
+        # ALL
+        #if riff["render_valid"]:
         if not riff["render_valid"]:
-            #render(riff)
+            render(riff)
             rendered_riffs.append(riff["id"])
-    sync()
-    update_riffs(rendered_riffs)
-    clean()
+    if len(rendered_riffs):
+        sync()
+        update_riffs(rendered_riffs)
+        clean()
     os.unlink(pidfile)
