@@ -19,8 +19,11 @@ from markupsafe import Markup
 from sqlalchemy.dialects.postgresql.base import UUID
 from wtforms import PasswordField
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> d4d98ab7d8d96b614f18168fbb8859ff575f9991
 VERSION = '0.1.2'
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
@@ -244,7 +247,10 @@ class RiffResource(Resource):
 class RiffResourceRendered(Resource):
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
+<<<<<<< HEAD
         print(api.payload)
+=======
+>>>>>>> d4d98ab7d8d96b614f18168fbb8859ff575f9991
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.render_valid = api.payload["render_valid"]
         riff.render_date = datetime.datetime.now()
@@ -298,9 +304,9 @@ class RolesAdminView(ModelView):
 
 class RiffAdminView(ModelView):
     Riff.image = db.String
-    column_list = ['id', 'name', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
+    column_list = ['id', 'name', 'render_valid', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
     column_default_sort = ('name', True)
-    column_filters = ('number_of_bars', 'chord')
+    column_filters = ('render_valid', 'number_of_bars', 'chord')
     column_searchable_list = ('name', 'chord')
 
     def is_accessible(self):
