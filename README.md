@@ -10,7 +10,6 @@ The REST API server for the improviser-client
     createuser improviser -sP
     python app.py db upgrade
     python app.py runserver --debug
-    
 
 ## Version handling
 
@@ -23,3 +22,9 @@ Will bump version to 0.3.0
     bumpversion --current-version 0.2.0 patch improviser/app.py
 
 Will bump version to 0.2.1
+
+## Deploy
+`$ mkvirtualenv improviser_deploy`
+`$ cd app`
+`$ zappa update`
+
