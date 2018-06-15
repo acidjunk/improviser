@@ -15,6 +15,7 @@ import boto3
 
 from render.render import Render
 
+DISABLE_CLEAN = os.getenv('DISABLE_CLEAN', 0)
 SIZES = ['small', 'medium', 'large']
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
@@ -58,7 +59,8 @@ def sync():
     for size in SIZES:
         os.chdir(os.path.join(RENDER_PATH, size))
         for file in glob.glob('*.png'):
-            transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size,file))
+            print("uploading file => {}".format(file)) 
+            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size,file))
 
 def update_riffs(riff_ids):
     payload = {'render_valid': True}
@@ -96,6 +98,8 @@ if __name__ == '__main__':
     if len(rendered_riffs):
         sync()
         update_riffs(rendered_riffs)
-        clean()
+        if not DISABLE_CLEAN:
+            print("Cleaning: as cleaning is enabled...")
+            clean()
     os.unlink(pidfile)
 
