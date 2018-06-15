@@ -79,6 +79,7 @@ def clean():
             print("Cleaning rm -f {folder}/*.{ext}".format(folder=size, ext=extension))
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
 
+
 if __name__ == '__main__':
     response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
@@ -93,7 +94,8 @@ if __name__ == '__main__':
             render(riff)
             rendered_riffs.append(riff["id"])
     if len(rendered_riffs):
-        sync()
-        update_riffs(rendered_riffs)
-        clean()
+        #sync()
+        #update_riffs(rendered_riffs)
+        #clean()
+        pass
     os.unlink(pidfile)
