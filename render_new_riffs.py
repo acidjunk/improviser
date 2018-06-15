@@ -94,9 +94,8 @@ if __name__ == '__main__':
             render(riff)
             rendered_riffs.append(riff["id"])
     if len(rendered_riffs):
-        #sync()
-        #update_riffs(rendered_riffs)
-        #clean()
-        pass
+        sync()
+        update_riffs(rendered_riffs)
+        clean()
     os.unlink(pidfile)
 
