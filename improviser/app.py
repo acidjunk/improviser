@@ -295,9 +295,9 @@ class RolesAdminView(ModelView):
 
 class RiffAdminView(ModelView):
     Riff.image = db.String
-    column_list = ['id', 'name', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
+    column_list = ['id', 'name', 'render_valid', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
     column_default_sort = ('name', True)
-    column_filters = ('number_of_bars', 'chord')
+    column_filters = ('render_valid', 'number_of_bars', 'chord')
     column_searchable_list = ('name', 'chord')
 
     def is_accessible(self):
