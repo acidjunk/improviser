@@ -25,6 +25,8 @@ Will bump version to 0.2.1
 
 ## Deploy
 `$ mkvirtualenv improviser_deploy`
+
 `$ cd app`
+
 `$ zappa update`
 
