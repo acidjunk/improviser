@@ -1,4 +1,5 @@
 import datetime
+import re
 import uuid
 
 import os
@@ -173,6 +174,7 @@ riff_fields = {
     'name': fields.String,
     'number_of_bars': fields.Integer,
     'notes': fields.String,
+    'notes_abc': fields.String(description='ABC representation of the riff (computed)'),
     'chord': fields.String,
     'image': fields.String,
     'render_valid': fields.Boolean,
@@ -207,6 +209,7 @@ class RiffResourceList(Resource):
 
         riffs = riffs_query.all()
         for riff in riffs:
+            riff.notes_abc = f"{convertToABC(riff.notes)}"
             riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
         return riffs
 
@@ -221,6 +224,48 @@ class RiffResourceList(Resource):
             abort(400, 'DB error: {}'.format(str(error)))
         return 201
 
+def convertToEasyScore(lilypond):
+
+    convert_map = {
+    "c'": "c",
+    "cis'": "^c",
+    "d'": "d",
+    "dis'": "^d",
+    "e'": "e",
+    "ees'": "_e",
+    "f'": "f",
+    "fis'": "^f",
+    "g'": "g",
+    "gis'": "^g",
+    "aes'": "_a",
+    "a'": "a",
+    "ais'": "^a",
+    "bes'": "_b",
+    "b'": "b",
+    "c''": "C",
+    "cis''": "^C",
+    "d''": "D",
+    "dis''": "^D",
+    "ees''": "_E",
+    "f''": "F",
+    "fis''": "^F",
+    "g''": "G",
+    "gis''": "^G",
+    "aes''": "_A",
+    "a''": "A",
+    "ais''": "^A",
+    "bes''": "_B",
+    "b''": "B",
+    }
+
+    lilypond_array = lilypond.split(" ")
+    result = []
+    for item in lilypond_array:
+
+        result.append(convert_map.get(''.join([i for i in item if not i.isdigit()]), item))
+    print(f"Ly: {lilypond} ==>>> Abc: {''.join(result)}")
+    return result
+
 
 @api.route('/riffs/<string:riff_id>')
 class RiffResource(Resource):
@@ -229,6 +274,7 @@ class RiffResource(Resource):
     def get(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+        riff.notes_abc = f"abc"
         return riff
 
     @api.expect(riff_serializer)
