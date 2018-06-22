@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql.base import UUID
 from wtforms import PasswordField
 
 
-VERSION = '0.1.2'
+VERSION = '0.2.0'
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
 app = Flask(__name__, static_url_path='/static')
