@@ -1,9 +1,8 @@
 import datetime
-import re
+import os
 import uuid
 
-import os
-from flask import Flask, abort, flash, request, url_for
+from flask import Flask, abort, flash, request, url_for, Response
 from flask_admin import helpers as admin_helpers
 from flask_admin.actions import action
 from flask_admin.contrib.sqla import ModelView
@@ -16,9 +15,12 @@ from flask_restplus import Api, Resource, fields, marshal_with, reqparse
 from flask_script import Manager
 from flask_security import RoleMixin, SQLAlchemyUserDatastore, Security, utils
 from flask_sqlalchemy import SQLAlchemy
+from ly.musicxml.create_musicxml import CreateMusicXML
+from ly.musicxml.lymus2musxml import ParseSource
 from markupsafe import Markup
 from sqlalchemy.dialects.postgresql.base import UUID
 from wtforms import PasswordField
+
 
 VERSION = '0.1.2'
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
@@ -187,6 +189,37 @@ riff_arguments.add_argument('search_phrase', type=str, required=False,
 riff_arguments.add_argument('show_unrendered', type=bool, required=False, default=False,
                             help='Toggle so you can see unrendered riffs also')
 
+
+def convertToMusicXML(lilypond):
+    import ly.musicxml
+    e = ly.musicxml.writer()
+
+    prefix = """\transpose c c {
+    {
+    \version "2.12.3"
+    \clef treble
+    \time 4/4
+    \override Staff.TimeSignature #'stencil = ##f
+    """
+    postfix = """}
+    }
+    \paper{
+                indent=0\mm
+                line-width=120\mm
+                oddFooterMarkup=##f
+                oddHeaderMarkup=##f
+                bookTitleMarkup = ##f
+                scoreTitleMarkup = ##f
+            }"""
+
+    lilypond = f"{prefix}\n{lilypond}\n{postfix}"
+
+
+    e.parse_text(lilypond)
+    xml = e.musicxml().tostring()
+    return xml
+
+
 @api.route('/riffs')
 class RiffResourceList(Resource):
 
@@ -209,7 +242,7 @@ class RiffResourceList(Resource):
 
         riffs = riffs_query.all()
         for riff in riffs:
-            riff.notes_abc = f"{convertToABC(riff.notes)}"
+            riff.notes_abc = f"{convertToMusicXML(riff.notes)}"
             riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
         return riffs
 
@@ -223,48 +256,6 @@ class RiffResourceList(Resource):
             db.session.rollback()
             abort(400, 'DB error: {}'.format(str(error)))
         return 201
-
-def convertToEasyScore(lilypond):
-
-    convert_map = {
-    "c'": "c",
-    "cis'": "^c",
-    "d'": "d",
-    "dis'": "^d",
-    "e'": "e",
-    "ees'": "_e",
-    "f'": "f",
-    "fis'": "^f",
-    "g'": "g",
-    "gis'": "^g",
-    "aes'": "_a",
-    "a'": "a",
-    "ais'": "^a",
-    "bes'": "_b",
-    "b'": "b",
-    "c''": "C",
-    "cis''": "^C",
-    "d''": "D",
-    "dis''": "^D",
-    "ees''": "_E",
-    "f''": "F",
-    "fis''": "^F",
-    "g''": "G",
-    "gis''": "^G",
-    "aes''": "_A",
-    "a''": "A",
-    "ais''": "^A",
-    "bes''": "_B",
-    "b''": "B",
-    }
-
-    lilypond_array = lilypond.split(" ")
-    result = []
-    for item in lilypond_array:
-
-        result.append(convert_map.get(''.join([i for i in item if not i.isdigit()]), item))
-    print(f"Ly: {lilypond} ==>>> Abc: {''.join(result)}")
-    return result
 
 
 @api.route('/riffs/<string:riff_id>')
@@ -293,6 +284,15 @@ class RiffResourceRendered(Resource):
         riff.render_date = datetime.datetime.now()
         db.session.commit()
         return 204
+
+
+@app.route('/test-musicxml')
+def convert():
+    riffs = Riff.query.all()
+    ly_string = ""
+    for riff in riffs:
+        ly_string += f"{riff.notes} "
+    return Response(response=convertToMusicXML(ly_string), status=200, mimetype="application/xml")
 
 
 class UserAdminView(ModelView):
@@ -376,4 +376,3 @@ admin.add_view(RolesAdminView(Role, db.session))
 
 if __name__ == '__main__':
     manager.run()
-
