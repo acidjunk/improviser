@@ -285,11 +285,12 @@ class RiffResourceRendered(Resource):
 
 
 @app.route('/test-musicxml')
-def convert():
+def testMusicXMLALL():
     riffs = Riff.query.all()
     ly_string = ""
     for riff in riffs:
-        ly_string += f"{riff.notes} "
+        if riff.render_valid:
+            ly_string += f"""{riff.notes} \bar "|"""""
     return Response(response=convertToMusicXML(ly_string), status=200, mimetype="application/xml")
 
 
@@ -342,7 +343,7 @@ class RiffAdminView(ModelView):
     column_list = ['id', 'name', 'render_valid', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
     column_default_sort = ('name', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')
-    column_searchable_list = ('id', 'name', 'chord')
+    column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
 
     def is_accessible(self):
         if 'admin' in current_user.roles:
