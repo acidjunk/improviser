@@ -210,13 +210,14 @@ def convertToMusicXML(lilypond):
                 scoreTitleMarkup = ##f
             }"""
 
+    xml_header = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">"""
+
     lilypond = f"{prefix}\n{lilypond}\n{postfix}"
 
-
     e.parse_text(lilypond)
-    xml = e.musicxml().tostring()
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">{xml}"""
+    xml = bytes(xml_header, encoding='UTF-8') + e.musicxml().tostring()
+    return {xml}
 
 
 @api.route('/riffs')
