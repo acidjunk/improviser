@@ -290,9 +290,12 @@ def testMusicXMLALL():
     ly_string = ""
     for riff in riffs:
         if riff.render_valid:
-            ly_string += f""" {riff.notes} \bar "|"""""
-    ly_string = ly_string[:-7]
-    print(f"Ly string: before retur => {ly_string}")
+            bar_separator = '\\bar "|"'
+            ly_string = f' {ly_string} {riff.notes} {bar_separator}'
+    # strip first space and bar suffix
+    ly_string = ly_string[1:-5]
+    # Todo: we desperately need logging
+    print(f"Ly string: before return=> {ly_string}")
     return Response(response=convertToMusicXML(ly_string), status=200, mimetype="application/xml")
 
 
