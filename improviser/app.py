@@ -119,7 +119,8 @@ class Riff(db.Model):
     chord = db.Column(db.String(255), index=True)
     render_valid = db.Column(db.Boolean, default=False)
     render_date = db.Column(db.DateTime)
-
+    riff_exercises = db.relationship('RiffExercise', secondary='riff_exercise_items',
+                                     backref=db.backref('riffs', lazy='dynamic'))
     def __repr__(self):
         return '<Riff %r>' % self.name
 
@@ -127,6 +128,26 @@ class Riff(db.Model):
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
+
+
+class RiffExercise(db.Model):
+    __tablename__ = 'riff_exercises'
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = db.Column(db.String(255))
+    is_global = db.Column(db.Boolean, default=True)
+    created_by = db.Column('created_by', db.UUID(as_uuid=True), db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def __repr__(self):
+        return '<RiffExercise %r>' % self.name
+
+
+class RiffExerciseItem(db.Model):
+    __tablename__ = 'riff_exercise_items'
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    riff_exercise_id = db.Column('riff_exercise_id', db.UUID(as_uuid=True), db.ForeignKey('riff_exercises.id'))
+    riff_id = db.Column('riff_id', db.UUID(as_uuid=True), db.ForeignKey('riffs.id'))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 
 # define a context processor for merging flask-admin's template context into the
@@ -376,7 +397,18 @@ class RiffAdminView(ModelView):
     }
 
 
+class RiffExerciseAdminView(ModelView):
+    column_list = ['id', 'name', 'created_by', 'created_at']
+    column_default_sort = ('name', True)
+    column_searchable_list = ('id', 'name', 'created_by')
+
+    def is_accessible(self):
+        if 'admin' in current_user.roles:
+            return True
+
+
 admin.add_view(RiffAdminView(Riff, db.session))
+admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
 admin.add_view(UserAdminView(User, db.session))
 admin.add_view(RolesAdminView(Role, db.session))
 
