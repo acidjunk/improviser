@@ -224,7 +224,7 @@ riff_exercise_fields = {
     'created_at': fields.DateTime,
 }
 riff_exercise_detail_fields = riff_exercise_fields
-# Todo: investigate
+# Todo: investigate: e.g. use a deep_copy?
 riff_exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))
 
 riff_arguments = reqparse.RequestParser()
