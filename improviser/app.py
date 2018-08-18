@@ -147,6 +147,8 @@ class RiffExerciseItem(db.Model):
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = db.Column('riff_exercise_id', db.UUID(as_uuid=True), db.ForeignKey('riff_exercises.id'))
     riff_id = db.Column('riff_id', db.UUID(as_uuid=True), db.ForeignKey('riffs.id'))
+    order_number = db.Column(db.Integer, primary_key=True, index=True)
+    created_by = db.Column('created_by', db.UUID(as_uuid=True), db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 
@@ -189,6 +191,18 @@ riff_render_serializer = api.model('Riff', {
     'render_valid': fields.Boolean(required=True, description='Whether a render is deemed valid.'),
 })
 
+riff_exercise_serializer = api.model('RiffExercise', {
+    'name': fields.String(required=True, description='Unique exercise name'),
+    'is_global': fields.Boolean(description="Is this riff exercise visible to everyone?", default=False),
+})
+
+# Todo: make this a nested list: so order can be dealt with easily
+riff_exercise_item_serializer = api.model('RiffExerciseItem', {
+    'riff_exercise_id': fields.String(required=True, description='Unique exercise name'),
+    'riff_id': fields.Boolean(description="Is this riff exercise visible to everyone?"),
+})
+
+
 riff_fields = {
     'id': fields.String,
     'difficulty': fields.String,
@@ -202,11 +216,26 @@ riff_fields = {
     'render_date': fields.DateTime,
 }
 
+riff_exercise_fields = {
+    'id': fields.String,
+    'name': fields.String,
+    # 'riffs': fields.List,
+    'created_by': fields.String,  # or UUID of the user?
+    'created_at': fields.DateTime,
+}
+riff_exercise_detail_fields = riff_exercise_fields
+# Todo: investigate
+riff_exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))
+
 riff_arguments = reqparse.RequestParser()
 riff_arguments.add_argument('search_phrase', type=str, required=False,
                             help='Return only items that contain the search_phrase')
 riff_arguments.add_argument('show_unrendered', type=bool, required=False, default=False,
                             help='Toggle so you can see unrendered riffs also')
+
+riff_exercise_arguments = reqparse.RequestParser()
+riff_exercise_arguments.add_argument('search_phrase', type=str, required=False,
+                                     help='Return only items that contain the search_phrase')
 
 
 def convertToMusicXML(lilypond):
@@ -307,6 +336,56 @@ class RiffResourceRendered(Resource):
         return 204
 
 
+@api.route('/riff-exercises')
+class RiffExerciseResourceList(Resource):
+
+    @marshal_with(riff_exercise_fields)
+    @api.expect(riff_exercise_arguments)
+    def get(self):
+        args = request.args
+        # handle case insensitive search
+        if args.get("search_phrase"):
+            riff_exercises_query = RiffExercise.query.filter(RiffExercise.name.ilike('%' + args["search_phrase"] + '%'))
+        else:
+            riff_exercises_query = RiffExercise.query
+
+        # todo: filter on created_by and is_global
+        return riff_exercises_query.all()
+
+    @api.expect(riff_exercise_serializer)
+    def post(self):
+        """A new riff is always just a name. Note Riff Items will be added via update..."""
+        riff_exercise = RiffExercise(**api.payload)
+        # Todo: add user
+        try:
+            db.session.add(riff_exercise)
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
+            abort(400, 'DB error: {}'.format(str(error)))
+        return 201
+
+
+@api.route('/riff-exercises/<string:riff_exercise_id>')
+class RiffExerciseResource(Resource):
+    @api.expect(riff_exercise_serializer)
+    def put(self, riff_exercise_id):
+        riff_exercise = RiffExercise.query.filter_by(id=riff_exercise_id).first_or_404()
+        riff_exercise.name = api.payload["name"]
+        riff_exercise.is_global = api.payload["name"]
+        # Todo: add items also.
+
+        db.session.commit()
+        return 204
+
+    @marshal_with(riff_exercise_fields)
+    def get(self, riff_exercise_id):
+        riff_exercise = RiffExercise.query.filter_by(id=riff_exercise_id).first_or_404()
+        # Todo: do stuff with items also.
+        return riff_exercise
+
+
+
 @app.route('/test-musicxml')
 def testMusicXMLALL():
     riffs = Riff.query.all()
@@ -358,6 +437,7 @@ class UserAdminView(ModelView):
             # the existing password in the database will be retained.
             model.password = utils.hash_password(model.password2)
 
+
 class RolesAdminView(ModelView):
 
     # Prevent administration of Roles unless the currently logged-in user has the "admin" role
@@ -398,7 +478,7 @@ class RiffAdminView(ModelView):
 
 
 class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'created_by', 'created_at']
+    column_list = ['id', 'name', 'is_global', 'created_by', 'created_at']
     column_default_sort = ('name', True)
     column_searchable_list = ('id', 'name', 'created_by')
 
