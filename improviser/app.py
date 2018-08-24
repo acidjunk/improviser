@@ -147,6 +147,7 @@ class RiffExerciseItem(db.Model):
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = db.Column('riff_exercise_id', db.UUID(as_uuid=True), db.ForeignKey('riff_exercises.id'))
     riff_id = db.Column('riff_id', db.UUID(as_uuid=True), db.ForeignKey('riffs.id'))
+    riff_root_key = db.Column(db.String(3), default='c')
     order_number = db.Column(db.Integer, primary_key=True, index=True)
     created_by = db.Column('created_by', db.UUID(as_uuid=True), db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
