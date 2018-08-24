@@ -1,7 +1,29 @@
+<!DOCTYPE html>
+{% from "macros/_flashing.html" import flash_messages %}
 <html>
-    <body>
-        <div>
-            <a href="{{ url_for('admin.index') }}">Go to admin!</a>
-        </div>
-    </body>
+<head>
+    <title>iMproviser backend</title>
+    <link rel="stylesheet" href="http://cdn.foundation5.zurb.com/foundation.css" />
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-2.7.2.js"></script>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div class="row">
+        <h1><a href="/">iMproviser backend</a></h1>
+
+        {{ flash_messages() }}
+
+        {% block content %}
+            <a class="button tiny" href="https://www.improviser.education">Go to frontend</a>
+            <a class="button tiny" href="https://api.improviser.education/swagger">API docs</a>
+        {% endblock %}
+    </div>
+
+    <script src="http://cdn.foundation5.zurb.com/foundation.js"></script>
+    <script>
+      $(document).foundation();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
 </html>

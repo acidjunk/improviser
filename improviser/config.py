@@ -46,22 +46,9 @@ class Config(object):
 
     LOAD_MODULES_EXTENSIONS = ['views', 'models']
 
-    EXTENSIONS = [
-        'extensions.db',
-        'extensions.toolbar',
-    ]
-
     # ex: BLUEPRINTS = ['blog']  # where `blog` is a Blueprint instance
     # ex: BLUEPRINTS = [('blog', {'url_prefix': '/myblog'})]  # where `blog` is a Blueprint instance
-    BLUEPRINTS = []
-
-
-# config class for development environment
-class Dev(Config):
-    DEBUG = True  # we want debug level output
-    SECRET_KEY = "secret"
-    MAIL_DEBUG = True
-    SQLALCHEMY_ECHO = True  # we want to see sqlalchemy output
+    BLUEPRINTS = [('riffs', {'url_prefix': '/riffs'}), ]
 
 
 # config class used during tests

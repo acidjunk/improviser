@@ -18,6 +18,12 @@ class App(AppTemplate):
         def index_view():
             return render_template("index.html")
 
+    def configure_database(self):
+        # uncomment for sqlalchemy support
+        from .database import db
+        db.app = self
+        db.init_app(self)
+
 
 def config_str_to_obj(cfg):
     if isinstance(cfg, basestring):
@@ -26,11 +32,13 @@ def config_str_to_obj(cfg):
     return cfg
 
 
-def app_factory(config, app_name, blueprints=None):
+def app_factory(config=None, app_name='iMproviser', blueprints=None):
     # you can use AppTemplate directly if you wish
+    config = config if config else Config
     app = App(app_name, template_folder=os.path.join(PROJECT_PATH, 'templates'))
+
+    # Conf file support not needed for serverless
     # config = config_str_to_obj(config)
-    config = Config
     app.configure(config)
     app.add_blueprint_list(blueprints or config.BLUEPRINTS)
     app.setup()
