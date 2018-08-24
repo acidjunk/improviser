@@ -1,5 +1,5 @@
 bumpversion==0.5.3
-Flask==0.12.2
+Flask==1.0.2
 Flask-Admin==1.5.1
 Flask-Cors==3.0.4
 flask-restplus==0.10.1
