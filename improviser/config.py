@@ -46,7 +46,6 @@ class Config(object):
 
     LOAD_MODULES_EXTENSIONS = ['views', 'models']
 
-    # ex: BLUEPRINTS = ['blog']  # where `blog` is a Blueprint instance
     # ex: BLUEPRINTS = [('blog', {'url_prefix': '/myblog'})]  # where `blog` is a Blueprint instance
     BLUEPRINTS = [('riffs', {'url_prefix': '/riffs'}), ]
 

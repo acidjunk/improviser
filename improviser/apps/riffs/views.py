@@ -2,14 +2,17 @@
 import datetime
 from flask import Blueprint
 from flask import render_template, request
-from flask_restplus import Resource, marshal_with, abort, fields, reqparse, Namespace
+from flask_restplus import Resource, Api, marshal_with, abort, fields, reqparse
 
 from .models import *
 
-app = Blueprint('blueprint', __name__,
-    template_folder='templates')
+app = Blueprint('blueprint', __name__, template_folder='templates', url_prefix='/riffs')
 
-api = Namespace('riffs', description='Riffs related')
+api = Api(app, version='1.0', title='Riffs API',  description='All api calls that are riff related.',
+)
+
+ns = api.namespace('riffs', description='Riff operations')
+
 
 riff_serializer = api.model('Riff', {
     'name': fields.String(required=True, description='Unique riff name'),
