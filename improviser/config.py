@@ -24,7 +24,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = DEBUG
 
     WTF_CSRF_ENABLED = True
-    SECRET_KEY = os.urandom(24)
+    SECRET_KEY = os.urandom(24)  # Todo: check if this makes the session invalid each start
 
     # LOGGING
     LOGGER_NAME = "%s_log" % project_name
@@ -45,6 +45,11 @@ class Config(object):
     DEFAULT_MAIL_SENDER = "example@%s.com" % project_name
 
     LOAD_MODULES_EXTENSIONS = ['views', 'models']
+
+
+    EXTENSIONS = [
+        'improviser.extensions.db',
+    ]
 
     # ex: BLUEPRINTS = [('blog', {'url_prefix': '/myblog'})]  # where `blog` is a Blueprint instance
     BLUEPRINTS = [('riffs', {'url_prefix': '/riffs'}), ]

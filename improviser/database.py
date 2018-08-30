@@ -1,9 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql.base import UUID
-
-
-db = SQLAlchemy()
-db.UUID = UUID
+from .extensions import db
 
 
 def drop_all():

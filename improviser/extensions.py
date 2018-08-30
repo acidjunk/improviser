@@ -1,3 +1,5 @@
+from sqlalchemy.dialects.postgresql.base import UUID
+
 try:
     # only works in debug mode
     from flask_debugtoolbar import DebugToolbarExtension
@@ -8,3 +10,4 @@ except ImportError:
 
 from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
+db.UUID = UUID
