@@ -6,7 +6,7 @@ from flask_restplus import Resource, Api, marshal_with, abort, fields, reqparse
 
 from .models import *
 
-app = Blueprint('blueprint', __name__, template_folder='templates', url_prefix='/riffs')
+app = Blueprint('riffs', __name__, template_folder='templates', url_prefix='/riffs')
 
 api = Api(app, version='1.0', title='Riffs API',  description='All api calls that are riff related.',
 )

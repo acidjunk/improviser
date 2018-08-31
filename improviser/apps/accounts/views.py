@@ -5,8 +5,7 @@ from flask import render_template, request
 
 from .models import *
 
-app = Blueprint('blueprint', __name__, 
-    template_folder='templates')
+app = Blueprint('accounts', __name__, template_folder='templates', url_prefix='/accounts')
 
 
 @app.route("/")

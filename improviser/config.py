@@ -52,7 +52,7 @@ class Config(object):
     ]
 
     # ex: BLUEPRINTS = [('blog', {'url_prefix': '/myblog'})]  # where `blog` is a Blueprint instance
-    BLUEPRINTS = [('riffs', {'url_prefix': '/riffs'}), ]
+    BLUEPRINTS = ['riffs', 'accounts']  # todo: admin
 
 
 # config class used during tests
