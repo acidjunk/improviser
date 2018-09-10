@@ -4,7 +4,7 @@ from flask import Blueprint, flash
 from flask_admin import Admin
 from flask_admin.actions import action
 from flask_security import SQLAlchemyUserDatastore, Security, utils
-from flask_admin.contrib.sqla import ModelView
+# from flask_admin.contrib.sqla import ModelView
 from markupsafe import Markup
 from wtforms import PasswordField
 
@@ -14,8 +14,16 @@ from wtforms import PasswordField
 # Todo: check for a better way to get DB up in blueprint? not sure if this is ok
 from improviser.extensions import db
 
-app = Blueprint('admin', __name__, template_folder='templates')
-admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
+# app = Blueprint('admin', __name__, template_folder='templates', url_prefix='/riffs')
+# admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
+
+
+from .admin_blueprint import AdminBlueprint
+from improviser.extensions import db
+
+app = AdminBlueprint('admin2', __name__, url_prefix='/admin2')
+# app.add_view(ModelView(MyModel, db.session))
+
 
 
 # class UserAdminView(ModelView):
@@ -63,48 +71,48 @@ admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 #     #         return True
 
 
-class RiffAdminView(ModelView):
-    Riff.image = db.String
-    column_list = ['id', 'name', 'render_valid', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
-    column_default_sort = ('name', True)
-    column_filters = ('render_valid', 'number_of_bars', 'chord')
-    column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
-
-    # def is_accessible(self):
-    #     if 'admin' in current_user.roles:
-    #         return True
-
-    @action('render', 'Render', 'Are you sure you want to re-render selected riffs?')
-    def action_approve(self, ids):
-        try:
-            query = Riff.query.filter(Riff.id.in_(ids))
-            count = 0
-            for riff in query.all():
-                riff.render_valid = False
-                flash('{} render of riffs successfully rescheduled.'.format(count))
-        except Exception as error:
-            if not self.handle_view_exception(error):
-                flash('Failed to schedule re-render riff. {error}'.format(error=str(error)))
-
-    def _list_thumbnail(view, context, model, name):
-        return Markup(f'<img src="https://www.improviser.education/static/rendered/small/riff_{model.id}_c.png">')
-
-    column_formatters = {
-        'image': _list_thumbnail
-    }
-
-
-class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'is_global', 'created_by', 'created_at']
-    column_default_sort = ('name', True)
-    column_searchable_list = ('id', 'name', 'created_by')
-
-    # def is_accessible(self):
-    #     if 'admin' in current_user.roles:
-    #         return True
-
-
-admin.add_view(RiffAdminView(Riff, db.session))
-admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
+# class RiffAdminView(ModelView):
+#     Riff.image = db.String
+#     column_list = ['id', 'name', 'render_valid', 'difficulty', 'notes', 'number_of_bars', 'chord', 'image']
+#     column_default_sort = ('name', True)
+#     column_filters = ('render_valid', 'number_of_bars', 'chord')
+#     column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
+#
+#     # def is_accessible(self):
+#     #     if 'admin' in current_user.roles:
+#     #         return True
+#
+#     @action('render', 'Render', 'Are you sure you want to re-render selected riffs?')
+#     def action_approve(self, ids):
+#         try:
+#             query = Riff.query.filter(Riff.id.in_(ids))
+#             count = 0
+#             for riff in query.all():
+#                 riff.render_valid = False
+#                 flash('{} render of riffs successfully rescheduled.'.format(count))
+#         except Exception as error:
+#             if not self.handle_view_exception(error):
+#                 flash('Failed to schedule re-render riff. {error}'.format(error=str(error)))
+#
+#     def _list_thumbnail(view, context, model, name):
+#         return Markup(f'<img src="https://www.improviser.education/static/rendered/small/riff_{model.id}_c.png">')
+#
+#     column_formatters = {
+#         'image': _list_thumbnail
+#     }
+#
+#
+# class RiffExerciseAdminView(ModelView):
+#     column_list = ['id', 'name', 'is_global', 'created_by', 'created_at']
+#     column_default_sort = ('name', True)
+#     column_searchable_list = ('id', 'name', 'created_by')
+#
+#     # def is_accessible(self):
+#     #     if 'admin' in current_user.roles:
+#     #         return True
+#
+#
+# admin.add_view(RiffAdminView(Riff, db.session))
+# admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
 # admin.add_view(UserAdminView(User, db.session))
 # admin.add_view(RolesAdminView(Role, db.session))
