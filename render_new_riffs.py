@@ -120,4 +120,3 @@ if __name__ == '__main__':
             print("Cleaning: as cleaning is enabled...")
             clean_png()
     os.unlink(pidfile)
-
