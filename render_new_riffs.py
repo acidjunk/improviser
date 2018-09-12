@@ -16,6 +16,7 @@ import boto3
 from render.render import Render, SIZES
 
 DISABLE_CLEAN = os.getenv('DISABLE_CLEAN', 0)
+LOCAL_RUN = os.getenv('LOCAL_RUN', False)
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
 
@@ -36,8 +37,9 @@ if os.path.isfile(pidfile):
     sys.exit()
 open(pidfile, 'w').write(pid)
 
-# if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
-#     sys.exit('Please set needed environment vars.')
+if not LOCAL_RUN:
+    if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
+        sys.exit('Please set needed environment vars.')
 
 
 def render(riff):
@@ -104,19 +106,18 @@ if __name__ == '__main__':
     riffs = response.json()
     rendered_riffs = []
     for riff in riffs:
-        # ALL
-        #if riff["render_valid"]:
         if not riff["render_valid"]:
             print("Rendering {}".format(riff["name"]))
             render(riff)
             rendered_riffs.append(riff["id"])
-
-            clean_garbage()
+            if not LOCAL_RUN:
+                clean_garbage()
 
     if len(rendered_riffs):
-        sync()
-        update_riffs(rendered_riffs)
-        if not DISABLE_CLEAN:
-            print("Cleaning: as cleaning is enabled...")
-            clean_png()
+        if not LOCAL_RUN:
+            sync()
+            update_riffs(rendered_riffs)
+            if not DISABLE_CLEAN:
+                print("Cleaning: as cleaning is enabled...")
+                clean_png()
     os.unlink(pidfile)
