@@ -24,7 +24,10 @@ Will bump version to 0.3.0
 Will bump version to 0.2.1
 
 ## Deploy
-`$ mkvirtualenv improviser_deploy`
-`$ cd app`
-`$ zappa update`
-
+```
+mkvirtualenv improviser_deploy
+pip install -r requirements/all.txt
+pip install -r requirements/deploy.txt
+cd improviser
+zappa update
+```
