@@ -61,10 +61,10 @@ def sync():
     client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     transfer = S3Transfer(client)
     for size in SIZES:
-        os.chdir(os.path.join(RENDER_PATH, size))
+        os.chdir(os.path.join(RENDER_PATH, str(size)))
         for file in glob.glob('*.png'):
             print("uploading file => {}".format(file)) 
-            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size, file))
+            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(str(size), file))
 
 
 def update_riffs(riff_ids):
