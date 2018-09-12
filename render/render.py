@@ -50,6 +50,7 @@ class Render:
         self.cleff = "treble"
 
         self.lilypond = "lilypond"
+        self.octaves = ['-3','-2','-1'
 
     def set_rootKeys(self, rootKeys):
         # allow to set new rootkey
@@ -71,40 +72,53 @@ class Render:
         self.currentKey = key
 
     def render(self):
-        #calculate filename
-        if sys.platform=="win32": fileName=("%s\\%s" % (self.renderPath, self.name))
-        else: fileName=("%s/%s" % (self.renderPath, self.name))
-        print(fileName)
-        fHandle=open("%s.ly" % fileName, 'w')
+        #calculate file_name
+        if sys.platform=="win32": file_name=("%s\\%s" % (self.renderPath, self.name))
+        else: file_name=("%s/%s" % (self.renderPath, self.name))
+        
+        for octave, file_postfix in self.octaves.items(): 
+            if file_postfix:
+                file_name="%s_%s.ly" % (file_name, file_postfix)
+            else:
+                file_name="%s.ly" % (file_name)
 
-        fHandle.write("\\transpose c %s {\n" % self.currentKey)
-        fHandle.write("{\n")
-        fHandle.write(self.lilypondVersion)
-        fHandle.write("\\clef %s\n" % self.cleff)
-        #fHandle.write("\\key c \\major\n")
-        for setting in self.settings:
-            fHandle.write(setting)
-        for note in self.notes:
-            fHandle.write(note + " ")
-        fHandle.write("\n")
-        fHandle.write("}\n")
-        fHandle.write("}\n")
-        fHandle.write(self.paperFormat)
+            print(file_name)
+            fHandle=open(file_name, 'w')
+             
+            fHandle.write("\\transpose c %s {\n" % self.currentKey)
+            fHandle.write("{\n")
+            if file_postfix:
+               fHandle.write("\\relative %s {\n" % octave 
 
-        fHandle.close()
-        for size in self.sizes:
-            #render it in a couple of different dpi's and folders
-            #self.sizes = [("small",72),("medium",150),("large",300)]
-            cmd="%s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size[1], self.renderPath, size[0], self.name, fileName)
-            print(cmd)
-            os.system(cmd)
+            fHandle.write(self.lilypondVersion)
+            fHandle.write("\\clef %s\n" % self.cleff)
+            #fHandle.write("\\key c \\major\n")
+            for setting in self.settings:
+                fHandle.write(setting)
+            for note in self.notes:
+                fHandle.write(note + " ")
+            fHandle.write("\n")
+            fHandle.write("}\n")
+
+            if file_postfix:
+               fHandle.write("}\n" % octave 
+            fHandle.write("}\n")
+            fHandle.write(self.paperFormat)
+
+            fHandle.close()
+            for size in self.sizes:
+                #render it in a couple of different dpi's and folders
+                #self.sizes = [("small",72),("medium",150),("large",300)]
+                cmd="%s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size[1], self.renderPath, size[0], self.name, fileName)
+                print(cmd)
+                os.system(cmd)
         return True
  
     
     def render_riff(self):
         #This renders a riff, it gets the key and major/minor from the caller
         #
-        #calculate filename
+        #calculate file_name
         if sys.platform=="win32": fileName=("%s\\riff_%s_%s" % (self.renderPath, self.currentKey, self.name))
         else: fileName=("%s/riff_%s_%s" % (self.renderPath, self.currentKey, self.name))
 

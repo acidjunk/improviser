@@ -85,7 +85,8 @@ def clean():
 if __name__ == '__main__':
     response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
-        sys.exit("Unable to query riffs")
+        print("Unable to query riffs")
+        sys.exit()
         os.unlink(pidfile)
     riffs = response.json()
     rendered_riffs = []
@@ -93,8 +94,10 @@ if __name__ == '__main__':
         # ALL
         #if riff["render_valid"]:
         if not riff["render_valid"]:
+            print("Rendering {}".format(riff["name"]))
             render(riff)
             rendered_riffs.append(riff["id"])
+            
     if len(rendered_riffs):
         sync()
         update_riffs(rendered_riffs)
