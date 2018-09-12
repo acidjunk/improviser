@@ -98,6 +98,8 @@ def cleanpng():
 
 
 if __name__ == '__main__':
+    sync()
+    1/0
     response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
         print("Unable to query riffs")
