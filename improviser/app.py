@@ -294,7 +294,7 @@ class RiffResourceList(Resource):
         riffs = riffs_query.all()
         for riff in riffs:
             riff.notes_abc = f"{convertToMusicXML(riff.notes)}"
-            riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+            riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         return riffs
 
     @api.expect(riff_serializer)
@@ -315,7 +315,7 @@ class RiffResource(Resource):
     @marshal_with(riff_fields)
     def get(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
-        riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+        riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         riff.notes_abc = f"abc"
         return riff
 
@@ -471,7 +471,7 @@ class RiffAdminView(ModelView):
                 flash('Failed to schedule re-render riff. {error}'.format(error=str(error)))
 
     def _list_thumbnail(view, context, model, name):
-        return Markup(f'<img src="https://www.improviser.education/static/rendered/small/riff_{model.id}_c.png">')
+        return Markup(f'<img src="https://www.improviser.education/static/rendered/80/riff_{model.id}_c.png">')
 
     column_formatters = {
         'image': _list_thumbnail
