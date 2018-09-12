@@ -411,6 +411,7 @@ class UserAdminView(ModelView):
 
     # Automatically display human-readable names for the current and available Roles when creating or editing a User
     column_auto_select_related = True
+    can_set_page_size = True
 
     # Prevent administration of Users unless the currently logged-in user has the "admin" role
     def is_accessible(self):
@@ -453,6 +454,7 @@ class RiffAdminView(ModelView):
     column_default_sort = ('name', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')
     column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
+    can_set_page_size = True
 
     def is_accessible(self):
         if 'admin' in current_user.roles:
@@ -482,6 +484,7 @@ class RiffExerciseAdminView(ModelView):
     column_list = ['id', 'name', 'is_global', 'created_by', 'created_at']
     column_default_sort = ('name', True)
     column_searchable_list = ('id', 'name', 'created_by')
+    can_set_page_size = True
 
     def is_accessible(self):
         if 'admin' in current_user.roles:
