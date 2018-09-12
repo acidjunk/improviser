@@ -13,10 +13,9 @@ import requests
 from boto3.s3.transfer import S3Transfer
 import boto3
 
-from render.render import Render
+from render.render import Render, SIZES
 
 DISABLE_CLEAN = os.getenv('DISABLE_CLEAN', 0)
-SIZES = ['small', 'medium', 'large']
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
 
@@ -37,11 +36,13 @@ if os.path.isfile(pidfile):
     sys.exit()
 open(pidfile, 'w').write(pid)
 
-if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
-    sys.exit('Please set needed environment vars.')
+# if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
+#     sys.exit('Please set needed environment vars.')
+
 
 def render(riff):
     keys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
+
 
     for key in keys:
         renderer.name = "riff_%s_%s" % (riff["id"], key)
@@ -52,6 +53,7 @@ def render(riff):
         if not renderer.render():
             print("Error: couldn't render riff.id: {}".format(riff['id']))
 
+
 def sync():
     """Sync all .png files to S3 bucket."""
     client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -60,7 +62,8 @@ def sync():
         os.chdir(os.path.join(RENDER_PATH, size))
         for file in glob.glob('*.png'):
             print("uploading file => {}".format(file)) 
-            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size,file))
+            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(size, file))
+
 
 def update_riffs(riff_ids):
     payload = {'render_valid': True}
@@ -70,12 +73,22 @@ def update_riffs(riff_ids):
         response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload) 
         if response.status_code != 204:
             print("Error while updating riff")
-           
-def clean():
-    extensions = ['eps', 'count', 'tex', 'texi', 'png']
+
+
+def clean_garbage():
+    extensions = ['eps', 'count', 'tex', 'texi']
     os.chdir(RENDER_PATH)
     print("Cleaning root *.ly")
     os.system('rm -f *.ly')
+    for size in SIZES:
+        for extension in extensions:
+            print("Cleaning rm -f {folder}/*.{ext}".format(folder=size, ext=extension))
+            os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
+
+
+def cleanpng():
+    extensions = ['png']
+    os.chdir(RENDER_PATH)
     for size in SIZES:
         for extension in extensions:
             print("Cleaning rm -f {folder}/*.{ext}".format(folder=size, ext=extension))
@@ -97,12 +110,14 @@ if __name__ == '__main__':
             print("Rendering {}".format(riff["name"]))
             render(riff)
             rendered_riffs.append(riff["id"])
-            
+
+            clean_garbage()
+
     if len(rendered_riffs):
         sync()
         update_riffs(rendered_riffs)
         if not DISABLE_CLEAN:
             print("Cleaning: as cleaning is enabled...")
-            clean()
+            clean_png()
     os.unlink(pidfile)
 
