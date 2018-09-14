@@ -2,7 +2,7 @@
 This script will query https://api.improviser.education for unrendered riffs. It will then render them and
 upload the rendered/changed riffs to an Amazon S3 bucket and flag the riff as rendered via a second API call.
 
-It has a check that ensures that only one instance can be running at the same time
+It has a check that ensures that only one instance can be running at the same time. Note: for now python 3.4 compatible.
 """
 import glob
 import json
@@ -73,7 +73,7 @@ def update_riffs(riff_ids):
         print("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id))
         print("Setting riff_id: {} to rendered -> True".format(riff_id))
         response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload) 
-        if response.status_code != 204:
+        if response.status_code not in [200, 201, 204]:
             print("Error while updating riff")
 
 
@@ -111,14 +111,12 @@ if __name__ == '__main__':
         if not riff["render_valid"]:
             print("Rendering {}".format(riff["name"]))
             render(riff)
+            #todo check if we can find ione of the .pngs' of the rendered file? 
             rendered_riffs.append(riff["id"])
             if not LOCAL_RUN:
                 clean_garbage()
-
-    if len(rendered_riffs):
-        if not LOCAL_RUN:
-            sync()
-            update_riffs(rendered_riffs)
+                sync()
+                update_riffs(rendered_riffs)
             if not DISABLE_CLEAN:
                 print("Cleaning: as cleaning is enabled...")
                 clean_png()
