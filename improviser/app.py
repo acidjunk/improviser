@@ -294,7 +294,7 @@ class RiffResourceList(Resource):
         riffs = riffs_query.all()
         for riff in riffs:
             riff.notes_abc = f"{convertToMusicXML(riff.notes)}"
-            riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+            riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         return riffs
 
     @api.expect(riff_serializer)
@@ -315,7 +315,7 @@ class RiffResource(Resource):
     @marshal_with(riff_fields)
     def get(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
-        riff.image = f"https://www.improviser.education/static/rendered/large/riff_{riff.id}_c.png"
+        riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         riff.notes_abc = f"abc"
         return riff
 
@@ -411,6 +411,7 @@ class UserAdminView(ModelView):
 
     # Automatically display human-readable names for the current and available Roles when creating or editing a User
     column_auto_select_related = True
+    can_set_page_size = True
 
     # Prevent administration of Users unless the currently logged-in user has the "admin" role
     def is_accessible(self):
@@ -453,6 +454,7 @@ class RiffAdminView(ModelView):
     column_default_sort = ('name', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')
     column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
+    can_set_page_size = True
 
     def is_accessible(self):
         if 'admin' in current_user.roles:
@@ -471,7 +473,7 @@ class RiffAdminView(ModelView):
                 flash('Failed to schedule re-render riff. {error}'.format(error=str(error)))
 
     def _list_thumbnail(view, context, model, name):
-        return Markup(f'<img src="https://www.improviser.education/static/rendered/small/riff_{model.id}_c.png">')
+        return Markup(f'<img src="https://www.improviser.education/static/rendered/80/riff_{model.id}_c.png">')
 
     column_formatters = {
         'image': _list_thumbnail
@@ -482,6 +484,7 @@ class RiffExerciseAdminView(ModelView):
     column_list = ['id', 'name', 'is_global', 'created_by', 'created_at']
     column_default_sort = ('name', True)
     column_searchable_list = ('id', 'name', 'created_by')
+    can_set_page_size = True
 
     def is_accessible(self):
         if 'admin' in current_user.roles:
