@@ -15,7 +15,6 @@ import boto3
 
 from render.render import Render, SIZES
 
-DISABLE_CLEAN = os.getenv('DISABLE_CLEAN', 0)
 LOCAL_RUN = os.getenv('LOCAL_RUN', False)
 ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
@@ -88,7 +87,7 @@ def clean_garbage():
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
 
 
-def cleanpng():
+def clean_png():
     extensions = ['png']
     os.chdir(RENDER_PATH)
     for size in SIZES:
@@ -98,8 +97,6 @@ def cleanpng():
 
 
 if __name__ == '__main__':
-    sync()
-    1/0
     response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
         print("Unable to query riffs")
@@ -117,7 +114,5 @@ if __name__ == '__main__':
                 clean_garbage()
                 sync()
                 update_riffs(rendered_riffs)
-            if not DISABLE_CLEAN:
-                print("Cleaning: as cleaning is enabled...")
                 clean_png()
     os.unlink(pidfile)
