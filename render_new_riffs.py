@@ -67,7 +67,8 @@ def sync():
     os.chdir(os.path.join(RENDER_PATH, "svg"))
     for file in glob.glob('*.svg'):
         print("uploading file => {}".format(file)) 
-        result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/svg/{}".format(file))
+        result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/svg/{}".format(file),
+                                      extra_args={"ContentType": "image/svg+xml"})
 
 
 def update_riffs(riff_ids):
@@ -120,3 +121,5 @@ if __name__ == '__main__':
                 update_riffs(rendered_riffs)
                 clean_png()
     os.unlink(pidfile)
+    clean_png()
+    sync()
