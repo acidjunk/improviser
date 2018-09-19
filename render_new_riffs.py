@@ -56,7 +56,7 @@ def render(riff):
 
 
 def sync():
-    """Sync all .png files to S3 bucket."""
+    """Sync all .png and .svg files to S3 bucket."""
     client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     transfer = S3Transfer(client)
     for size in SIZES:
@@ -64,6 +64,10 @@ def sync():
         for file in glob.glob('*.png'):
             print("uploading file => {}".format(file)) 
             result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(str(size), file))
+    os.chdir(os.path.join(RENDER_PATH, "svg"))
+    for file in glob.glob('*.svg'):
+        print("uploading file => {}".format(file)) 
+        result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/svg/{}".format(file))
 
 
 def update_riffs(riff_ids):
@@ -105,7 +109,7 @@ if __name__ == '__main__':
     riffs = response.json()
     rendered_riffs = []
     for riff in riffs:
-        if riff["render_valid"]:
+        if not riff["render_valid"]:
             print("Rendering {}".format(riff["name"]))
             render(riff)
             # todo check if we can find one of the .pngs' of the rendered file?
