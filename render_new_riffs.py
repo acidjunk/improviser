@@ -105,10 +105,10 @@ if __name__ == '__main__':
     riffs = response.json()
     rendered_riffs = []
     for riff in riffs:
-        if not riff["render_valid"]:
+        if riff["render_valid"]:
             print("Rendering {}".format(riff["name"]))
             render(riff)
-            #todo check if we can find ione of the .pngs' of the rendered file? 
+            # todo check if we can find one of the .pngs' of the rendered file?
             rendered_riffs.append(riff["id"])
             if not LOCAL_RUN:
                 clean_garbage()

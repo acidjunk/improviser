@@ -20,14 +20,14 @@
 # This script will produce a set of scales based on one predefined scale in all keys
 import os
 
-SIZES = [60, 80, 100, 120, 140, 160, 180, 200, 220]
-
+# SIZES = [60, 80, 100, 120, 140, 160, 180, 200, 220]
+SIZES = [120]
 
 class Render:
     def __init__(self, renderPath, name="riff"):
         self.renderPath = renderPath
         self.name = name
-        self.lilypondVersion = '\\version "2.12.3"\n'
+        self.lilypondVersion = '\\version "2.19.82"\n'
         self.sizes = SIZES
         self.settings = []
         self.notes = []
@@ -42,7 +42,7 @@ class Render:
         self.rootKeys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
         self.paperFormat = """\paper{
             indent=0\mm
-            line-width=120\mm
+            line-width=200\mm
             oddFooterMarkup=##f
             oddHeaderMarkup=##f
             bookTitleMarkup = ##f
@@ -50,7 +50,7 @@ class Render:
         }"""
         self.cleff = "treble"
 
-        self.lilypond = "lilypond"
+        self.lilypond = "/usr/local/bin/lilypond"
         self.octaves = {"-1": ",", "0": None, "1": "'", "2": "''"}
 
     def set_rootKeys(self, rootKeys):
@@ -78,6 +78,9 @@ class Render:
             if not os.path.exists("%s/%s" % (self.renderPath, size)):
                 print("Creating folder: %s/%s" % (self.renderPath, size))
                 os.makedirs("%s/%s" % (self.renderPath, size))
+        if not os.path.exists("%s/svg" % self.renderPath):
+            print("Creating folder: svg")
+            os.makedirs("%s/svg" % self.renderPath)
 
         for file_postfix, octave in self.octaves.items():
             file_name = "%s/%s" % (self.renderPath, self.name)
@@ -107,9 +110,16 @@ class Render:
 
             fHandle.close()
             for size in self.sizes:
-                cmd="%s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
-                                                                                  self.renderPath, size,
-                                                                                  output_file_name, file_name)
-                print(cmd)
+                # #PNG
+                # cmd = "%s -s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
+                #                                                                        self.renderPath, size,
+                #                                                                        output_file_name, file_name)
+                # os.system(cmd)
+                #SVG
+                cmd = "%s -s -dbackend=svg -dcrop -o %s/svg/%s %s.ly" % (self.lilypond, self.renderPath, output_file_name,
+                                                                         file_name)
                 os.system(cmd)
+                # mv cropped file over paper sized file:
+                os.system('mv %s/svg/%s.cropped.svg %s/svg/%s.svg' % (self.renderPath, output_file_name,
+                                                                      self.renderPath, output_file_name))
         return True
