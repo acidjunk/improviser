@@ -110,10 +110,10 @@ class Render:
             fHandle.close()
             for size in self.sizes:
                 # #PNG
-                # cmd = "%s -s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
-                #                                                                        self.renderPath, size,
-                #                                                                        output_file_name, file_name)
-                # os.system(cmd)
+                cmd = "%s -s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
+                                                                                       self.renderPath, size,
+                                                                                       output_file_name, file_name)
+                os.system(cmd)
                 #SVG
                 cmd = "%s -s -dbackend=svg -dcrop -o %s/svg/%s %s.ly" % (self.lilypond, self.renderPath, output_file_name,
                                                                          file_name)
