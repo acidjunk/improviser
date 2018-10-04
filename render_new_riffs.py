@@ -24,17 +24,9 @@ API_PASS = os.getenv('API_PASS')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') 
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') 
 AWS_BUCKET_NAME = "improviser.education"
-
+KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
 
 renderer = Render(renderPath=RENDER_PATH)
-
-pid = str(os.getpid())
-pidfile = "/tmp/render_new_riffs.pid"
-
-if os.path.isfile(pidfile):
-    print("%s already exists, exiting" % pidfile)
-    sys.exit()
-open(pidfile, 'w').write(pid)
 
 if not LOCAL_RUN:
     if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
@@ -42,10 +34,8 @@ if not LOCAL_RUN:
 
 
 def render(riff):
-    keys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
-
-
-    for key in keys:
+    rendered_riff_ids =[]
+    for key in KEYS:
         renderer.name = "riff_%s_%s" % (riff["id"], key)
         notes = riff["notes"].split(" ")
         renderer.addNotes(notes)
@@ -53,6 +43,15 @@ def render(riff):
         renderer.doTranspose(key)
         if not renderer.render():
             print("Error: couldn't render riff.id: {}".format(riff['id']))
+        # try to find the svg and retrieve metadata
+    riff_name = "riff_{}_c.svg".format(riff["id"])
+    if os.path.exists("rendered/svg/{riff_name}".format(riff_name=riff_name)):
+        rendered_riff_ids.append(riff['id'])
+    else:
+        print("Error: couldn't find rendered svg {}! Quitting...".format(riff_name))
+        sys.exit()
+
+    print("Rendered {} images: {}".format(len(rendered_riff_ids), rendered_riff_ids))
 
 
 def sync():
@@ -101,12 +100,44 @@ def clean_png():
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
 
 
+def retrieve_metadata(riff_ids):
+    for riff_id in riff_ids:
+        filelist = []
+        for key in KEYS:
+            for octave in ['-1', '1', '2']:
+                filelist.append(("{}_{}".format(key, octave),
+                                 "rendered/svg/riff_{}_{}_{}.svg".format(riff_id, key, octave)))
+            filelist.append((key, "rendered/svg/riff_{}_{}.svg".format(riff_id, key)))
+
+        for file_suffix, file_name in filelist:
+            if(os.path.exists(file_name)):
+                print("File {} => {}".format(file_suffix, file_name))
+            else:
+                # ERROR?????
+                # Todo: comment remove after debugging
+                # print("Error: file {} not found".format(file_name))
+                pass
+
+
+        # print(filelist)
+
+
 if __name__ == '__main__':
+
+    pid = str(os.getpid())
+    pidfile = "/tmp/render_new_riffs.pid"
+
+    if os.path.isfile(pidfile):
+        print("%s already exists, exiting" % pidfile)
+        sys.exit()
+    open(pidfile, 'w').write(pid)
+
     response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
         print("Unable to query riffs")
-        sys.exit()
         os.unlink(pidfile)
+        sys.exit()
+
     riffs = response.json()
     rendered_riffs = []
     for riff in riffs:
