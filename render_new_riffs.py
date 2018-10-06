@@ -9,7 +9,9 @@ import json
 import os
 import sys
 
+import pysvg.parser
 import requests
+import xmltodict
 from boto3.s3.transfer import S3Transfer
 import boto3
 
@@ -109,14 +111,26 @@ def retrieve_metadata(riff_ids):
                                  "rendered/svg/riff_{}_{}_{}.svg".format(riff_id, key, octave)))
             filelist.append((key, "rendered/svg/riff_{}_{}.svg".format(riff_id, key)))
 
+        riff_metadata = []
         for file_suffix, file_name in filelist:
             if(os.path.exists(file_name)):
-                print("File {} => {}".format(file_suffix, file_name))
+                # print("File {} => {}".format(file_suffix, file_name))
+                with open(file_name, 'r') as svg_file:
+                    svg_data = xmltodict.parse(svg_file.read())
+
+
+                width = round(float(svg_data["svg"]["@width"][:-2])*3.779527559)
+                height = round(float(svg_data["svg"]["@height"][:-2])*3.779527559)
+                # translate(0.0000, 5.0450)
+                mid_staff_line = round(float(svg_data["svg"]["line"][2]["@transform"][:-2].split(",")[1][1:])*6.64)
+                # print("Width: {}, Height: {}, Mid noteline {}".format(width, height, mid_staff_line))
+                riff_metadata.append({file_suffix: "{}x{}:{}".format(width, height, mid_staff_line)})
             else:
                 # ERROR?????
                 # Todo: comment remove after debugging
                 # print("Error: file {} not found".format(file_name))
                 pass
+        print("'{}':{}".format(riff_id, riff_metadata))
 
 
         # print(filelist)
