@@ -72,9 +72,12 @@ def sync():
                                       extra_args={"ContentType": "image/svg+xml"})
 
 
-def update_riffs(riff_ids):
-    payload = {'render_valid': True}
+def update_riffs(riff_ids, image_info=None):
     for riff_id in riff_ids:
+        payload = {'render_valid': True}
+        if image_info:
+            payload["image_info"] = image_info[riff_id]
+            print(payload)
         print("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id))
         print("Setting riff_id: {} to rendered -> True".format(riff_id))
         response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload) 
@@ -118,22 +121,23 @@ def retrieve_metadata(riff_ids):
                 with open(file_name, 'r') as svg_file:
                     svg_data = xmltodict.parse(svg_file.read())
 
-
                 width = round(float(svg_data["svg"]["@width"][:-2])*3.779527559)
                 height = round(float(svg_data["svg"]["@height"][:-2])*3.779527559)
                 # translate(0.0000, 5.0450)
-                mid_staff_line = round(float(svg_data["svg"]["line"][2]["@transform"][:-2].split(",")[1][1:])*6.64)
-                # print("Width: {}, Height: {}, Mid noteline {}".format(width, height, mid_staff_line))
-                riff_metadata.append({file_suffix: "{}x{}:{}".format(width, height, mid_staff_line)})
+                staff_center = round(float(svg_data["svg"]["line"][2]["@transform"][:-2].split(",")[1][1:])*6.64)
+                riff_metadata.append({"key_octave": file_suffix, "width": width, "height": height,
+                                      "staff_center": staff_center})
             else:
                 # ERROR?????
                 # Todo: comment remove after debugging
-                # print("Error: file {} not found".format(file_name))
+                print("Error: file {} not found".format(file_name))
+                sys.exit()
                 pass
-        print("'{}':{}".format(riff_id, riff_metadata))
+        print({riff_id: riff_metadata})
+        update_riffs([riff_id], {riff_id: riff_metadata})
+        # only one:
+        # sys.exit()
 
-
-        # print(filelist)
 
 
 if __name__ == '__main__':

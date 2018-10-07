@@ -6,11 +6,13 @@ It has a check that ensures that only one instance can be running at the same ti
 
 Note: for now python 3.4 compatible.
 """
-from render_new_riffs import retrieve_metadata
+import requests
 
-riff_ids = ['16e44ba5-4dc3-4d1c-9469-a30eec620ad7',
-            '2392a94a-be9b-4360-b36a-9c53b195a25e',
-            '5b0503b9-47e3-4684-a7a8-b0c1b4fc7ae9',
-            'e14e181e-0b2a-4a4f-acba-eddd8692b5bf']
+from render_new_riffs import retrieve_metadata, ENDPOINT_RIFFS
 
+response = requests.get("{}".format(ENDPOINT_RIFFS))
+
+riff_ids = [riff["id"] for riff in response.json()]
+print(riff_ids)
+print("Starting metadata extraction\n**************")
 retrieve_metadata(riff_ids)

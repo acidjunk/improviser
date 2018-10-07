@@ -119,6 +119,7 @@ class Riff(db.Model):
     chord = db.Column(db.String(255), index=True)
     render_valid = db.Column(db.Boolean, default=False)
     render_date = db.Column(db.DateTime)
+    image_info = db.Column(db.JSON)
     riff_exercises = db.relationship('RiffExercise', secondary='riff_exercise_items',
                                      backref=db.backref('riffs', lazy='dynamic'))
     def __repr__(self):
@@ -190,6 +191,7 @@ riff_serializer = api.model('Riff', {
 
 riff_render_serializer = api.model('Riff', {
     'render_valid': fields.Boolean(required=True, description='Whether a render is deemed valid.'),
+    'image_info': fields.String(description="The metainfo for all images for this riff, per key, octave")
 })
 
 riff_exercise_serializer = api.model('RiffExercise', {
@@ -203,6 +205,12 @@ riff_exercise_item_serializer = api.model('RiffExerciseItem', {
     'riff_id': fields.Boolean(description="Is this riff exercise visible to everyone?"),
 })
 
+image_info_marshaller = parameter_marshaller = {
+    "key_octave": fields.String,
+    "width": fields.Integer,
+    "height": fields.Integer,
+    "staff_center": fields.Integer,
+}
 
 riff_fields = {
     'id': fields.String,
@@ -213,6 +221,7 @@ riff_fields = {
     'notes_abc': fields.String(description='ABC representation of the riff (computed)'),
     'chord': fields.String,
     'image': fields.String,
+    'image_info': fields.Nested(image_info_marshaller),
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
 }
@@ -317,6 +326,7 @@ class RiffResource(Resource):
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         riff.notes_abc = f"abc"
+        print(riff.image_info)
         return riff
 
     @api.expect(riff_serializer)
@@ -332,6 +342,7 @@ class RiffResourceRendered(Resource):
     def put(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.render_valid = api.payload["render_valid"]
+        riff.image_info = api.payload["image_info"]
         riff.render_date = datetime.datetime.now()
         db.session.commit()
         return 204
