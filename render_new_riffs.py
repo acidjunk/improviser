@@ -5,11 +5,9 @@ upload the rendered/changed riffs to an Amazon S3 bucket and flag the riff as re
 It has a check that ensures that only one instance can be running at the same time. Note: for now python 3.4 compatible.
 """
 import glob
-import json
 import os
 import sys
 
-import pysvg.parser
 import requests
 import xmltodict
 from boto3.s3.transfer import S3Transfer
