@@ -167,6 +167,7 @@ if __name__ == '__main__':
             if not LOCAL_RUN:
                 clean_garbage()
                 sync()
+                print(os.getcwd()) # Todo -> check this:local first?
                 retrieve_metadata(rendered_riffs)
                 clean_png()
 
