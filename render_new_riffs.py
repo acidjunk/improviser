@@ -103,6 +103,8 @@ def clean_png():
         for extension in extensions:
             print("Cleaning rm -f {folder}/*.{ext}".format(folder=size, ext=extension))
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
+    print("Cleaning rm -f svg/*.svg")
+    os.system('rm -f svg/*.svg')
 
 
 def retrieve_metadata(riff_ids):
@@ -162,13 +164,13 @@ if __name__ == '__main__':
         if not riff["render_valid"]:
             print("Rendering {}".format(riff["name"]))
             render(riff)
-            # todo check if we can find one of the .pngs' of the rendered file?
+            rendered_riffs = []
             rendered_riffs.append(riff["id"])
             if not LOCAL_RUN:
                 clean_garbage()
                 sync()
-                update_riffs(rendered_riffs)
+                retrieve_metadata(rendered_riffs)
                 clean_png()
+
     os.unlink(pidfile)
-    clean_png()
-    sync()
+
