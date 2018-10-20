@@ -139,7 +139,6 @@ def retrieve_metadata(riff_ids):
         # sys.exit()
 
 
-
 if __name__ == '__main__':
 
     pid = str(os.getpid())

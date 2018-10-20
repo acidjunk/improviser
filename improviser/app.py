@@ -23,6 +23,8 @@ from wtforms import PasswordField
 VERSION = '0.2.0'
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
+KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
+OCTAVES = [-1, 0, 1, 2]
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
@@ -217,13 +219,23 @@ riff_fields = {
     'difficulty': fields.String,
     'name': fields.String,
     'number_of_bars': fields.Integer,
-    'notes': fields.String,
-    'notes_abc': fields.String(description='ABC representation of the riff (computed)'),
     'chord': fields.String,
     'image': fields.String,
     'image_info': fields.Nested(image_info_marshaller),
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
+}
+
+music_xml_info_marshaller = {
+    "key_octave": fields.String,
+    "music_xml": fields.String,
+}
+
+riff_detail_fields = {
+    **riff_fields,
+    'music_xml_info': fields.List(
+        fields.Nested(music_xml_info_marshaller),
+        description='Music XML representation of the riff in all available keys')
 }
 
 riff_exercise_fields = {
@@ -248,15 +260,15 @@ riff_exercise_arguments.add_argument('search_phrase', type=str, required=False,
                                      help='Return only items that contain the search_phrase')
 
 
-def convertToMusicXML(lilypond):
+def convertToMusicXML(lilypond, tranpose='c'):
     import ly.musicxml
     e = ly.musicxml.writer()
 
-    prefix = """\transpose c c {
+    prefix = """\\transpose c %s {
     {
-    \version "2.12.3"
-    \clef treble
-    \time 4/4
+    \\version "2.12.3"
+    \\clef treble
+    \\time 4/4
     \override Staff.TimeSignature #'stencil = ##f
     """
     postfix = """}
@@ -273,12 +285,12 @@ def convertToMusicXML(lilypond):
     xml_header = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">"""
 
-    lilypond = f"{prefix}\n{lilypond}\n{postfix}"
-
+    lilypond = f"{prefix % tranpose}\n{lilypond}\n{postfix}"
     e.parse_text(lilypond)
-    xml = bytes(xml_header, encoding='UTF-8') + e.musicxml().tostring()
-    return {xml}
-
+    # xml = bytes(xml_header, encoding='UTF-8') + e.musicxml().tostring()
+    # return {xml}
+    xml = xml_header + str(e.musicxml().tostring())
+    return xml
 
 @api.route('/riffs')
 class RiffResourceList(Resource):
@@ -302,7 +314,6 @@ class RiffResourceList(Resource):
 
         riffs = riffs_query.all()
         for riff in riffs:
-            riff.notes_abc = f"{convertToMusicXML(riff.notes)}"
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         return riffs
 
@@ -321,12 +332,16 @@ class RiffResourceList(Resource):
 @api.route('/riffs/<string:riff_id>')
 class RiffResource(Resource):
 
-    @marshal_with(riff_fields)
+    @marshal_with(riff_detail_fields)
     def get(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first_or_404()
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
-        riff.notes_abc = f"abc"
-        print(riff.image_info)
+        # todo: marshall dict -> key:music_xml
+        result = []
+        for octave in OCTAVES:
+            result += [{"key_octave": key if not octave else f"{key}_{octave}",
+                        "music_xml": convertToMusicXML(riff.notes, key)} for key in KEYS]
+        riff.music_xml_info = result
         return riff
 
     @api.expect(riff_serializer)
