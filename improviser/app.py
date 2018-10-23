@@ -219,6 +219,7 @@ riff_fields = {
     'difficulty': fields.String,
     'name': fields.String,
     'number_of_bars': fields.Integer,
+    'notes': fields.String,
     'chord': fields.String,
     'image': fields.String,
     'image_info': fields.Nested(image_info_marshaller),
