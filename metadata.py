@@ -10,9 +10,9 @@ import requests
 
 from render_new_riffs import retrieve_metadata, ENDPOINT_RIFFS
 
-response = requests.get("{}".format(ENDPOINT_RIFFS))
-
-riff_ids = [riff["id"] for riff in response.json()]
+#response = requests.get("{}".format(ENDPOINT_RIFFS))
+#riff_ids = [riff["id"] for riff in response.json()]
+riff_ids = ["080286dd-0ac2-4bb9-9269-e70a4c049167"]
 print(riff_ids)
 print("Starting metadata extraction\n**************")
 retrieve_metadata(riff_ids)
