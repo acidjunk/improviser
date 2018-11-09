@@ -59,6 +59,7 @@ class Riff(Base):
     notes = Column(String(255))
     chord = Column(String(255), index=True)
     # multi_chord = Column(Boolean, default=False)
+    # scale_trainer_enabled = Column(Boolean, default=False)
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
     image_info = Column(JSON)

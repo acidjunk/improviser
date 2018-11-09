@@ -5,19 +5,15 @@ from flask import Flask, url_for
 
 from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
-from flask_admin.actions import action
-from flask_admin.contrib.sqla import ModelView
 
 from flask_cors import CORS
-
-from flask_login import current_user
-from flask_security import (Security, login_required,
-                            SQLAlchemySessionUserDatastore, utils)
-
-from flask_restplus import Api
+from flask_security import (Security, SQLAlchemySessionUserDatastore)
 
 from database import db_session
 from models import User, Role, RiffExercise, Riff
+
+from apis import api
+
 
 # Create app
 app = Flask(__name__, static_url_path='/static')
@@ -60,8 +56,6 @@ app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 # Setup Flask-Security
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Role)
 security = Security(app, user_datastore)
-api = Api(app)
-
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -81,12 +75,9 @@ def security_context_processor():
 
 
 if __name__ == '__main__':
+    api.init_app(app)
     admin.add_view(RiffAdminView(Riff, db_session))
     admin.add_view(RiffExerciseAdminView(RiffExercise, db_session))
     admin.add_view(UserAdminView(User, db_session))
     admin.add_view(RolesAdminView(Role, db_session))
-
-
-
-
     app.run()

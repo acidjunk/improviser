@@ -1,14 +1,13 @@
 import datetime
 from database import db_session
 from flask import request
-from flask_restplus import Resource, fields, marshal_with, reqparse, abort
-from main import api
+from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from models import Riff
-
 
 KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
 OCTAVES = [-1, 0, 1, 2]
 
+api = Namespace('riffs', description='Riff related operations')
 
 
 riff_serializer = api.model('Riff', {
@@ -18,7 +17,7 @@ riff_serializer = api.model('Riff', {
     'chord': fields.String(description='Chord if known'),
 })
 
-riff_render_serializer = api.model('Riff', {
+riff_render_serializer = api.model('RenderedRiff', {
     'render_valid': fields.Boolean(required=True, description='Whether a render is deemed valid.'),
     'image_info': fields.String(description="The metainfo for all images for this riff, per key, octave")
 })
@@ -119,7 +118,8 @@ def convertToMusicXML(lilypond, tranpose='c'):
     xml = xml_header + str(e.musicxml().tostring())
     return xml
 
-@api.route('/riffs')
+
+@api.route('/')
 class RiffResourceList(Resource):
 
     @marshal_with(riff_fields)
@@ -156,7 +156,7 @@ class RiffResourceList(Resource):
         return 201
 
 
-@api.route('/riffs/<string:riff_id>')
+@api.route('/<string:riff_id>')
 class RiffResource(Resource):
 
     @marshal_with(riff_detail_fields)
@@ -178,7 +178,7 @@ class RiffResource(Resource):
         return 204
 
 
-@api.route('/riffs/rendered/<string:riff_id>')
+@api.route('/rendered/<string:riff_id>')
 class RiffResourceRendered(Resource):
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
