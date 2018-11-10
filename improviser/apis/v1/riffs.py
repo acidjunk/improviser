@@ -11,7 +11,6 @@ api = Namespace("riffs", description="Riff related operations")
 
 
 riff_serializer = api.model("Riff", {
-    "id"
     "name": fields.String(required=True, description="Unique riff name"),
     "number_of_bars": fields.Integer(required=True, description="Number of bars"),
     "notes": fields.String(required=True, description="Lilypond representation of the riff"),
@@ -67,7 +66,6 @@ riff_detail_fields = {
 }
 
 riff_exercise_fields = {
-    'id': fields.String,
     'name': fields.String,
     # 'riffs': fields.List,
     'created_by': fields.String,  # or UUID of the user?

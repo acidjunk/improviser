@@ -53,5 +53,5 @@ class ScaleTrainerResourceList(Resource):
     @marshal_with(riff_fields)
     def get(self):
         #Todo: query riffs that are allowed in scaletrainer
-        riffs = Riff.query.filter(Riff.number_of_bars==1 or Riff.number_of_bars==2).all()
+        riffs = Riff.query.filter(Riff.number_of_bars == 1 or Riff.number_of_bars == 2).all()
         return riffs

@@ -8,8 +8,10 @@ The REST API server for the improviser-client
     pip install -r requirements.txt
     createdb improviser
     createuser improviser -sP
-    python app.py db upgrade
-    python app.py runserver --debug
+    cd improviser
+    DEBUG=1 PYTHON_PATH=. flask db upgrade
+    DEBUG=1 PYTHON_PATH=. flask run
+
 
 ## Version handling
 

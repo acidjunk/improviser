@@ -8,6 +8,7 @@ from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
 from flask_cors import CORS
+from flask_migrate import Migrate
 from flask_security import (Security, SQLAlchemySessionUserDatastore)
 
 from database import db_session
@@ -81,4 +82,6 @@ admin.add_view(RolesAdminView(Role, db_session))
 logger.info("Ready loading admin views and api")
 
 if __name__ == '__main__':
+    migrate = Migrate(app, db)
+
     app.run()
