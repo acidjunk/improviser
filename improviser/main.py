@@ -1,4 +1,6 @@
 import os
+import structlog
+
 from admin_views import UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView
 
 from flask import Flask, url_for
@@ -12,6 +14,7 @@ from database import db_session
 from models import User, Role, RiffExercise, Riff
 
 from apis import api
+logger = structlog.get_logger(__name__)
 
 # Create app
 app = Flask(__name__, static_url_path='/static')
@@ -75,6 +78,7 @@ admin.add_view(RiffAdminView(Riff, db_session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db_session))
 admin.add_view(UserAdminView(User, db_session))
 admin.add_view(RolesAdminView(Role, db_session))
+logger.info("Ready loading admin views and api")
 
 if __name__ == '__main__':
     app.run()

@@ -58,8 +58,10 @@ class Riff(Base):
     number_of_bars = Column(Integer())
     notes = Column(String(255))
     chord = Column(String(255), index=True)
-    # multi_chord = Column(Boolean, default=False)
+    # multi_chord = Column(JSON, default=False) # JSON with info about quarters in the riff  on which the chord changes happen
     # scale_trainer_enabled = Column(Boolean, default=False)
+    # backing_track_info = Column(Boolean, default=False)
+
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
     image_info = Column(JSON)

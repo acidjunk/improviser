@@ -4,33 +4,34 @@ from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from models import Riff
 
-KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
+KEYS = ["c", "cis", "d", "dis", "ees", "e", "f", "fis", "g", "gis", "aes", "a", "ais", "bes", "b"]
 OCTAVES = [-1, 0, 1, 2]
 
-api = Namespace('riffs', description='Riff related operations')
+api = Namespace("riffs", description="Riff related operations")
 
 
-riff_serializer = api.model('Riff', {
-    'name': fields.String(required=True, description='Unique riff name'),
-    'number_of_bars': fields.Integer(required=True, description='Number of bars'),
-    'notes': fields.String(required=True, description='Lilypond representation of the riff'),
-    'chord': fields.String(description='Chord if known'),
+riff_serializer = api.model("Riff", {
+    "id"
+    "name": fields.String(required=True, description="Unique riff name"),
+    "number_of_bars": fields.Integer(required=True, description="Number of bars"),
+    "notes": fields.String(required=True, description="Lilypond representation of the riff"),
+    "chord": fields.String(description="Chord if known"),
 })
 
-riff_render_serializer = api.model('RenderedRiff', {
-    'render_valid': fields.Boolean(required=True, description='Whether a render is deemed valid.'),
-    'image_info': fields.String(description="The metainfo for all images for this riff, per key, octave")
+riff_render_serializer = api.model("RenderedRiff", {
+    "render_valid": fields.Boolean(required=True, description="Whether a render is deemed valid."),
+    "image_info": fields.String(description="The metainfo for all images for this riff, per key, octave")
 })
 
-riff_exercise_serializer = api.model('RiffExercise', {
-    'name': fields.String(required=True, description='Unique exercise name'),
-    'is_global': fields.Boolean(description="Is this riff exercise visible to everyone?", default=False),
+riff_exercise_serializer = api.model("RiffExercise", {
+    "name": fields.String(required=True, description="Unique exercise name"),
+    "is_global": fields.Boolean(description="Is this riff exercise visible to everyone?", default=False),
 })
 
 # Todo: make this a nested list: so order can be dealt with easily
-riff_exercise_item_serializer = api.model('RiffExerciseItem', {
-    'riff_exercise_id': fields.String(required=True, description='Unique exercise name'),
-    'riff_id': fields.Boolean(description="Is this riff exercise visible to everyone?"),
+riff_exercise_item_serializer = api.model("RiffExerciseItem", {
+    "riff_exercise_id": fields.String(required=True, description="Unique exercise name"),
+    "riff_id": fields.Boolean(description="Is this riff exercise visible to everyone?"),
 })
 
 image_info_marshaller = parameter_marshaller = {
@@ -161,7 +162,7 @@ class RiffResource(Resource):
 
     @marshal_with(riff_detail_fields)
     def get(self, riff_id):
-        riff = Riff.query.filter_by(id=riff_id).first_or_404()
+        riff = Riff.query.filter(Riff.id == riff_id).first()
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         # todo: marshall dict -> key:music_xml
         result = []
