@@ -16,7 +16,7 @@ import boto3
 from render.render import Render, SIZES
 
 LOCAL_RUN = os.getenv('LOCAL_RUN', False)
-ENDPOINT_RIFFS = "https://api.improviser.education/riffs"
+ENDPOINT_RIFFS = "https://api.improviser.education/v1/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
 
 API_USER = os.getenv('API_USER')
@@ -56,6 +56,7 @@ def render(riff):
 
 def sync():
     """Sync all .png and .svg files to S3 bucket."""
+    current_dir = os.getcwd()
     client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     transfer = S3Transfer(client)
     for size in SIZES:
@@ -68,6 +69,7 @@ def sync():
         print("uploading file => {}".format(file)) 
         result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/svg/{}".format(file),
                                       extra_args={"ContentType": "image/svg+xml"})
+    os.chdir(current_dir)
 
 
 def update_riffs(riff_ids, image_info=None):
@@ -84,6 +86,7 @@ def update_riffs(riff_ids, image_info=None):
 
 
 def clean_garbage():
+    current_dir = os.getcwd()
     extensions = ['eps', 'count', 'tex', 'texi']
     os.chdir(RENDER_PATH)
     print("Cleaning root *.ly")
@@ -92,9 +95,11 @@ def clean_garbage():
         for extension in extensions:
             print("Cleaning rm -f {folder}/*.{ext}".format(folder=size, ext=extension))
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
+    os.chdir(current_dir)
 
 
 def clean_png():
+    current_dir = os.getcwd()
     extensions = ['png']
     os.chdir(RENDER_PATH)
     for size in SIZES:
@@ -103,6 +108,7 @@ def clean_png():
             os.system('rm -f {folder}/*.{ext}'.format(folder=size, ext=extension))
     print("Cleaning rm -f svg/*.svg")
     os.system('rm -f svg/*.svg')
+    os.chdir(current_dir)
 
 
 def retrieve_metadata(riff_ids):
