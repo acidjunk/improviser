@@ -8,15 +8,7 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, ForeignKey, Str
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
 
-class SQLAlchemyPrePing(SQLAlchemy):
-    def apply_pool_defaults(self, app, options):
-        options["pool_pre_ping"] = True
-        options["echo"] = app.config["SQLALCHEMY_ECHO"]
-        super().apply_pool_defaults(app, options)
-
-
-# Any because: https://github.com/python/mypy/issues/2477
-db = SQLAlchemyPrePing()
+db = SQLAlchemy()
 
 
 class RolesUsers(db.Model):  # Todo: not good to inherit from DB base???
@@ -67,9 +59,9 @@ class Riff(db.Model):
     number_of_bars = Column(Integer())
     notes = Column(String(255))
     chord = Column(String(255), index=True)
-    multi_chord = Column(JSON)  # JSON with info about quarters in the riff  on which the chord changes happen
+    multi_chord = Column(Boolean, default=False)
     scale_trainer_enabled = Column(Boolean, default=False)
-    backing_track_info = Column(JSON, default=False)
+    backing_track_info = Column(JSON, default=False)  # JSON with info about quarters in the riff on which the chord changes happen
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)

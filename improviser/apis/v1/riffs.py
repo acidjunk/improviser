@@ -15,6 +15,8 @@ riff_serializer = api.model("Riff", {
     "number_of_bars": fields.Integer(required=True, description="Number of bars"),
     "notes": fields.String(required=True, description="Lilypond representation of the riff"),
     "chord": fields.String(description="Chord if known"),
+    "multi_chord": fields.Boolean(description="Multiple chords in this riff?"),
+    "backing_track_info": fields.String(),
 })
 
 riff_render_serializer = api.model("RenderedRiff", {
@@ -33,11 +35,15 @@ riff_exercise_item_serializer = api.model("RiffExerciseItem", {
     "riff_id": fields.Boolean(description="Is this riff exercise visible to everyone?"),
 })
 
-image_info_marshaller = parameter_marshaller = {
+image_info_marshaller = {
     "key_octave": fields.String,
     "width": fields.Integer,
     "height": fields.Integer,
     "staff_center": fields.Integer,
+}
+backing_track_marshaller = {
+    "length": fields.Integer,
+    "chord": fields.String,
 }
 
 riff_fields = {
@@ -47,10 +53,13 @@ riff_fields = {
     'number_of_bars': fields.Integer,
     'notes': fields.String,
     'chord': fields.String,
+    'multi_chord': fields.Boolean,
     'image': fields.String,
     'image_info': fields.Nested(image_info_marshaller),
+    'backing_track_info': fields.Nested(backing_track_marshaller),
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
+    'created_date': fields.DateTime,
 }
 
 music_xml_info_marshaller = {
