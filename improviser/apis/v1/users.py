@@ -16,7 +16,7 @@ login_serializer = api.model("User", {
 class UserLoginResource(Resource):
 
     @api.expect(login_serializer)
-    def post(self, riff_id):
+    def post(self):
         # Todo implement real update
         return 204
 
@@ -24,7 +24,15 @@ class UserLoginResource(Resource):
 @api.route("/logout")
 class UserLogoutResource(Resource):
 
-    def post(self, riff_id):
+    def post(self, user):
+        # Todo implement check on auth token and clean it when OK.
+        return 204
+
+
+@api.route("/preferences")
+class UsePreferenceResource(Resource):
+
+    def post(self):
         # Todo implement check on auth token and clean it when OK.
         return 204
 
