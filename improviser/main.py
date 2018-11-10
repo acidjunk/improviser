@@ -8,14 +8,14 @@ from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_security import (Security, SQLAlchemySessionUserDatastore)
 
-from database import db_session
-from models import User, Role, RiffExercise, Riff
-
 from apis import api
+
+from database import db
+from database import User, Role, Riff, RiffExercise
+
 logger = structlog.get_logger(__name__)
 
 # Create app
@@ -57,12 +57,12 @@ app.config['SECURITY_CHANGE_URL'] = '/admin/change'
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 
 # Setup Flask-Security
-user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Role)
+user_datastore = SQLAlchemySessionUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
-    db_session.remove()
+    db.session.remove()
 
 
 # define a context processor for merging flask-admin's template context into the
@@ -79,13 +79,15 @@ def security_context_processor():
 
 # Views
 api.init_app(app)
-admin.add_view(RiffAdminView(Riff, db_session))
-admin.add_view(RiffExerciseAdminView(RiffExercise, db_session))
-admin.add_view(UserAdminView(User, db_session))
-admin.add_view(RolesAdminView(Role, db_session))
-migrate = Migrate(app, db=db_session) # T
-logger.info("Ready loading admin views and api")
+db.init_app(app)
 
+admin.add_view(RiffAdminView(Riff, db.session))
+admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
+admin.add_view(UserAdminView(User, db.session))
+admin.add_view(RolesAdminView(Role, db.session))
+
+migrate = Migrate(app, db)
+logger.info("Ready loading admin views and api")
 
 if __name__ == '__main__':
     app.run()

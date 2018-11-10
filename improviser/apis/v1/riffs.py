@@ -1,8 +1,8 @@
 import datetime
-from database import db_session
+from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from models import Riff
+from database import Riff
 
 KEYS = ["c", "cis", "d", "dis", "ees", "e", "f", "fis", "g", "gis", "aes", "a", "ais", "bes", "b"]
 OCTAVES = [-1, 0, 1, 2]
@@ -147,10 +147,10 @@ class RiffResourceList(Resource):
     def post(self):
         riff = Riff(**api.payload)
         try:
-            db_session.add(riff)
-            db_session.commit()
+            db.session.add(riff)
+            db.session.commit()
         except Exception as error:
-            db_session.rollback()
+            db.session.rollback()
             abort(400, 'DB error: {}'.format(str(error)))
         return 201
 
@@ -185,5 +185,5 @@ class RiffResourceRendered(Resource):
         riff.render_valid = api.payload["render_valid"]
         riff.image_info = api.payload["image_info"]
         riff.render_date = datetime.datetime.now()
-        db_session.commit()
+        db.session.commit()
         return 204

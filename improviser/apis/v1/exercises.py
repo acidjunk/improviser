@@ -1,10 +1,10 @@
 import datetime
 from .riffs import riff_fields
 
-from database import db_session
+from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from models import Riff, RiffExercise
+from database import Riff, RiffExercise
 
 
 api = Namespace("exercises", description="Exercise related operations")
@@ -39,10 +39,10 @@ class ExerciseResourceList(Resource):
     def post(self):
         exercise = RiffExercise(**api.payload)
         try:
-            db_session.add(exercise)
-            db_session.commit()
+            db.session.add(exercise)
+            db.session.commit()
         except Exception as error:
-            db_session.rollback()
+            db.session.rollback()
             abort(400, 'DB error: {}'.format(str(error)))
         return 201
 

@@ -1,8 +1,8 @@
 import datetime
-from database import db_session
+from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from models import RiffExercise
+from database import RiffExercise
 
 
 api = Namespace("lessons", description="Lesson related operations")

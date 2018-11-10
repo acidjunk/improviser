@@ -1,8 +1,7 @@
 import datetime
-from database import db_session
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from models import User
+from database import User
 
 
 api = Namespace("users", description="User related operations")

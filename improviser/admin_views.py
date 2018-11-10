@@ -4,7 +4,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user
 from flask_security import utils
 from markupsafe import Markup
-from models import Riff
+from database import Riff
 from sqlalchemy import String
 from wtforms import PasswordField
 

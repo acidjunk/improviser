@@ -47,3 +47,7 @@ zappa update
 ```
 rclone copy remote:improviser.education/static/rendered/svg .
 ```
+
+## Create a new migration
+
+    DATABASE_URI=your-devportsgres DEBUG=1 PYTHON_PATH=. FLASK_APP=main flask db migrate
