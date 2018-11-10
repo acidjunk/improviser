@@ -1,6 +1,6 @@
 from flask_restplus import Api
 
-from .riffs import api as riffs_ns
+from .v1.riffs import api as riffs_ns
 
 api = Api(
     title='iMproviser API',
@@ -8,4 +8,4 @@ api = Api(
     description='A restful api for the iMproviser',
 )
 
-api.add_namespace(riffs_ns)
+api.add_namespace(riffs_ns, path='/v1/riffs')

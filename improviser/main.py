@@ -2,7 +2,6 @@ import os
 from admin_views import UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView
 
 from flask import Flask, url_for
-
 from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
@@ -14,21 +13,17 @@ from models import User, Role, RiffExercise, Riff
 
 from apis import api
 
-
 # Create app
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
 # Todo: move config to other class??
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
 app.config['SECRET_KEY'] = 'super-secret'
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 
 app.config['FLASK_ADMIN_SWATCH'] = 'flatly'
 app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
-# app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-# app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
 app.config['SECURITY_PASSWORD_SALT'] = 'SALTSALTSALT'
@@ -74,10 +69,12 @@ def security_context_processor():
     )
 
 
+# Views
+api.init_app(app)
+admin.add_view(RiffAdminView(Riff, db_session))
+admin.add_view(RiffExerciseAdminView(RiffExercise, db_session))
+admin.add_view(UserAdminView(User, db_session))
+admin.add_view(RolesAdminView(Role, db_session))
+
 if __name__ == '__main__':
-    api.init_app(app)
-    admin.add_view(RiffAdminView(Riff, db_session))
-    admin.add_view(RiffExerciseAdminView(RiffExercise, db_session))
-    admin.add_view(UserAdminView(User, db_session))
-    admin.add_view(RolesAdminView(Role, db_session))
     app.run()
