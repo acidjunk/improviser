@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship, backref
 from database import Base
 
 
-class RolesUsers(Base):
+class RolesUsers(Base):  # Todo: not good to inherit from DB base???
     __tablename__ = 'roles_users'
     id = Column(Integer(), primary_key=True)
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))
@@ -58,15 +58,15 @@ class Riff(Base):
     number_of_bars = Column(Integer())
     notes = Column(String(255))
     chord = Column(String(255), index=True)
-    # multi_chord = Column(JSON, default=False) # JSON with info about quarters in the riff  on which the chord changes happen
-    # scale_trainer_enabled = Column(Boolean, default=False)
-    # backing_track_info = Column(Boolean, default=False)
-
+    multi_chord = Column(JSON)  # JSON with info about quarters in the riff  on which the chord changes happen
+    scale_trainer_enabled = Column(Boolean, default=False)
+    backing_track_info = Column(JSON, default=False)
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
+    created_date = Column(DateTime, default=datetime.datetime.utcnow)
     image_info = Column(JSON)
     riff_exercises = relationship('RiffExercise', secondary='riff_exercise_items',
-                                     backref=backref('riffs', lazy='dynamic'))
+                                  backref=backref('riffs', lazy='dynamic'))
     def __repr__(self):
         return '<Riff %r>' % self.name
 

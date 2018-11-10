@@ -8,6 +8,7 @@ from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_security import (Security, SQLAlchemySessionUserDatastore)
 
@@ -20,6 +21,7 @@ logger = structlog.get_logger(__name__)
 # Create app
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
+DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
 # Todo: move config to other class??
 app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
@@ -31,7 +33,9 @@ app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
 app.config['SECURITY_PASSWORD_SALT'] = 'SALTSALTSALT'
-
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Replace the next six lines with your own SMTP server settings
 app.config['SECURITY_EMAIL_SENDER'] = os.getenv('SECURITY_EMAIL_SENDER') if os.getenv('SECURITY_EMAIL_SENDER') \
     else 'no-reply@example.com'
@@ -79,9 +83,9 @@ admin.add_view(RiffAdminView(Riff, db_session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db_session))
 admin.add_view(UserAdminView(User, db_session))
 admin.add_view(RolesAdminView(Role, db_session))
+migrate = Migrate(app, db=db_session) # T
 logger.info("Ready loading admin views and api")
 
-if __name__ == '__main__':
-    migrate = Migrate(app, db)
 
+if __name__ == '__main__':
     app.run()

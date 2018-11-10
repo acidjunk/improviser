@@ -9,9 +9,12 @@ The REST API server for the improviser-client
     createdb improviser
     createuser improviser -sP
     cd improviser
-    DEBUG=1 PYTHON_PATH=. flask db upgrade
-    DEBUG=1 PYTHON_PATH=. flask run
+    DEBUG=1 PYTHON_PATH=. FLASK_APP=main flask db upgrade
+    DEBUG=1 PYTHON_PATH=. FLASK_APP=main flask run
 
+## WITH DB:
+
+    DATABASE_URI=postgres://user:pass@host/db_name DEBUG=1 PYTHON_PATH=. FLASK_APP=main flask run
 
 ## Version handling
 
@@ -37,4 +40,10 @@ zappa deploy
 ```
 workon imporviser_depploy
 zappa update
+```
+
+
+## Sync pictures: from inside SVG folder!
+```
+rclone copy remote:improviser.education/static/rendered/svg .
 ```

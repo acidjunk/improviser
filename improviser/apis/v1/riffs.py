@@ -172,7 +172,7 @@ class RiffResource(Resource):
 
     @api.expect(riff_serializer)
     def put(self, riff_id):
-        riff = Riff.query.filter_by(id=riff_id).first_or_404()
+        riff = Riff.query.filter_by(id=riff_id).first()
         # Todo implement real update
         return 204
 
@@ -181,7 +181,7 @@ class RiffResource(Resource):
 class RiffResourceRendered(Resource):
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
-        riff = Riff.query.filter_by(id=riff_id).first_or_404()
+        riff = Riff.query.filter_by(id=riff_id).first()
         riff.render_valid = api.payload["render_valid"]
         riff.image_info = api.payload["image_info"]
         riff.render_date = datetime.datetime.now()
