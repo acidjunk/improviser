@@ -11,7 +11,7 @@ from sqlalchemy.orm import relationship, backref
 db = SQLAlchemy()
 
 
-class RolesUsers(db.Model):  # Todo: not good to inherit from DB base???
+class RolesUsers(db.Model):
     __tablename__ = 'roles_users'
     id = Column(Integer(), primary_key=True)
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))

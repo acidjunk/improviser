@@ -23,7 +23,6 @@ app = Flask(__name__, static_url_path='/static')
 CORS(app)
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
-# Todo: move config to other class??
 app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
 app.config['SECRET_KEY'] = 'super-secret'
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
@@ -57,7 +56,7 @@ app.config['SECURITY_CHANGE_URL'] = '/admin/change'
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 
 # Setup Flask-Security
-user_datastore = SQLAlchemySessionUserDatastore(db, User, Role)
+user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
 security = Security(app, user_datastore)
 
 @app.teardown_appcontext
