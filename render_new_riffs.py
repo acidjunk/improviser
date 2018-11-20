@@ -37,7 +37,7 @@ def render(riff):
     rendered_riff_ids =[]
     for key in KEYS:
         renderer.name = "riff_%s_%s" % (riff["id"], key)
-        notes = riff["notes"].split(" ")
+        notes = riff["notes"]
         renderer.addNotes(notes)
         renderer.set_cleff('treble')
         renderer.doTranspose(key)

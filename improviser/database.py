@@ -59,9 +59,9 @@ class Riff(db.Model):
     number_of_bars = Column(Integer())
     notes = Column(String(255))
     chord = Column(String(255), index=True)
+    chord_info = Column(String(255))
     multi_chord = Column(Boolean, default=False)
     scale_trainer_enabled = Column(Boolean, default=False)
-    backing_track_info = Column(JSON, default=False)  # JSON with info about quarters in the riff on which the chord changes happen
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)

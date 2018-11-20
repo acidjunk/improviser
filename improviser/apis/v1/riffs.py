@@ -16,7 +16,7 @@ riff_serializer = api.model("Riff", {
     "notes": fields.String(required=True, description="Lilypond representation of the riff"),
     "chord": fields.String(description="Chord if known"),
     "multi_chord": fields.Boolean(description="Multiple chords in this riff?"),
-    "backing_track_info": fields.String(),
+    "chord_info": fields.String(),
 })
 
 riff_render_serializer = api.model("RenderedRiff", {
@@ -41,10 +41,6 @@ image_info_marshaller = {
     "height": fields.Integer,
     "staff_center": fields.Integer,
 }
-backing_track_marshaller = {
-    "length": fields.Integer,
-    "chord": fields.String,
-}
 
 riff_fields = {
     'id': fields.String,
@@ -52,11 +48,11 @@ riff_fields = {
     'name': fields.String,
     'number_of_bars': fields.Integer,
     'notes': fields.String,
+    'chord_info': fields.String,
     'chord': fields.String,
     'multi_chord': fields.Boolean,
     'image': fields.String,
     'image_info': fields.Nested(image_info_marshaller),
-    'backing_track_info': fields.Nested(backing_track_marshaller),
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
     'created_date': fields.DateTime,
@@ -80,6 +76,7 @@ riff_exercise_fields = {
     'created_by': fields.String,  # or UUID of the user?
     'created_at': fields.DateTime,
 }
+
 riff_exercise_detail_fields = riff_exercise_fields
 # Todo: investigate: e.g. use a deep_copy?
 riff_exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))

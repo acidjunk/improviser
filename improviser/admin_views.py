@@ -57,7 +57,7 @@ class RolesAdminView(ModelView):
 
 class RiffAdminView(ModelView):
     Riff.image = String
-    column_list = ['id', 'name', 'render_valid', 'render_date', 'notes', 'multi_chord', 'backing_track_info',
+    column_list = ['id', 'name', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
                    'number_of_bars', 'chord', 'created_date', 'image']
     column_default_sort = ('name', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')

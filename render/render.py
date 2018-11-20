@@ -22,31 +22,53 @@ import os
 
 SIZES = [60, 80, 100, 120, 140, 160, 180, 200, 220]
 
+TEMPLATE = """\\version "2.19.82"
+
+\paper {{
+    indent=0\mm
+    line-width=200\mm
+    oddFooterMarkup=##f
+    oddHeaderMarkup=##f
+    bookTitleMarkup = ##f
+    scoreTitleMarkup = ##f
+}}
+
+\layout {{
+    \override Staff.TimeSignature #'stencil = ##f
+}}
+
+<<
+
+\\transpose c {transpose} {{
+    \chords {{
+        {chords}
+    }}
+}}
+
+\\transpose c {transpose} {{
+    {{
+        {notes}
+    }}
+}}
+>>
+"""
+
+
 class Render:
     def __init__(self, renderPath, name="riff"):
         self.renderPath = renderPath
         self.name = name
-        self.lilypondVersion = '\\version "2.19.82"\n'
         self.sizes = SIZES
         self.settings = []
-        self.notes = []
+        self.notes = ""  # lilypond notation of notes
+        self.chords = ""  # lilypond notation of chords
         self.riffs = []  # list of riffs for the riff renderer
         self.transposes = []  # list of notes and transpose messages for the riff renderer
 
         self.currentKey = 'c'  # init it to C
-        self.settings.append("""\\time 4/4\n""")  # set a very high value so all the exercises fit into 1 bar
-        # self.settings.append("""\\override Staff.BarLine #'stencil = ##f\n""")
-        self.settings.append("""\\override Staff.TimeSignature #'stencil = ##f\n""")
         # render to all keys by default
         self.rootKeys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
-        self.paperFormat = """\paper{
-            indent=0\mm
-            line-width=200\mm
-            oddFooterMarkup=##f
-            oddHeaderMarkup=##f
-            bookTitleMarkup = ##f
-            scoreTitleMarkup = ##f
-        }"""
+
         self.cleff = "treble"
 
         self.lilypond = "/usr/local/bin/lilypond"
@@ -61,7 +83,6 @@ class Render:
         self.cleff = cleff
 
     def addNotes(self, notes):
-        self.notes = []  # init empty again to allow looped access
         self.notes = notes
 
     def addRiff(self, riff):
@@ -90,24 +111,13 @@ class Render:
                 file_name = "%s" % file_name
                 output_file_name = self.name
 
+            tranpose = "%s%s" % (self.currentKey, octave if octave else "")
+            lilypond_string = TEMPLATE.format(transpose=tranpose, notes=self.notes, chords=self.chords)
             print("%s.ly" % file_name)
             fHandle = open("%s.ly" % file_name, 'w')
-
-            fHandle.write("\\transpose c %s%s {\n" % (self.currentKey, octave if octave else ""))
-            fHandle.write("{\n")
-            fHandle.write(self.lilypondVersion)
-            fHandle.write("\\clef %s\n" % self.cleff)
-            #fHandle.write("\\key c \\major\n")
-            for setting in self.settings:
-                fHandle.write(setting)
-            for note in self.notes:
-                fHandle.write(note + " ")
-            fHandle.write("\n")
-            fHandle.write("}\n")
-            fHandle.write("}\n")
-            fHandle.write(self.paperFormat)
-
+            fHandle.write(lilypond_string)
             fHandle.close()
+            sys.exit()
             for size in self.sizes:
                 # #PNG
                 cmd = "%s -s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
