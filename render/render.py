@@ -85,6 +85,9 @@ class Render:
     def addNotes(self, notes):
         self.notes = notes
 
+    def addChords(self, chords):
+        self.chords = chords
+    
     def addRiff(self, riff):
         # calls to addRiff should be prefixed by calls to doTranspose
         self.riffs.append(riff)
@@ -117,7 +120,6 @@ class Render:
             fHandle = open("%s.ly" % file_name, 'w')
             fHandle.write(lilypond_string)
             fHandle.close()
-            sys.exit()
             for size in self.sizes:
                 # #PNG
                 cmd = "%s -s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
