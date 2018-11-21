@@ -38,7 +38,9 @@ def render(riff):
     for key in KEYS:
         renderer.name = "riff_%s_%s" % (riff["id"], key)
         notes = riff["notes"]
+        chords = riff["chord_info"] if riff["chord_info"] else ""
         renderer.addNotes(notes)
+        renderer.addChords(chords)
         renderer.set_cleff('treble')
         renderer.doTranspose(key)
         if not renderer.render():
