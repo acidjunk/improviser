@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref
 
 db = SQLAlchemy()
@@ -52,6 +53,12 @@ class User(db.Model, UserMixin):
         return hash(self.email)
 
 
+class Tag(db.Model):
+    __tablename__ = 'tags'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String(60), unique=True, index=True)
+
+
 class Riff(db.Model):
     __tablename__ = 'riffs'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
@@ -68,6 +75,9 @@ class Riff(db.Model):
     image_info = Column(JSON)
     riff_exercises = relationship('RiffExercise', secondary='riff_exercise_items',
                                   backref=backref('riffs', lazy='dynamic'))
+    riff_tags = relationship('RiffTag', cascade='all, delete-orphan')
+    tags = association_proxy('riff_tags', 'tag', creator=lambda tag: RiffTag(tag=tag))
+
     def __repr__(self):
         return '<Riff %r>' % self.name
 
@@ -79,6 +89,9 @@ class RiffExercise(db.Model):
     is_global = Column(Boolean, default=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    riff_tags = relationship('RiffExerciseTag', cascade='all, delete-orphan')
+    tags = association_proxy('riff_exercise_tags', 'tag', creator=lambda tag: RiffExerciseTag(tag=tag))
 
     def __repr__(self):
         return '<RiffExercise %r>' % self.name
@@ -93,3 +106,20 @@ class RiffExerciseItem(db.Model):
     order_number = Column(Integer, primary_key=True, index=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+# Setup tagging for all resources that need it
+class RiffTag(db.Model):
+    __tablename__ = 'riff_tags'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    riff_id = Column(UUID(as_uuid=True), ForeignKey('riffs.id'), index=True)
+    tag_id = Column(UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+    tag = relationship('Tag')
+
+
+class RiffExerciseTag(db.Model):
+    __tablename__ = 'riff_exercise_tags'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    riff_exercise_id = Column(UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
+    tag_id = Column(UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+    tag = relationship('Tag')

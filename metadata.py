@@ -12,7 +12,7 @@ from render_new_riffs import retrieve_metadata, ENDPOINT_RIFFS
 
 #response = requests.get("{}".format(ENDPOINT_RIFFS))
 #riff_ids = [riff["id"] for riff in response.json()]
-riff_ids = ["7d867eb5-3415-4e59-8762-267298f1d4a2"]
+riff_ids = ["75323e7a-566e-4e1b-bedd-f7937d963c68", "7d867eb5-3415-4e59-8762-267298f1d4a2"]
 print(riff_ids)
 print("Starting metadata extraction\n**************")
 retrieve_metadata(riff_ids)
