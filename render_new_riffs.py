@@ -113,7 +113,7 @@ def clean_png():
     os.chdir(current_dir)
 
 
-def retrieve_metadata(riff_ids):
+def retrieve_metadata(riff_ids, skip_update=False):
     for riff_id in riff_ids:
         filelist = []
         for key in KEYS:
@@ -142,9 +142,10 @@ def retrieve_metadata(riff_ids):
                 sys.exit()
                 pass
         print({riff_id: riff_metadata})
-        update_riffs([riff_id], {riff_id: riff_metadata})
-        # only one:
-        # sys.exit()
+        if not skip_update:
+            update_riffs([riff_id], {riff_id: riff_metadata})
+        else:
+            print("Skipping update")
 
 
 if __name__ == '__main__':
