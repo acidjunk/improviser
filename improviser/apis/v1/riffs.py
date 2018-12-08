@@ -1,4 +1,5 @@
 import datetime
+import json
 from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
@@ -56,6 +57,7 @@ riff_fields = {
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
     'created_date': fields.DateTime,
+    'tags': fields.List(fields.String),
 }
 
 music_xml_info_marshaller = {
@@ -146,6 +148,7 @@ class RiffResourceList(Resource):
 
         riffs = riffs_query.all()
         for riff in riffs:
+            riff.tags = [str(tag.name) for tag in riff.riff_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         return riffs
 
@@ -167,6 +170,7 @@ class RiffResource(Resource):
     @marshal_with(riff_detail_fields)
     def get(self, riff_id):
         riff = Riff.query.filter(Riff.id == riff_id).first()
+        riff.tags = [str(tag.name) for tag in riff.riff_tags]
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         # todo: marshall dict -> key:music_xml
         result = []

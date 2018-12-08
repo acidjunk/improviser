@@ -1,7 +1,7 @@
 import os
 import structlog
 
-from admin_views import UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView
+from admin_views import (UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView, BaseAdminView)
 
 from flask import Flask, url_for
 from flask_admin import Admin
@@ -13,7 +13,7 @@ from flask_security import (Security, SQLAlchemySessionUserDatastore)
 
 from apis import api
 
-from database import db
+from database import db, Tag, RiffTag, RiffExerciseTag
 from database import User, Role, Riff, RiffExercise
 
 logger = structlog.get_logger(__name__)
@@ -84,6 +84,9 @@ admin.add_view(RiffAdminView(Riff, db.session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
 admin.add_view(UserAdminView(User, db.session))
 admin.add_view(RolesAdminView(Role, db.session))
+admin.add_view(BaseAdminView(Tag, db.session))
+admin.add_view(BaseAdminView(RiffTag, db.session))
+admin.add_view(BaseAdminView(RiffExerciseTag, db.session))
 
 migrate = Migrate(app, db)
 logger.info("Ready loading admin views and api")

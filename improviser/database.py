@@ -58,6 +58,9 @@ class Tag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(60), unique=True, index=True)
 
+    def __rep__(self):
+        return self.name
+
 
 class Riff(db.Model):
     __tablename__ = 'riffs'
@@ -75,11 +78,10 @@ class Riff(db.Model):
     image_info = Column(JSON)
     riff_exercises = relationship('RiffExercise', secondary='riff_exercise_items',
                                   backref=backref('riffs', lazy='dynamic'))
-    riff_tags = relationship('RiffTag', cascade='all, delete-orphan')
-    tags = association_proxy('riff_tags', 'tag', creator=lambda tag: RiffTag(tag=tag))
+    riff_tags = relationship("Tag", secondary='riff_tags')
 
     def __repr__(self):
-        return '<Riff %r>' % self.name
+        return '<Riff %r %s>' % (self.name, self.id)
 
 
 class RiffExercise(db.Model):
@@ -89,12 +91,10 @@ class RiffExercise(db.Model):
     is_global = Column(Boolean, default=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-    riff_tags = relationship('RiffExerciseTag', cascade='all, delete-orphan')
-    tags = association_proxy('riff_exercise_tags', 'tag', creator=lambda tag: RiffExerciseTag(tag=tag))
+    riff_exercise_tags = relationship("Tag", secondary='riff_exercise_tags')
 
     def __repr__(self):
-        return '<RiffExercise %r>' % self.name
+        return '<RiffExercise %r %s>>' % (self.name, self.id)
 
 
 class RiffExerciseItem(db.Model):
@@ -112,14 +112,17 @@ class RiffExerciseItem(db.Model):
 class RiffTag(db.Model):
     __tablename__ = 'riff_tags'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    riff_id = Column(UUID(as_uuid=True), ForeignKey('riffs.id'), index=True)
-    tag_id = Column(UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
-    tag = relationship('Tag')
+    riff_id = Column('riff_id', UUID(as_uuid=True), ForeignKey('riffs.id'), index=True)
+    tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+    riff = db.relationship("Riff", lazy=True)
+    tag = db.relationship("Tag", lazy=True)
+
+    def __repr__(self):
+        return self.tag.name
 
 
 class RiffExerciseTag(db.Model):
     __tablename__ = 'riff_exercise_tags'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    riff_exercise_id = Column(UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
-    tag_id = Column(UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
-    tag = relationship('Tag')
+    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
+    tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)

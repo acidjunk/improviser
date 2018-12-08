@@ -97,3 +97,12 @@ class RiffExerciseAdminView(ModelView):
     def is_accessible(self):
         if 'admin' in current_user.roles:
             return True
+
+
+class BaseAdminView(ModelView):
+
+    # Prevent administration of Tags unless the currently logged-in user has the "admin" role
+    def is_accessible(self):
+        if 'admin' in current_user.roles:
+            return True
+
