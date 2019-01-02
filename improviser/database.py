@@ -1,7 +1,7 @@
 import datetime
 import uuid
 
-from flask_security import RoleMixin, UserMixin
+from flask_security import RoleMixin, UserMixin, SQLAlchemySessionUserDatastore
 from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, ForeignKey, String
@@ -38,6 +38,8 @@ class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String(255), unique=True)
+    first_name = Column(String(255), index=True)
+    last_name = Column(String(255), index=True)
     username = Column(String(255), unique=True)
     password = Column(String(255))
     active = Column(Boolean())
@@ -126,3 +128,5 @@ class RiffExerciseTag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
     tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+
+user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

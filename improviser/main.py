@@ -13,7 +13,7 @@ from flask_security import (Security, SQLAlchemySessionUserDatastore)
 
 from apis import api
 
-from database import db, Tag, RiffTag, RiffExerciseTag
+from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore
 from database import User, Role, Riff, RiffExercise
 
 logger = structlog.get_logger(__name__)
@@ -56,8 +56,8 @@ app.config['SECURITY_CHANGE_URL'] = '/admin/change'
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 
 # Setup Flask-Security
-user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
 security = Security(app, user_datastore)
+
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

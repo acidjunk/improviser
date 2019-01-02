@@ -2,8 +2,10 @@ import datetime
 import json
 from database import db
 from flask import request
+from flask_login import login_required, current_user
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff
+from flask_security import roles_required, auth_token_required, roles_accepted
 
 KEYS = ["c", "cis", "d", "dis", "ees", "e", "f", "fis", "g", "gis", "aes", "a", "ais", "bes", "b"]
 OCTAVES = [-1, 0, 1, 2]
@@ -127,8 +129,11 @@ def convertToMusicXML(lilypond, tranpose='c'):
 
 
 @api.route('/')
+@api.doc("Show all riffs to users with sufficient rights. Provides the ability to filter on riff status and to search.")
 class RiffResourceList(Resource):
 
+    @auth_token_required
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_fields)
     @api.expect(riff_arguments)
     def get(self):
@@ -152,6 +157,8 @@ class RiffResourceList(Resource):
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         return riffs
 
+    @auth_token_required
+    @roles_accepted('admin', 'moderator', 'teacher')
     @api.expect(riff_serializer)
     def post(self):
         riff = Riff(**api.payload)
@@ -167,6 +174,8 @@ class RiffResourceList(Resource):
 @api.route('/<string:riff_id>')
 class RiffResource(Resource):
 
+    @auth_token_required
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_detail_fields)
     def get(self, riff_id):
         riff = Riff.query.filter(Riff.id == riff_id).first()
@@ -180,6 +189,8 @@ class RiffResource(Resource):
         riff.music_xml_info = result
         return riff
 
+    @auth_token_required
+    @roles_accepted('admin', 'moderator', 'teacher')
     @api.expect(riff_serializer)
     def put(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first()
@@ -189,6 +200,9 @@ class RiffResource(Resource):
 
 @api.route('/rendered/<string:riff_id>')
 class RiffResourceRendered(Resource):
+
+    @auth_token_required
+    @roles_accepted('admin')
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
         riff = Riff.query.filter_by(id=riff_id).first()
