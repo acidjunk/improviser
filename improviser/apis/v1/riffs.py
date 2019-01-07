@@ -50,7 +50,6 @@ riff_fields = {
     'difficulty': fields.String,
     'name': fields.String,
     'number_of_bars': fields.Integer,
-    'notes': fields.String,
     'chord_info': fields.String,
     'chord': fields.String,
     'multi_chord': fields.Boolean,
@@ -69,6 +68,7 @@ music_xml_info_marshaller = {
 
 riff_detail_fields = {
     **riff_fields,
+    'notes': fields.String,
     'music_xml_info': fields.List(
         fields.Nested(music_xml_info_marshaller),
         description='Music XML representation of the riff in all available keys')
@@ -94,6 +94,7 @@ riff_arguments.add_argument('show_unrendered', type=bool, required=False, defaul
 riff_exercise_arguments = reqparse.RequestParser()
 riff_exercise_arguments.add_argument('search_phrase', type=str, required=False,
                                      help='Return only items that contain the search_phrase')
+
 
 def convertToMusicXML(lilypond, tranpose='c'):
     import ly.musicxml

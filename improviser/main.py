@@ -10,7 +10,7 @@ from flask_admin import helpers as admin_helpers
 from flask_cors import CORS
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_security import (Security, SQLAlchemySessionUserDatastore, LoginForm, login_user)
+from flask_security import (Security, SQLAlchemySessionUserDatastore, LoginForm, login_user, user_registered)
 
 from apis import api
 
@@ -47,6 +47,7 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME') if os.getenv('MAIL_USER
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASSWORD') else 'somepassword'
 # More Flask Security settings
 app.config['SECURITY_REGISTERABLE'] = True
+app.config['SECURITY_CONFIRMABLE'] = True
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 
 # Needed for REST token login
@@ -73,6 +74,11 @@ def security_context_processor():
         h=admin_helpers,
         get_url=url_for
     )
+
+# ensure that new users are in an role
+@user_registered.connect_via(app)
+def on_user_registered(sender, user, confirm_token):
+    user_datastore.add_role_to_user(user, "student")
 
 
 # Views
