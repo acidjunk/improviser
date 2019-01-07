@@ -2,41 +2,44 @@ import datetime
 from flask import request, current_app
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import User, user_datastore, db
+from flask_security import auth_token_required, roles_accepted
 
 api = Namespace("users", description="User related operations")
 
-new_user_serializer = api.model("UserProfile", {
-    "username": fields.String(required=True, description="Username"),
-    "email": fields.String(required=True, description="E-mail address"),
-    "first_name": fields.String(required=True, description="First name"),
-    "last_name": fields.String(required=True, description="Last name"),
-})
+user_fields = {
+    'id': fields.String,
+    'username': fields.String,
+    'email': fields.String,
+    'first_name': fields.String,
+    'last_name': fields.String,
+    'created_at': fields.DateTime,
+    'confirmed_at': fields.DateTime,
+    'roles': fields.List(fields.String),
+}
+
+username_check_fields
+
+
+@api.route('/')
+@api.doc("Show all users to staff users.")
+class UserResourceList(Resource):
+
+    @roles_accepted('admin', 'member')
+    @marshal_with(user_fields)
+    def get(self):
+        users = User.query.all()
+        return users
 
 
 @api.route("/preferences")
-class UsePreferenceResource(Resource):
+class UserPreferenceResource(Resource):
 
     def post(self):
         # Todo implement check on auth token and clean it when OK.
         return 204
 
 
-@api.route("/register")
-class RegisterUserResource(Resource):
+@api.route('/')
+class UsernameResource(Resource):
 
-    @api.expect(new_user_serializer)
-    def post(self):
-        try:
-            user_datastore.create_user(
-                email=api.payload["email"],
-                username=api.payload["username"],
-                password='banaan',
-                first_name=api.payload["first_name"],
-                last_name=api.payload["last_name"],
-            )
-            # Todo implement check on auth token and clean it when OK.
-            db.session.commit()
-        except:
-            db.session.rollback()
-            abort(409)
-        return 204
+    def get(self):
