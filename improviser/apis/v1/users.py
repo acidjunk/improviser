@@ -17,13 +17,17 @@ user_fields = {
     'roles': fields.List(fields.String),
 }
 
-username_check_fields
+user_message_fields = {
+   'available': fields.Boolean,
+   'reason': fields.String,
+}
 
 
 @api.route('/')
 @api.doc("Show all users to staff users.")
 class UserResourceList(Resource):
 
+    @auth_token_required
     @roles_accepted('admin', 'member')
     @marshal_with(user_fields)
     def get(self):
@@ -34,12 +38,31 @@ class UserResourceList(Resource):
 @api.route("/preferences")
 class UserPreferenceResource(Resource):
 
+    @auth_token_required
     def post(self):
         # Todo implement check on auth token and clean it when OK.
         return 204
 
 
-@api.route('/')
-class UsernameResource(Resource):
+@api.route('/validate-username/<string:username>')
+class ValidateUsernameResource(Resource):
 
-    def get(self):
+    def get(self, username):
+        user = User.query.filter(User.username == username).first()
+        if not user:
+            return {'available': True, 'reason': ''}
+        else:
+            return {'available': False, 'reason': 'Username already taken'}
+
+
+@api.route('/validate-email/<string:email>')
+class ValidateEmailResource(Resource):
+
+    def get(self, email):
+        user = User.query.filter(User.email == email).first()
+        if not user:
+            return {'available': True, 'reason': ''}
+        else:
+            return {'available': False, 'reason': 'Email already exists'}
+
+
