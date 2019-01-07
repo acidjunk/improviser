@@ -1,7 +1,5 @@
-import datetime
-from flask import request, current_app
-from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from database import User, user_datastore, db
+from flask_restplus import Namespace, Resource, fields, marshal_with
+from database import User
 from flask_security import auth_token_required, roles_accepted
 
 api = Namespace("users", description="User related operations")
@@ -64,5 +62,3 @@ class ValidateEmailResource(Resource):
             return {'available': True, 'reason': ''}
         else:
             return {'available': False, 'reason': 'Email already exists'}
-
-
