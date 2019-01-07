@@ -6,7 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref
 
 db = SQLAlchemy()
@@ -43,9 +42,12 @@ class User(db.Model, UserMixin):
     username = Column(String(255), unique=True)
     password = Column(String(255))
     active = Column(Boolean())
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     confirmed_at = Column(DateTime())
     roles = relationship('Role', secondary='roles_users', backref=backref('users', lazy='dynamic'))
 
+    mail_offers = Column(Boolean, default=False)
+    mail_announcements = Column(Boolean, default=True)
     # Human-readable values for the User when editing user related stuff.
     def __str__(self):
         return f'{self.username} : {self.email}'

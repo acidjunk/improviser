@@ -8,6 +8,7 @@ from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
 from flask_cors import CORS
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_security import (Security, SQLAlchemySessionUserDatastore, LoginForm, login_user)
 
@@ -15,6 +16,7 @@ from apis import api
 
 from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore
 from database import User, Role, Riff, RiffExercise
+from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 
 logger = structlog.get_logger(__name__)
 
@@ -43,21 +45,18 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME') if os.getenv('MAIL_USERNAME') else 'no-reply@example.com'
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASSWORD') else 'somepassword'
-
 # More Flask Security settings
 app.config['SECURITY_REGISTERABLE'] = True
-app.config['SECURITY_REGISTER_URL'] = '/admin/create_account'
-app.config['SECURITY_LOGIN_URL'] = '/admin/login'
-app.config['SECURITY_POST_LOGIN_VIEW'] = '/admin'
-app.config['SECURITY_LOGOUT_URL'] = '/admin/logout'
-app.config['SECURITY_POST_LOGOUT_VIEW'] = '/admin'
-app.config['SECURITY_RESET_URL'] = '/admin/reset'
-app.config['SECURITY_CHANGE_URL'] = '/admin/change'
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 
-# Setup Flask-Security
-security = Security(app, user_datastore)
+# Needed for REST token login
+# Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
+app.config['WTF_CSRF_ENABLED'] = False
 
+# Setup Flask-Security with extended user registration
+security = Security(app, user_datastore, register_form=ExtendedRegisterForm,
+                    confirm_register_form=ExtendedJSONRegisterForm)
+mail = Mail()
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -79,6 +78,7 @@ def security_context_processor():
 # Views
 api.init_app(app)
 db.init_app(app)
+mail.init_app(app)
 
 admin.add_view(RiffAdminView(Riff, db.session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))

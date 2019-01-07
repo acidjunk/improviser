@@ -1,8 +1,10 @@
+import os
+
 import requests
 import json
 
-r = requests.post('http://localhost:5000/v1/users/login',
-                  data=json.dumps({'email': 'john@smit.com', 'password': '1234'}),
+r = requests.post('http://localhost:5000/login',
+                  data=json.dumps({'email': 'test@user.com', 'password': os.getenv("IMPROVISER_PASSWORD")}),
                   headers={'content-type': 'application/json'})
 response = r.json()
 print(response)  # check response
