@@ -1,5 +1,26 @@
-{{ _('Welcome %(email)s!', email=user.email) }}
+{{ _('Welcome %(first_name)s!', first_name=user.first_name) }},
 
-{{ _('You can confirm your email through the link below:') }}
+{{ _('You succesfully created a free iMproviser account.') }}
+{{ _('With your new account you will be able to view, public and free, exercises and lessons.') }}
+{{ _('You can also use the BackingTrack player in the ScaleTrainer and Exercises.') }}
 
+{{ _('Account Details') }}
+{{ _('E-mail:') }} {{ user.email }}
+{{ _('Username:') }} {{ user.username }}
+{{ _('Created at:') }} {{ user.created_at }}
+
+{{ _('Mail Preferences') }}
+{{ _('Marketing offers:') }} {{ user.mail_offers }}
+{{ _('Platform announcements:') }} {{ user.mail_announcements }}
+
+{{ _('E-mail confirmation') }}
+{{ _('To avoid login and AVG issues you need to confirm your email through the link below within a couple of days:') }}
 {{ confirmation_link }}
+
+{{ _('Support') }}
+{{ _('As the project still has the status "hobby project", support will be based on best effort. You can create a github issue or mail me.') }}
+{{ _('Something wrong? Please contact') }} support@formatics.nl {{ _('or create an issue on') }} https://github.com/acidjunk/improviser/issues
+
+{{ _('Have fun using and practicing with the iMproviser') }}
+
+{{ _('the iMproviser') }}

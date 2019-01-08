@@ -1,4 +1,28 @@
-<p>{{ _('Welcome %(email)s!', email=user.email) }}</p>
+<p>{{ _('Welcome %(first_name)s!', first_name=user.first_name) }},</p>
 
-<p>{{ _('You can confirm your email through the link below:') }}</p>
+<p>
+    {{ _('You succesfully created a free iMproviser account.') }}
+    {{ _('With your new account you will be able to view, public and free, exercises and lessons.') }}
+    {{ _('You can also use the BackingTrack player in the ScaleTrainer and Exercises.') }}
+</p>
+
+<h3>{{ _('Account Details') }}</h3>
+{{ _('E-mail:') }} <i>{{ user.email }}</i><br>
+{{ _('Username:') }} <i>{{ user.username }}</i><br>
+{{ _('Created at:') }} <i>{{ user.created_at }}</i><br>
+
+<h3>{{ _('Mail Preferences') }}</h3>
+{{ _('Marketing offers:') }} <i>{{ user.mail_offers }}</i><br>
+{{ _('Platform announcements:') }} <i>{{ user.mail_announcements }}</i><br>
+
+<h3>{{ _('E-mail confirmation') }}</h3>
+<p>{{ _('To avoid login and AVG issues you need to confirm your email through the link below within a couple of days:') }}</p>
 <p><a href="{{ confirmation_link }}">{{ _('Confirm my account') }}</a></p>
+
+<h3>{{ _('Support') }}</h3>
+<p>{{ _('As the project still has the status "hobby project", support will be based on best effort. You can create a github issue or mail me.') }}</p>
+<p>{{ _('Something wrong? Please contact') }} <a href="mailto:support@formatics.nl">Support</a> {{ _('or create an issue on') }} <a href="https://github.com/acidjunk/improviser/issues">Github</a>.</p>
+
+<p>{{ _('Have fun using and practicing with the iMproviser') }}</p>
+
+<p>{{ _('the iMproviser') }}</p>

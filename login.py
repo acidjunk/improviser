@@ -4,7 +4,7 @@ import requests
 import json
 
 r = requests.post('http://localhost:5000/login',
-                  data=json.dumps({'email': 'test@user.com', 'password': os.getenv("IMPROVISER_PASSWORD")}),
+                  data=json.dumps({'email': 'acidjunk@gmail.com', 'password': os.getenv("IMPROVISER_PASSWORD")}),
                   headers={'content-type': 'application/json'})
 response = r.json()
 print(response)  # check response
