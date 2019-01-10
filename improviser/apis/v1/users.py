@@ -33,13 +33,15 @@ class UserResourceList(Resource):
         return users
 
 
-@api.route("/preferences")
-class UserPreferenceResource(Resource):
+@api.route('/<string:user_id>')
+class UserResource(Resource):
 
     @auth_token_required
-    def post(self):
-        # Todo implement check on auth token and clean it when OK.
-        return 204
+    @marshal_with(user_fields)
+    def get(self, user_id):
+        # todo add check or decorator for current user
+        user = User.query.filter(User.id == user_id).first()
+        return user
 
 
 @api.route('/validate-username/<string:username>')
