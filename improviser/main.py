@@ -34,6 +34,16 @@ app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
 app.config['SECURITY_PASSWORD_SALT'] = 'SALTSALTSALT'
+# override the flask-security config for fast password hashes
+
+
+# TODO: before deploy
+app.config['SECURITY_HASHING_SCHEMES'] = ['plaintext']
+app.config['SECURITY_DEPRECATED_HASHING_SCHEMES'] = []
+app.config['SECURITY_PASSWORD_HASH'] = 'plaintext'
+
+
+
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

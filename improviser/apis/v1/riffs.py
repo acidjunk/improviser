@@ -152,7 +152,7 @@ class RiffResourceList(Resource):
         if "all" not in show:
             riffs_query = riffs_query.filter(Riff.render_valid)
 
-        riffs = riffs_query.all()
+        riffs = riffs_query.limit(50).all()
         for riff in riffs:
             riff.tags = [str(tag.name) for tag in riff.riff_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
