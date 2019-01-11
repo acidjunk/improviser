@@ -176,7 +176,6 @@ class RiffResourceList(Resource):
 @api.route('/<string:riff_id>')
 class RiffResource(Resource):
 
-    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_detail_fields)
     def get(self, riff_id):
         # Todo: check if riff is scaletrainer related otherwise block it for unauthorized users
