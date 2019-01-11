@@ -3,7 +3,7 @@ import os
 import requests
 import json
 
-r = requests.post('http://localhost:5000/login',
+r = requests.post('https://api.improviser.education/login',
                   data=json.dumps({'email': 'acidjunk@gmail.com', 'password': os.getenv("IMPROVISER_PASSWORD")}),
                   headers={'content-type': 'application/json'})
 response = r.json()

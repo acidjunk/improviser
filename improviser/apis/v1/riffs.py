@@ -135,7 +135,7 @@ def convertToMusicXML(lilypond, tranpose='c'):
 class RiffResourceList(Resource):
 
     @quick_token_required
-    # @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_fields)
     @api.expect(riff_arguments)
     def get(self):

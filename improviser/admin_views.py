@@ -22,8 +22,13 @@ class UserAdminView(ModelView):
 
     # Prevent administration of Users unless the currently logged-in user has the "admin" role
     def is_accessible(self):
-        if 'admin' in current_user.roles:
-            return True
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
 
     # On the form for creating or editing a User, don't display a field corresponding to the model's password field.
     # There are two reasons for this. First, we want to encrypt the password before storing in the database. Second,
@@ -51,8 +56,13 @@ class RolesAdminView(ModelView):
 
     # Prevent administration of Roles unless the currently logged-in user has the "admin" role
     def is_accessible(self):
-        if 'admin' in current_user.roles:
-            return True
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
 
 
 class RiffAdminView(ModelView):
@@ -65,8 +75,13 @@ class RiffAdminView(ModelView):
     can_set_page_size = True
 
     def is_accessible(self):
-        if 'admin' in current_user.roles:
-            return True
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
 
     @action('render', 'Render', 'Are you sure you want to re-render selected riffs?')
     def action_approve(self, ids):
@@ -95,14 +110,23 @@ class RiffExerciseAdminView(ModelView):
     can_set_page_size = True
 
     def is_accessible(self):
-        if 'admin' in current_user.roles:
-            return True
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
 
 
 class BaseAdminView(ModelView):
 
     # Prevent administration of Tags unless the currently logged-in user has the "admin" role
     def is_accessible(self):
-        if 'admin' in current_user.roles:
-            return True
-
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False

@@ -12,7 +12,7 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_security import (Security, SQLAlchemySessionUserDatastore, LoginForm, login_user, user_registered)
+from flask_security import (Security, user_registered)
 
 from apis import api
 
@@ -24,18 +24,21 @@ logger = structlog.get_logger(__name__)
 
 # Create app
 app = Flask(__name__, static_url_path='/static')
-CORS(app)
+# NOTE: the extra headers need to be available in the API gateway: that is handled by zappa_settings.json
+CORS(app, resources='/*', allow_headers='*', origins='*',
+     expose_headers='Authorization,Content-Type,Authentication-Token,Quick-Authentication-Token')
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
 
 app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
-app.config['SECRET_KEY'] = 'super-secret'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') else 'super-secret'
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 
 app.config['FLASK_ADMIN_SWATCH'] = 'flatly'
 app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
-app.config['SECURITY_PASSWORD_SALT'] = 'SALTSALTSALT'
+app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT') if os.getenv('SECURITY_PASSWORD_SALT') \
+    else 'SALTSALTSALT'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
@@ -56,6 +59,7 @@ app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 # Needed for REST token login
 # Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
 app.config['WTF_CSRF_ENABLED'] = False
+
 
 # Setup Flask-Security with extended user registration
 security = Security(app, user_datastore, register_form=ExtendedRegisterForm,
@@ -118,7 +122,6 @@ def load_user(user_id):
 api.init_app(app)
 db.init_app(app)
 mail.init_app(app)
-
 admin.add_view(RiffAdminView(Riff, db.session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
 admin.add_view(UserAdminView(User, db.session))
@@ -129,7 +132,8 @@ admin.add_view(BaseAdminView(RiffExerciseTag, db.session))
 
 migrate = Migrate(app, db)
 logger.info("Ready loading admin views and api")
-
+import logging
+logging.getLogger('flask_cors').level = logging.DEBUG
 
 if __name__ == '__main__':
     app.run()
