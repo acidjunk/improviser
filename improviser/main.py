@@ -1,3 +1,4 @@
+import hashlib
 import os
 import structlog
 
@@ -8,6 +9,7 @@ from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
 from flask_cors import CORS
+from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_security import (Security, SQLAlchemySessionUserDatastore, LoginForm, login_user, user_registered)
@@ -32,17 +34,8 @@ admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 app.config['FLASK_ADMIN_SWATCH'] = 'flatly'
 app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
 app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
-app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
+app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
 app.config['SECURITY_PASSWORD_SALT'] = 'SALTSALTSALT'
-# override the flask-security config for fast password hashes
-
-
-# TODO: before deploy
-app.config['SECURITY_HASHING_SCHEMES'] = ['plaintext']
-app.config['SECURITY_DEPRECATED_HASHING_SCHEMES'] = []
-app.config['SECURITY_PASSWORD_HASH'] = 'plaintext'
-
-
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
@@ -67,7 +60,9 @@ app.config['WTF_CSRF_ENABLED'] = False
 # Setup Flask-Security with extended user registration
 security = Security(app, user_datastore, register_form=ExtendedRegisterForm,
                     confirm_register_form=ExtendedJSONRegisterForm)
+login_manager = LoginManager(app)
 mail = Mail()
+
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -85,10 +80,38 @@ def security_context_processor():
         get_url=url_for
     )
 
+
 # ensure that new users are in an role
 @user_registered.connect_via(app)
 def on_user_registered(sender, user, confirm_token):
     user_datastore.add_role_to_user(user, "student")
+
+
+@login_manager.request_loader
+def load_user_from_request(request):
+    # try to login using the quick token
+    quick_token = request.headers.get("Quick-Authentication-Token")
+    if quick_token:
+        try:
+            user_id, token = quick_token.split(":")
+        except:
+            return None
+
+        quick_token_md5 = hashlib.md5(token.encode('utf-8')).hexdigest()
+        user = User.query \
+            .filter(User.id == user_id) \
+            .filter(User.quick_token == quick_token_md5) \
+            .first()
+        if user:
+            return user
+
+    # finally, return None if both methods did not login the user
+    return None
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
 
 
 # Views

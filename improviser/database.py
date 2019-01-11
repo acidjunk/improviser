@@ -48,6 +48,9 @@ class User(db.Model, UserMixin):
 
     mail_offers = Column(Boolean, default=False)
     mail_announcements = Column(Boolean, default=True)
+
+    quick_token = Column(String(255), index=True)
+    quick_token_created_at = Column(DateTime())
     # Human-readable values for the User when editing user related stuff.
     def __str__(self):
         return f'{self.username} : {self.email}'
