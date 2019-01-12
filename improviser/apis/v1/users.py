@@ -19,6 +19,8 @@ user_fields = {
     'created_at': fields.DateTime,
     'confirmed_at': fields.DateTime,
     'roles': fields.List(fields.String),
+    'mail_offers': fields.Boolean,
+    'mail_announcements': fields.Boolean,
 }
 quick_auth_fields = {
     'quick_token': fields.String,
