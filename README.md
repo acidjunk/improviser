@@ -23,11 +23,11 @@ If you want to see what you can build with it, grab a free account on: https://w
 
 Bump version (first lookup up current version and commit)
 
-    bumpversion --current-version 0.2.0 minor improviser/app.py
+    bumpversion --current-version 0.2.0 minor version.py
 
 Will bump version to 0.3.0
 
-    bumpversion --current-version 0.2.0 patch improviser/app.py
+    bumpversion --current-version 0.2.0 patch version.py
 
 Will bump version to 0.2.1
 
