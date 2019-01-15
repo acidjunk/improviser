@@ -14,11 +14,12 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_security import (Security, user_registered)
 
-from apis import api
-
 from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore
 from database import User, Role, Riff, RiffExercise
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
+
+from apis import api
+from version import VERSION
 
 logger = structlog.get_logger(__name__)
 
@@ -33,9 +34,10 @@ app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') else 'super-secret'
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
 
+app.config['VERSION'] = VERSION
 app.config['FLASK_ADMIN_SWATCH'] = 'flatly'
 app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
-app.secret_key = 'TODO:MOVE_TO_BLUEPRINT'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') else 'super-secret'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
 app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT') if os.getenv('SECURITY_PASSWORD_SALT') \
     else 'SALTSALTSALT'

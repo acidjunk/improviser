@@ -110,3 +110,4 @@ ENV/
 *.count
 *.tex
 *.texi
+create_test_db.sh
