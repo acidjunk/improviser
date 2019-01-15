@@ -5,7 +5,7 @@ import hashlib
 import uuid
 
 from flask_restplus import Namespace, Resource, fields, marshal_with
-from database import User
+from database import User, Instrument
 from flask_security import auth_token_required, roles_accepted
 
 api = Namespace("users", description="User related operations")
@@ -30,6 +30,21 @@ quick_auth_fields = {
 user_message_fields = {
    'available': fields.Boolean,
    'reason': fields.String,
+}
+
+instrument_fields = {
+    'id': fields.String,
+    'name': fields.String,
+    'root_key': fields.String
+}
+
+user_preference_fields = {
+    'instrument_id': fields.String,
+    'user_id': fields.String,
+    'recent_exercises': fields.String,
+    'recent_lessons': fields.String,
+    'language': fields.String,
+    'ideabook': fields.String,
 }
 
 
@@ -86,3 +101,14 @@ class ValidateEmailResource(Resource):
             return {'available': True, 'reason': ''}
         else:
             return {'available': False, 'reason': 'Email already exists'}
+
+
+@api.route('/instruments')
+@api.doc("Show all instruments to users.")
+class UserResourceList(Resource):
+
+    @auth_token_required
+    @roles_accepted('member')
+    @marshal_with(instrument_fields)
+    def get(self):
+        return Instrument.query.all()

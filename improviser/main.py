@@ -2,7 +2,8 @@ import hashlib
 import os
 import structlog
 
-from admin_views import (UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView, BaseAdminView)
+from admin_views import (UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView, BaseAdminView,
+                         UserPreferenceAdminView, InstrumentAdminView)
 
 from flask import Flask, url_for
 from flask_admin import Admin
@@ -14,7 +15,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_security import (Security, user_registered)
 
-from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore
+from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore, UserPreference, Instrument
 from database import User, Role, Riff, RiffExercise
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 
@@ -91,6 +92,9 @@ def security_context_processor():
 @user_registered.connect_via(app)
 def on_user_registered(sender, user, confirm_token):
     user_datastore.add_role_to_user(user, "student")
+    # set up user preferences default with sensible defaults
+    default_instrument = Instrument.query.filter(Instrument.name == "Generic C").first()
+    UserPreference(instrument=default_instrument, user=user)
 
 
 @login_manager.request_loader
@@ -127,6 +131,8 @@ mail.init_app(app)
 admin.add_view(RiffAdminView(Riff, db.session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
 admin.add_view(UserAdminView(User, db.session))
+admin.add_view(UserPreferenceAdminView(UserPreference, db.session))
+admin.add_view(InstrumentAdminView(Instrument, db.session))
 admin.add_view(RolesAdminView(Role, db.session))
 admin.add_view(BaseAdminView(Tag, db.session))
 admin.add_view(BaseAdminView(RiffTag, db.session))

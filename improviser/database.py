@@ -69,6 +69,10 @@ class Instrument(db.Model):
     name = Column(String(255), unique=True)
     root_key = Column(String(3), default='c')
 
+    # __str__ is required by Flask-Admin, so we can have human-readable values for the Role when editing a User.
+    def __str__(self):
+        return f'Instrument: {self.name}, Key: {self.root_key}'
+
 
 class UserPreference(db.Model):
     __tablename__ = 'user_preferences'

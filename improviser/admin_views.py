@@ -65,6 +65,32 @@ class RolesAdminView(ModelView):
             return False
 
 
+class UserPreferenceAdminView(ModelView):
+
+    # Prevent administration of Roles unless the currently logged-in user has the "admin" role
+    def is_accessible(self):
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
+
+
+class InstrumentAdminView(ModelView):
+
+    # Prevent administration of Roles unless the currently logged-in user has the "admin" role
+    def is_accessible(self):
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
+
+
 class RiffAdminView(ModelView):
     Riff.image = String
     column_list = ['id', 'name', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
