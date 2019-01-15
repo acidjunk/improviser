@@ -2,9 +2,10 @@ import os
 
 import pytest
 import sqlalchemy as sa
+from flask_migrate import Migrate, command
 
-from database import user_datastore
-from flask import Flask
+from database import user_datastore, User
+from flask import Flask, current_app
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_security import Security
@@ -35,6 +36,7 @@ def database(request):
     pg_db = DB_OPTS["database"]
 
     init_postgresql_database(pg_user, pg_host, pg_port, pg_db)
+    os.system('psql -d improviser_test < tests/unit_tests/empty_db.psql')
 
     @request.addfinalizer
     def drop_database():
@@ -85,7 +87,6 @@ def app(database):
     login_manager = LoginManager(app)
     mail = Mail()
 
-
     return app
 
 
@@ -96,4 +97,14 @@ def _db(app):
     database connection.
     """
     db = SQLAlchemy(app=app)
+
     return db
+
+
+def db_migrations():
+    migrations_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "improviser/migrations/")
+    from alembic.config import Config
+    config = Config(migrations_dir + "alembic.ini")
+    config.set_main_option("sqlalchemy.url", current_app.config.get("SQLALCHEMY_DATABASE_URI"))
+    config.set_main_option("script_location", migrations_dir)
+    command.upgrade(config, "head")

@@ -1,0 +1,631 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.6.6
+-- Dumped by pg_dump version 9.6.0
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE alembic_version (
+    version_num character varying(32) NOT NULL
+);
+
+
+ALTER TABLE alembic_version OWNER TO formatics;
+
+--
+-- Name: instruments; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE instruments (
+    id uuid NOT NULL,
+    name character varying(255),
+    root_key character varying(3)
+);
+
+
+ALTER TABLE instruments OWNER TO formatics;
+
+--
+-- Name: riff_exercise_items; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE riff_exercise_items (
+    id uuid NOT NULL,
+    riff_exercise_id uuid,
+    riff_id uuid,
+    created_at timestamp without time zone,
+    created_by uuid,
+    order_number integer,
+    riff_root_key character varying(3)
+);
+
+
+ALTER TABLE riff_exercise_items OWNER TO formatics;
+
+--
+-- Name: riff_exercise_tags; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE riff_exercise_tags (
+    id uuid NOT NULL,
+    riff_exercise_id uuid,
+    tag_id uuid
+);
+
+
+ALTER TABLE riff_exercise_tags OWNER TO formatics;
+
+--
+-- Name: riff_exercises; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE riff_exercises (
+    id uuid NOT NULL,
+    name character varying(255),
+    is_global boolean,
+    created_by uuid,
+    created_at timestamp without time zone
+);
+
+
+ALTER TABLE riff_exercises OWNER TO formatics;
+
+--
+-- Name: riff_tags; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE riff_tags (
+    id uuid NOT NULL,
+    riff_id uuid,
+    tag_id uuid
+);
+
+
+ALTER TABLE riff_tags OWNER TO formatics;
+
+--
+-- Name: riffs; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE riffs (
+    id uuid NOT NULL,
+    name character varying(255),
+    number_of_bars integer,
+    notes character varying(255),
+    chord character varying(255),
+    render_date timestamp without time zone,
+    render_valid boolean,
+    image_info json,
+    created_date timestamp without time zone,
+    scale_trainer_enabled boolean,
+    multi_chord boolean,
+    chord_info character varying(255)
+);
+
+
+ALTER TABLE riffs OWNER TO formatics;
+
+--
+-- Name: role; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE role (
+    id uuid NOT NULL,
+    name character varying(80),
+    description character varying(255)
+);
+
+
+ALTER TABLE role OWNER TO formatics;
+
+--
+-- Name: roles_users; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE roles_users (
+    id integer NOT NULL,
+    user_id uuid,
+    role_id uuid
+);
+
+
+ALTER TABLE roles_users OWNER TO formatics;
+
+--
+-- Name: roles_users_id_seq; Type: SEQUENCE; Schema: public; Owner: formatics
+--
+
+CREATE SEQUENCE roles_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE roles_users_id_seq OWNER TO formatics;
+
+--
+-- Name: roles_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: formatics
+--
+
+ALTER SEQUENCE roles_users_id_seq OWNED BY roles_users.id;
+
+
+--
+-- Name: tags; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE tags (
+    id uuid NOT NULL,
+    name character varying(60)
+);
+
+
+ALTER TABLE tags OWNER TO formatics;
+
+--
+-- Name: user; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE "user" (
+    id uuid NOT NULL,
+    email character varying(255),
+    username character varying(255),
+    password character varying(255),
+    active boolean,
+    confirmed_at timestamp without time zone,
+    first_name character varying(255),
+    last_name character varying(255),
+    created_at timestamp without time zone,
+    mail_announcements boolean,
+    mail_offers boolean,
+    quick_token character varying(255),
+    quick_token_created_at timestamp without time zone
+);
+
+
+ALTER TABLE "user" OWNER TO formatics;
+
+--
+-- Name: user_preferences; Type: TABLE; Schema: public; Owner: formatics
+--
+
+CREATE TABLE user_preferences (
+    id uuid NOT NULL,
+    instrument_id uuid,
+    user_id uuid,
+    recent_exercises json,
+    recent_lessons json,
+    language character varying(2),
+    ideabook json
+);
+
+
+ALTER TABLE user_preferences OWNER TO formatics;
+
+--
+-- Name: roles_users id; Type: DEFAULT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY roles_users ALTER COLUMN id SET DEFAULT nextval('roles_users_id_seq'::regclass);
+
+
+--
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY alembic_version
+    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
+
+
+--
+-- Name: instruments instruments_name_key; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY instruments
+    ADD CONSTRAINT instruments_name_key UNIQUE (name);
+
+
+--
+-- Name: instruments instruments_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY instruments
+    ADD CONSTRAINT instruments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: riff_exercise_items riff_exercise_items_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_items
+    ADD CONSTRAINT riff_exercise_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: riff_exercise_tags riff_exercise_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_tags
+    ADD CONSTRAINT riff_exercise_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: riff_exercises riff_exercises_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercises
+    ADD CONSTRAINT riff_exercises_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: riff_tags riff_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_tags
+    ADD CONSTRAINT riff_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: riffs riffs_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riffs
+    ADD CONSTRAINT riffs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: role role_name_key; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY role
+    ADD CONSTRAINT role_name_key UNIQUE (name);
+
+
+--
+-- Name: role role_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY role
+    ADD CONSTRAINT role_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: roles_users roles_users_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY roles_users
+    ADD CONSTRAINT roles_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY tags
+    ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user user_email_key; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY "user"
+    ADD CONSTRAINT user_email_key UNIQUE (email);
+
+
+--
+-- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY "user"
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_preferences user_preferences_pkey; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY user_preferences
+    ADD CONSTRAINT user_preferences_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user user_username_key; Type: CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY "user"
+    ADD CONSTRAINT user_username_key UNIQUE (username);
+
+
+--
+-- Name: ix_instruments_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_instruments_id ON instruments USING btree (id);
+
+
+--
+-- Name: ix_riff_exercise_items_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_exercise_items_id ON riff_exercise_items USING btree (id);
+
+
+--
+-- Name: ix_riff_exercise_items_order_number; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_exercise_items_order_number ON riff_exercise_items USING btree (order_number);
+
+
+--
+-- Name: ix_riff_exercise_tags_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_exercise_tags_id ON riff_exercise_tags USING btree (id);
+
+
+--
+-- Name: ix_riff_exercise_tags_riff_exercise_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_exercise_tags_riff_exercise_id ON riff_exercise_tags USING btree (riff_exercise_id);
+
+
+--
+-- Name: ix_riff_exercise_tags_tag_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_exercise_tags_tag_id ON riff_exercise_tags USING btree (tag_id);
+
+
+--
+-- Name: ix_riff_exercises_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_exercises_id ON riff_exercises USING btree (id);
+
+
+--
+-- Name: ix_riff_tags_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_tags_id ON riff_tags USING btree (id);
+
+
+--
+-- Name: ix_riff_tags_riff_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_tags_riff_id ON riff_tags USING btree (riff_id);
+
+
+--
+-- Name: ix_riff_tags_tag_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riff_tags_tag_id ON riff_tags USING btree (tag_id);
+
+
+--
+-- Name: ix_riffs_chord; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riffs_chord ON riffs USING btree (chord);
+
+
+--
+-- Name: ix_riffs_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_riffs_id ON riffs USING btree (id);
+
+
+--
+-- Name: ix_riffs_name; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE UNIQUE INDEX ix_riffs_name ON riffs USING btree (name);
+
+
+--
+-- Name: ix_role_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_role_id ON role USING btree (id);
+
+
+--
+-- Name: ix_tags_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_tags_id ON tags USING btree (id);
+
+
+--
+-- Name: ix_tags_name; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE UNIQUE INDEX ix_tags_name ON tags USING btree (name);
+
+
+--
+-- Name: ix_user_first_name; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_user_first_name ON "user" USING btree (first_name);
+
+
+--
+-- Name: ix_user_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_user_id ON "user" USING btree (id);
+
+
+--
+-- Name: ix_user_last_name; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_user_last_name ON "user" USING btree (last_name);
+
+
+--
+-- Name: ix_user_preferences_id; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_user_preferences_id ON user_preferences USING btree (id);
+
+
+--
+-- Name: ix_user_quick_token; Type: INDEX; Schema: public; Owner: formatics
+--
+
+CREATE INDEX ix_user_quick_token ON "user" USING btree (quick_token);
+
+
+--
+-- Name: riff_exercise_items riff_exercise_items_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_items
+    ADD CONSTRAINT riff_exercise_items_created_by_fkey FOREIGN KEY (created_by) REFERENCES "user"(id);
+
+
+--
+-- Name: riff_exercise_items riff_exercise_items_riff_exercise_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_items
+    ADD CONSTRAINT riff_exercise_items_riff_exercise_id_fkey FOREIGN KEY (riff_exercise_id) REFERENCES riff_exercises(id);
+
+
+--
+-- Name: riff_exercise_items riff_exercise_items_riff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_items
+    ADD CONSTRAINT riff_exercise_items_riff_id_fkey FOREIGN KEY (riff_id) REFERENCES riffs(id);
+
+
+--
+-- Name: riff_exercise_tags riff_exercise_tags_riff_exercise_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_tags
+    ADD CONSTRAINT riff_exercise_tags_riff_exercise_id_fkey FOREIGN KEY (riff_exercise_id) REFERENCES riff_exercises(id);
+
+
+--
+-- Name: riff_exercise_tags riff_exercise_tags_tag_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercise_tags
+    ADD CONSTRAINT riff_exercise_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES tags(id);
+
+
+--
+-- Name: riff_exercises riff_exercises_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_exercises
+    ADD CONSTRAINT riff_exercises_created_by_fkey FOREIGN KEY (created_by) REFERENCES "user"(id);
+
+
+--
+-- Name: riff_tags riff_tags_riff_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_tags
+    ADD CONSTRAINT riff_tags_riff_id_fkey FOREIGN KEY (riff_id) REFERENCES riffs(id);
+
+
+--
+-- Name: riff_tags riff_tags_tag_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY riff_tags
+    ADD CONSTRAINT riff_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES tags(id);
+
+
+--
+-- Name: roles_users roles_users_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY roles_users
+    ADD CONSTRAINT roles_users_role_id_fkey FOREIGN KEY (role_id) REFERENCES role(id);
+
+
+--
+-- Name: roles_users roles_users_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY roles_users
+    ADD CONSTRAINT roles_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES "user"(id);
+
+
+--
+-- Name: user_preferences user_preferences_instrument_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY user_preferences
+    ADD CONSTRAINT user_preferences_instrument_id_fkey FOREIGN KEY (instrument_id) REFERENCES instruments(id);
+
+
+--
+-- Name: user_preferences user_preferences_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: formatics
+--
+
+ALTER TABLE ONLY user_preferences
+    ADD CONSTRAINT user_preferences_user_id_fkey FOREIGN KEY (user_id) REFERENCES "user"(id);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: formatics
+--
+
+REVOKE ALL ON SCHEMA public FROM rdsadmin;
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT ALL ON SCHEMA public TO formatics;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
