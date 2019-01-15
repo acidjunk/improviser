@@ -2,6 +2,9 @@
 
 The REST API server for the improviser-client
 
+An online demo can be found on: https://api.improviser.education
+If you want to see what you can build with it, grab a free account on: https://www.improviser.education/register
+
 ## Install for development
 
     mkvirtualenv --python=/usr/local/bin/python3 improviser
