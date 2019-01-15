@@ -51,6 +51,7 @@ class User(db.Model, UserMixin):
 
     quick_token = Column(String(255), index=True)
     quick_token_created_at = Column(DateTime())
+
     # Human-readable values for the User when editing user related stuff.
     def __str__(self):
         return f'{self.username} : {self.email}'
@@ -58,6 +59,26 @@ class User(db.Model, UserMixin):
     # __hash__ is required to avoid the exception TypeError: unhashable type: 'Role' when saving a User
     def __hash__(self):
         return hash(self.email)
+
+
+class Instrument(db.Model):
+    __tablename__ = 'instruments'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String(255), unique=True)
+    root_key = Column(String(3), default='c')
+
+
+class UserPreference(db.Model):
+    __tablename__ = 'user_preferences'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    instrument_id = Column('instrument_id', UUID(as_uuid=True), ForeignKey('instruments.id'))
+    instrument = relationship("Instrument", backref=backref("parent", uselist=False))
+    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))
+    user = relationship("User", backref=backref("parent", uselist=False))
+    recent_exercises = Column(JSON)
+    recent_lessons = Column(JSON)
+    language = Column(String(2), default='en')
+    ideabook = Column(JSON)
 
 
 class Tag(db.Model):
