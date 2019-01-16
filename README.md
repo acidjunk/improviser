@@ -41,7 +41,7 @@ zappa deploy
 
 ## Update deployment
 ```
-workon imporviser_depploy
+workon improviser_deploy
 zappa update
 ```
 
