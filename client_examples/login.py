@@ -30,11 +30,15 @@ print(f"Got user preferences: {response}")
 print("Testing update of language:")
 payload = {"language": "nl"}
 r = requests.patch(IMPROVISER_HOST + f'/v1/users/preferences', headers=quick_auth_headers, json=payload)
-if not r.status_code == 204:
+if not r.status_code == 200:
     print(r.__dict__)
+else:
+    print("OK")
 
 print("Testing update of instrument_id")
 payload = {"instrument_id": "b96ae0e8-aae8-484b-ab70-6d2f6fa2bc01"}
 r = requests.patch(IMPROVISER_HOST + f'/v1/users/preferences', headers=quick_auth_headers, json=payload)
-if not r.status_code == 204:
+if not r.status_code == 200:
     print(r.__dict__)
+else:
+    print("OK")

@@ -14,6 +14,7 @@ api = Namespace("users", description="User related operations")
 
 user_preference_fields = {
     'instrument_id': fields.String,
+    'instrument_name': fields.String,
     'recent_exercises': fields.String,
     'recent_lessons': fields.String,
     'language': fields.String,
@@ -86,6 +87,7 @@ class UserResource(Resource):
         # get the response ready, without overwriting the DB
         shallow_user = copy.copy(user)
         shallow_user.quick_token = quick_token
+        shallow_user.preferences.instrument_name = user.preferences.instrument.name
         return shallow_user
 
 
@@ -96,6 +98,7 @@ class UserPreferenceResource(Resource):
     @marshal_with(user_preference_fields)
     def get(self):
         user_preference = UserPreference.query.filter(UserPreference.user_id == current_user.id).first()
+        user_preference.instrument_name = user_preference.instrument.name
         return user_preference
 
     @quick_token_required
