@@ -80,7 +80,7 @@ class UserPreference(db.Model):
     instrument_id = Column('instrument_id', UUID(as_uuid=True), ForeignKey('instruments.id'))
     instrument = relationship("Instrument", backref=backref("parent", uselist=False))
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))
-    user = relationship("User", backref=backref("parent", uselist=False))
+    user = relationship("User", backref=backref("preferences", uselist=False))
     recent_exercises = Column(JSON)
     recent_lessons = Column(JSON)
     language = Column(String(2), default='en')

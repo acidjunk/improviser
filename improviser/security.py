@@ -10,6 +10,7 @@ from wtforms.validators import DataRequired
 
 _security = LocalProxy(lambda: current_app.extensions['security'])
 
+
 class ExtraUserFields():
     username = StringField('Username', [DataRequired()])
     first_name = StringField('First Name', [DataRequired()])
@@ -58,7 +59,6 @@ def quick_token_required(fn):
 
     @wraps(fn)
     def decorated(*args, **kwargs):
-        print(request)
         if check_quick_token():
             return fn(*args, **kwargs)
         if _security._unauthorized_callback:
