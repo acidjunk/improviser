@@ -94,7 +94,13 @@ def on_user_registered(sender, user, confirm_token):
     user_datastore.add_role_to_user(user, "student")
     # set up user preferences default with sensible defaults
     default_instrument = Instrument.query.filter(Instrument.name == "Generic C").first()
-    UserPreference(instrument=default_instrument, user=user)
+    user_preference = UserPreference(instrument_id=default_instrument.id, user_id=user.id)
+    try:
+        db.session.add(user_preference)
+        db.session.commit()
+    except Exception as error:
+        print(F"error while creating user prefs?: {error}")
+        db.session.rollback()
 
 
 @login_manager.request_loader
@@ -107,7 +113,7 @@ def load_user_from_request(request):
         except:
             return None
 
-        quick_token_md5 = hashlib.md5(token.encode('utf-8')).hexdigest()
+        quick_token_md5 = hashlib.md5(token.encode("utf-8")).hexdigest()
         user = User.query \
             .filter(User.id == user_id) \
             .filter(User.quick_token == quick_token_md5) \
