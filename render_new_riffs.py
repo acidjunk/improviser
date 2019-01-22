@@ -5,6 +5,7 @@ upload the rendered/changed riffs to an Amazon S3 bucket and flag the riff as re
 It has a check that ensures that only one instance can be running at the same time. Note: for now python 3.4 compatible.
 """
 import glob
+import json
 import os
 import sys
 
@@ -16,7 +17,8 @@ import boto3
 from render.render import Render, SIZES
 
 LOCAL_RUN = os.getenv('LOCAL_RUN', False)
-ENDPOINT_RIFFS = "https://api.improviser.education/v1/riffs"
+IMPROVISER_HOST = "https://api.improviser.education"
+ENDPOINT_RIFFS = IMPROVISER_HOST + "/v1/riffs"
 RENDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rendered')
 
 API_USER = os.getenv('API_USER')
@@ -25,6 +27,7 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') 
 AWS_BUCKET_NAME = "improviser.education"
 KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
+
 
 renderer = Render(renderPath=RENDER_PATH)
 
@@ -56,6 +59,21 @@ def render(riff):
     print("Rendered {} images: {}".format(len(rendered_riff_ids), rendered_riff_ids))
 
 
+def login():
+    default_headers = {'content-type': 'application/json'}
+
+    response = requests.post(IMPROVISER_HOST + '/login',
+                             data=json.dumps({'email': API_USER, 'password': API_PASS}),
+                             headers=default_headers).json()
+    token = response['response']['user']['authentication_token']  # set token value
+    user_id = response['response']['user']['id']
+    auth_headers = {**default_headers, "Authentication-Token": token}
+
+    response = requests.get(IMPROVISER_HOST + '/v1/users/current-user', headers=auth_headers).json()
+    quick_auth_headers = {**default_headers, "Quick-Authentication-Token": f"{user_id}:{response['quick_token']}"}
+    return auth_headers, quick_auth_headers
+
+
 def sync():
     """Sync all .png and .svg files to S3 bucket."""
     current_dir = os.getcwd()
@@ -74,7 +92,7 @@ def sync():
     os.chdir(current_dir)
 
 
-def update_riffs(riff_ids, image_info=None):
+def update_riffs(riff_ids, auth_headers, image_info=None):
     for riff_id in riff_ids:
         payload = {'render_valid': True}
         if image_info:
@@ -82,7 +100,7 @@ def update_riffs(riff_ids, image_info=None):
             print(payload)
         print("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id))
         print("Setting riff_id: {} to rendered -> True".format(riff_id))
-        response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload) 
+        response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload, headers=auth_headers)
         if response.status_code not in [200, 201, 204]:
             print("Error while updating riff")
 
@@ -113,7 +131,7 @@ def clean_png():
     os.chdir(current_dir)
 
 
-def retrieve_metadata(riff_ids, skip_update=False):
+def retrieve_metadata(riff_ids, auth_headers, skip_update=False):
     for riff_id in riff_ids:
         filelist = []
         for key in KEYS:
@@ -124,7 +142,7 @@ def retrieve_metadata(riff_ids, skip_update=False):
 
         riff_metadata = []
         for file_suffix, file_name in filelist:
-            if(os.path.exists(file_name)):
+            if os.path.exists(file_name):
                 # print("File {} => {}".format(file_suffix, file_name))
                 with open(file_name, 'r') as svg_file:
                     svg_data = xmltodict.parse(svg_file.read())
@@ -143,7 +161,7 @@ def retrieve_metadata(riff_ids, skip_update=False):
                 pass
         print({riff_id: riff_metadata})
         if not skip_update:
-            update_riffs([riff_id], {riff_id: riff_metadata})
+            update_riffs([riff_id], auth_headers, {riff_id: riff_metadata})
         else:
             print("Skipping update")
 
@@ -153,12 +171,20 @@ if __name__ == '__main__':
     pid = str(os.getpid())
     pidfile = "/tmp/render_new_riffs.pid"
 
+
     if os.path.isfile(pidfile):
         print("%s already exists, exiting" % pidfile)
-        sys.exit()
+        answer = input("Delete and continue? y/n :")
+        if answer.lower() == 'y':
+            os.system("rm -f {pidfile}".format(pidfile=pidfile))
+        else:
+            sys.exit()
+
     open(pidfile, 'w').write(pid)
 
-    response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS))
+    auth_headers, quick_auth_headers = login()
+
+    response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS), headers=quick_auth_headers)
     if response.status_code != 200:
         print("Unable to query riffs")
         os.unlink(pidfile)
@@ -175,8 +201,7 @@ if __name__ == '__main__':
             if not LOCAL_RUN:
                 clean_garbage()
                 sync()
-                print(os.getcwd()) # Todo -> check this:local first?
-                retrieve_metadata(rendered_riffs)
+                retrieve_metadata(rendered_riffs, auth_headers)
                 clean_png()
 
     os.unlink(pidfile)
