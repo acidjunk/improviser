@@ -150,10 +150,15 @@ class RiffResourceList(Resource):
         show = "rendered"
         if args.get("show_unrendered") and args["show_unrendered"] == "true":
             show = "all"
-        if "all" not in show:
+        if args.get("show_unrendered") and args["show_unrendered"] == "false":
+            show = "unrendered"
+
+        if show == "unrendered":
+            riffs_query = riffs_query.filter(not Riff.render_valid)
+        elif "all" not in show:
             riffs_query = riffs_query.filter(Riff.render_valid)
 
-        riffs = riffs_query.limit(50).all()
+        riffs = riffs_query.limit(75).all()
         for riff in riffs:
             riff.tags = [str(tag.name) for tag in riff.riff_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
