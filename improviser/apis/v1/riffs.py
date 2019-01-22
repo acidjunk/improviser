@@ -83,14 +83,11 @@ riff_exercise_fields = {
 }
 
 riff_exercise_detail_fields = riff_exercise_fields
-# Todo: investigate: e.g. use a deep_copy?
 riff_exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))
 
 riff_arguments = reqparse.RequestParser()
 riff_arguments.add_argument('search_phrase', type=str, required=False,
                             help='Return only items that contain the search_phrase')
-riff_arguments.add_argument('show_unrendered', type=bool, required=False, default=False,
-                            help='Toggle so you can see unrendered riffs also')
 
 riff_exercise_arguments = reqparse.RequestParser()
 riff_exercise_arguments.add_argument('search_phrase', type=str, required=False,
@@ -146,14 +143,9 @@ class RiffResourceList(Resource):
         else:
             riffs_query = Riff.query
 
-        # show all riffs or only rendered?
-        show = "rendered"
-        if args.get("show_unrendered") and args["show_unrendered"] == "true":
-            show = "all"
-        if "all" not in show:
-            riffs_query = riffs_query.filter(Riff.render_valid)
+        riffs_query = riffs_query.filter(Riff.render_valid)
 
-        riffs = riffs_query.limit(50).all()
+        riffs = riffs_query.limit(75).all()
         for riff in riffs:
             riff.tags = [str(tag.name) for tag in riff.riff_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
@@ -171,6 +163,17 @@ class RiffResourceList(Resource):
             db.session.rollback()
             abort(400, 'DB error: {}'.format(str(error)))
         return 201
+
+
+@api.route('/unrendered')
+@api.doc("Show all unrendered riffs to users with sufficient rights.")
+class UnrenderedRiffResourceList(Resource):
+
+    @quick_token_required
+    @roles_accepted('admin', 'moderator')
+    @marshal_with(riff_detail_fields)
+    def get(self):
+        return Riff.query.filter(Riff.render_valid.is_(False)).all()
 
 
 @api.route('/<string:riff_id>')
