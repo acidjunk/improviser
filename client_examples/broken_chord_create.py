@@ -9,6 +9,8 @@ template_notes = {
     'Dominant 7:C7': ['c', 'e', 'g', 'bes'],
 }
 
+
+
 for description, notes in template_notes.items():
     for i, note in enumerate(notes):
         octave = ''
@@ -40,4 +42,5 @@ for description, notes in template_notes.items():
         for note in note_collection:
             riff.append(f"{note}{octave} ")
 
+        riff[0] = f"{riff[0].strip()}8 "
         print("".join(riff))
