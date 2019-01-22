@@ -76,9 +76,11 @@ def login():
     user_id = response['response']['user']['id']
     auth_headers = merge_two_dicts(default_headers, {"Authentication-Token": token})
 
+    print("Auth header initialised")
     response = requests.get(IMPROVISER_HOST + '/v1/users/current-user', headers=auth_headers).json()
     quick_auth_headers = merge_two_dicts(default_headers,
-                                         {"Quick-Authentication-Token": f"{user_id}:{response['quick_token']}"})
+                                         {"Quick-Authentication-Token": "{}:{}".format(user_id,response['quick_token'])})
+    print("Quick Auth header initialised")
     return auth_headers, quick_auth_headers
 
 
@@ -192,13 +194,14 @@ if __name__ == '__main__':
 
     auth_headers, quick_auth_headers = login()
 
-    response = requests.get("{}?show_unrendered=true".format(ENDPOINT_RIFFS), headers=quick_auth_headers)
+    response = requests.get(ENDPOINT_RIFFS + '/unrendered', headers=quick_auth_headers)
     if response.status_code != 200:
         print("Unable to query riffs")
         os.unlink(pidfile)
         sys.exit()
 
     riffs = response.json()
+    print(riffs)
     rendered_riffs = []
     for riff in riffs:
         if not riff["render_valid"]:

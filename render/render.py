@@ -20,7 +20,8 @@
 # This script will produce a set of scales based on one predefined scale in all keys
 import os
 
-SIZES = [60, 80, 100, 120, 140, 160, 180, 200, 220]
+#SIZES = [60, 80, 100, 120, 140, 160, 180, 200, 220]
+SIZES = [80, 120]
 
 TEMPLATE = """\\version "2.19.82"
 
