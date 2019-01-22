@@ -59,6 +59,13 @@ def render(riff):
     print("Rendered {} images: {}".format(len(rendered_riff_ids), rendered_riff_ids))
 
 
+def merge_two_dicts(x, y):
+    """Given two dicts, merge them into a new dict as a shallow copy. (needed for python < 3.5)"""
+    z = x.copy()
+    z.update(y)
+    return z
+
+
 def login():
     default_headers = {'content-type': 'application/json'}
 
@@ -67,10 +74,11 @@ def login():
                              headers=default_headers).json()
     token = response['response']['user']['authentication_token']  # set token value
     user_id = response['response']['user']['id']
-    auth_headers = {**default_headers, "Authentication-Token": token}
+    auth_headers = merge_two_dicts(default_headers, {"Authentication-Token": token})
 
     response = requests.get(IMPROVISER_HOST + '/v1/users/current-user', headers=auth_headers).json()
-    quick_auth_headers = {**default_headers, "Quick-Authentication-Token": f"{user_id}:{response['quick_token']}"}
+    quick_auth_headers = merge_two_dicts(default_headers,
+                                         {"Quick-Authentication-Token": f"{user_id}:{response['quick_token']}"})
     return auth_headers, quick_auth_headers
 
 
