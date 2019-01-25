@@ -92,7 +92,7 @@ class Tag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(60), unique=True, index=True)
 
-    def __rep__(self):
+    def __repr__(self):
         return self.name
 
 
@@ -122,7 +122,7 @@ class RiffExercise(db.Model):
     __tablename__ = 'riff_exercises'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255))
-    is_global = Column(Boolean, default=True)
+    is_public = Column(Boolean, default=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     riff_exercise_tags = relationship("Tag", secondary='riff_exercise_tags')
@@ -136,8 +136,9 @@ class RiffExerciseItem(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'))
     riff_id = Column('riff_id', UUID(as_uuid=True), ForeignKey('riffs.id'))
-    riff_root_key = Column(String(3), default='c')
-    order_number = Column(Integer, primary_key=True, index=True)
+    pitch = Column(String(3), default='c')
+    octave = Column(Integer(), default=0)
+    order_number = Column(Integer, index=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -152,6 +153,7 @@ class RiffTag(db.Model):
     tag = db.relationship("Tag", lazy=True)
 
     def __repr__(self):
+        print(self.tag)
         return self.tag.name
 
 
@@ -160,5 +162,6 @@ class RiffExerciseTag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
     tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+
 
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
