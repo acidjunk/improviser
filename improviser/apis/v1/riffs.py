@@ -20,6 +20,7 @@ riff_serializer = api.model("Riff", {
     "notes": fields.String(required=True, description="Lilypond representation of the riff"),
     "chord": fields.String(description="Chord if known"),
     "multi_chord": fields.Boolean(description="Multiple chords in this riff?"),
+    "scale_trainer_enabled": fields.Boolean(description="Show this riff in the scale trainer?"),
     "chord_info": fields.String(),
 })
 
