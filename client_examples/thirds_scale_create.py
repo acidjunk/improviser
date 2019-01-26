@@ -72,6 +72,6 @@ for description, notes in template_notes.items():
         }
         response = requests.post(f"{IMPROVISER_HOST}/v1/riffs/", json=payload, headers=auth_headers)
         if response.status_code not in [200, 201, 204]:
-            print(f"Error while updating riff. Status: {response.status_code} with content: {response.content}")
+            print(f"Error while creating riff. Status: {response.status_code} with content: {response.content}")
         else:
             print(f"Added riff, with response {response.json()}")

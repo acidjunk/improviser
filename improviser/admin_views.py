@@ -130,7 +130,7 @@ class RiffAdminView(ModelView):
 
 
 class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'is_global', 'created_by', 'created_at']
+    column_list = ['id', 'name', 'is_public', 'created_by', 'created_at']
     column_default_sort = ('name', True)
     column_searchable_list = ('id', 'name', 'created_by')
     can_set_page_size = True

@@ -29,16 +29,7 @@ riff_render_serializer = api.model("RenderedRiff", {
     "image_info": fields.String(description="The metainfo for all images for this riff, per key, octave")
 })
 
-riff_exercise_serializer = api.model("RiffExercise", {
-    "name": fields.String(required=True, description="Unique exercise name"),
-    "is_global": fields.Boolean(description="Is this riff exercise visible to everyone?", default=False),
-})
 
-# Todo: make this a nested list: so order can be dealt with easily
-riff_exercise_item_serializer = api.model("RiffExerciseItem", {
-    "riff_exercise_id": fields.String(required=True, description="Unique exercise name"),
-    "riff_id": fields.Boolean(description="Is this riff exercise visible to everyone?"),
-})
 
 image_info_marshaller = {
     "key_octave": fields.String,
@@ -76,23 +67,9 @@ riff_detail_fields = {
         description='Music XML representation of the riff in all available keys')
 }
 
-riff_exercise_fields = {
-    'name': fields.String,
-    # 'riffs': fields.List,
-    'created_by': fields.String,  # or UUID of the user?
-    'created_at': fields.DateTime,
-}
-
-riff_exercise_detail_fields = riff_exercise_fields
-riff_exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))
-
 riff_arguments = reqparse.RequestParser()
 riff_arguments.add_argument('search_phrase', type=str, required=False,
                             help='Return only items that contain the search_phrase')
-
-riff_exercise_arguments = reqparse.RequestParser()
-riff_exercise_arguments.add_argument('search_phrase', type=str, required=False,
-                                     help='Return only items that contain the search_phrase')
 
 
 def convertToMusicXML(lilypond, tranpose='c'):

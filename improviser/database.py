@@ -122,6 +122,8 @@ class RiffExercise(db.Model):
     __tablename__ = 'riff_exercises'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255))
+    description = Column(String())
+    root_key = Column(String(3))
     is_public = Column(Boolean, default=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
