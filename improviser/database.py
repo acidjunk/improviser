@@ -1,3 +1,4 @@
+import hashlib
 import sqlalchemy
 
 import datetime
@@ -5,6 +6,7 @@ import uuid
 
 from flask_security import RoleMixin, UserMixin, SQLAlchemySessionUserDatastore
 from flask_sqlalchemy import SQLAlchemy
+from libgravatar import Gravatar
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -110,8 +112,6 @@ class Riff(db.Model):
     render_date = Column(DateTime)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     image_info = Column(JSON)
-    riff_exercises = relationship('RiffExercise', secondary='riff_exercise_items',
-                                  backref=backref('riffs', lazy='dynamic'))
     riff_tags = relationship("Tag", secondary='riff_tags')
 
     def __repr__(self):
@@ -127,10 +127,18 @@ class RiffExercise(db.Model):
     is_public = Column(Boolean, default=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    riff_exercise_tags = relationship("Tag", secondary='riff_exercise_tags')
+
+    user = relationship("User", backref=backref("riff_exercises", uselist=False))
+    riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
+
 
     def __repr__(self):
         return '<RiffExercise %r %s>>' % (self.name, self.id)
+
+    @property
+    def gravatar_image(self):
+        g = Gravatar(self.user.email)
+        return g.get_image(size=100)
 
 
 class RiffExerciseItem(db.Model):
@@ -141,8 +149,9 @@ class RiffExerciseItem(db.Model):
     pitch = Column(String(3), default='c')
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)
-    created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    riff_exercise = relationship("RiffExercise", backref=backref("riff_exercise_items", uselist=True))
 
 
 # Setup tagging for all resources that need it
@@ -164,6 +173,5 @@ class RiffExerciseTag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
     tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
-
 
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

@@ -7,3 +7,4 @@ Flask-Migrate==2.3.0
 flask-security==3.0.0
 psycopg2-binary==2.7.6.1
 python-ly==0.9.5
+libgravatar==0.2.3

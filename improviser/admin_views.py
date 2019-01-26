@@ -93,7 +93,7 @@ class InstrumentAdminView(ModelView):
 
 class RiffAdminView(ModelView):
     Riff.image = String
-    column_list = ['id', 'name', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
+    column_list = ['id', 'name', 'riff_tags', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
                    'number_of_bars', 'chord', 'created_date', 'image']
     column_default_sort = ('name', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')
@@ -130,7 +130,7 @@ class RiffAdminView(ModelView):
 
 
 class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'is_public', 'created_by', 'created_at']
+    column_list = ['id', 'name', 'riff_exercise_tags', 'description', 'is_public', 'user.username', 'created_at']
     column_default_sort = ('name', True)
     column_searchable_list = ('id', 'name', 'created_by')
     can_set_page_size = True
