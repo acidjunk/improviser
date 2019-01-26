@@ -1,4 +1,8 @@
 import datetime
+from flask_login import current_user
+from flask_security import roles_accepted
+from security import quick_token_required
+
 from .riffs import riff_fields
 
 from database import db
@@ -54,11 +58,11 @@ class ExerciseResourceList(Resource):
         exercises = exercise_query.all()
         return exercises
 
+    @quick_token_required
+    @roles_accepted('admin', 'moderator', 'member')
     @api.expect(exercise_fields)
     def post(self):
-        print(api.payload)
-        api.payload["description"]
-        exercise = RiffExercise(**api.payload)
+        exercise = RiffExercise(**api.payload, created_by=current_user.id)
         try:
             db.session.add(exercise)
             db.session.commit()
