@@ -131,6 +131,7 @@ class RiffExercise(db.Model):
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
     riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
     riffs = relationship("Riff", secondary="riff_exercise_items")
+    exercise_items = relationship("RiffExerciseItem", backref=backref("riff_exercises", uselist=True))
 
     def __repr__(self):
         return '<RiffExercise %r %s>>' % (self.name, self.id)
@@ -150,8 +151,6 @@ class RiffExerciseItem(db.Model):
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-    riff_exercise = relationship("RiffExercise", backref=backref("riff_exercise_items", uselist=True))
 
 
 # Setup tagging for all resources that need it

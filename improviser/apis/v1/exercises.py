@@ -1,11 +1,12 @@
 import datetime
+import uuid
 from flask_login import current_user
 from flask_security import roles_accepted
 from security import quick_token_required
 
 from .riffs import riff_fields
 
-from database import db
+from database import db, RiffExerciseItem
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff, RiffExercise
@@ -29,7 +30,7 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
     "riff_exercise_id": fields.String(required=True, description="Unique exercise name"),
     "pitch": fields.String(required=True),
     "octave": fields.Integer(required=True),
-    "order_nr": fields.Integer(required=True),
+    "order_number": fields.Integer(required=True),
     "riff_id": fields.String(required=True, description="The riff"),
     "created_at": fields.DateTime(),
 })
@@ -43,10 +44,17 @@ exercise_detail_serializer = api.model("RiffExercise", {
     "created_by": fields.String(),
     "gravatar_image": fields.String(),
     "tags": fields.List(fields.String),
-    "riff_exercise_items": fields.Nested(exercise_item_serializer),
+    "exercise_items": fields.Nested(exercise_item_serializer),
     "riffs": fields.Nested(riff_fields)
 })
 
+exercise_item_fields = {
+    # "riff_exercise_id": fields.String(required=True, description="Unique exercise name"),
+    "pitch": fields.String(required=True),
+    "octave": fields.Integer(required=True),
+    "order_number": fields.Integer(required=True),
+    "riff_id": fields.String(required=True, description="The riff"),
+}
 
 exercise_fields = {
     "name": fields.String,
@@ -55,8 +63,10 @@ exercise_fields = {
     "is_public": fields.Boolean,
     "created_at": fields.DateTime,
     "created_by": fields.String,
+    "exercise_items": fields.Nested(exercise_item_fields),
 
 }
+
 exercise_detail_fields = exercise_fields
 # exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))
 
@@ -110,9 +120,14 @@ class ExerciseResourceList(Resource):
     @roles_accepted('admin', 'moderator', 'member')
     @api.expect(exercise_fields)
     def post(self):
+        exercise_items = api.payload.pop("exercise_items", [])
         exercise = RiffExercise(**api.payload, created_by=current_user.id)
         try:
             db.session.add(exercise)
+            for exercise_item in exercise_items:
+                print(f"Adding {exercise_item} to exercise_id: {api.payload['id']}")
+                record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
+                db.session.add(record)
             db.session.commit()
         except Exception as error:
             db.session.rollback()
