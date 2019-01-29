@@ -130,7 +130,7 @@ class RiffExercise(db.Model):
 
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
     riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
-
+    riffs = relationship("Riff", secondary="riff_exercise_items")
 
     def __repr__(self):
         return '<RiffExercise %r %s>>' % (self.name, self.id)

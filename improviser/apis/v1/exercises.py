@@ -14,6 +14,7 @@ from database import Riff, RiffExercise
 api = Namespace("exercises", description="Exercise related operations")
 
 exercise_list_serializer = api.model("RiffExercise", {
+    "id": fields.String(required=True),
     "name": fields.String(required=True, description="Unique exercise name"),
     "description": fields.String(required=True, description="Description", default=False),
     "is_public": fields.Boolean(required=True, description="Is this riff exercise visible to everyone?", default=False),
@@ -42,7 +43,8 @@ exercise_detail_serializer = api.model("RiffExercise", {
     "created_by": fields.String(),
     "gravatar_image": fields.String(),
     "tags": fields.List(fields.String),
-    "riff_exercise_items": fields.Nested(exercise_item_serializer)
+    "riff_exercise_items": fields.Nested(exercise_item_serializer),
+    "riffs": fields.Nested(riff_fields)
 })
 
 
@@ -61,7 +63,28 @@ exercise_detail_fields = exercise_fields
 
 exercise_arguments = reqparse.RequestParser()
 exercise_arguments.add_argument('search_phrase', type=str, required=False,
-                            help='Return only items that contain the search_phrase')
+                                help='Return only items that contain the search_phrase')
+
+exercise_message_fields = {
+   'available': fields.Boolean,
+   'reason': fields.String,
+}
+
+
+@api.route('/validate-exercise-name/<string:name>')
+class ValidateExerciseNameResource(Resource):
+
+    @quick_token_required
+    def get(self, name):
+        print(current_user)
+
+        exercise = RiffExercise.query.filter(RiffExercise.name == name)\
+            .filter(RiffExercise.user == current_user).first()
+        if not exercise:
+            return {'available': True, 'reason': ''}
+        else:
+            return {'available': False, 'reason': 'This exercise name already exists for the current user'}
+
 
 @api.route('/')
 class ExerciseResourceList(Resource):
