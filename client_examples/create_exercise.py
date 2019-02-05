@@ -1,4 +1,6 @@
-# Generate broken chord for M7, m7 en Dominant 7 chords in such a way that you get riffs that start on each chord note to ensure maximum instrument efficency
+"""
+Create an exercise via the REST endpoint
+"""
 import sys
 
 import json
@@ -47,6 +49,7 @@ payload = {
             "octave": 0,
             "order_number": 0,
             "riff_id": "61c290ec-9734-4364-b2ad-abf0b8ead3c2",
+            "chord_info": "blaat",
          },
          {
             "pitch": "c",
