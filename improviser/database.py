@@ -148,6 +148,7 @@ class RiffExerciseItem(db.Model):
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'))
     riff_id = Column('riff_id', UUID(as_uuid=True), ForeignKey('riffs.id'))
     pitch = Column(String(3), default='c')
+    chord_info = Column(String(255))
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

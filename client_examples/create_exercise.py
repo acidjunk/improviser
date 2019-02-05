@@ -38,7 +38,7 @@ exercise_id = str(uuid.uuid4())
 payload = {
     "id": exercise_id,
     "name": "Test" + exercise_id,
-    "description": "Good stuff",
+    "description": "Good stuff testing 2-5-1 chords",
     "root_key": "c",
     "is_public": False,
     "exercise_items": [

@@ -31,6 +31,7 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
     "pitch": fields.String(required=True),
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
+    "chord_info": fields.String(required=False),  # when NOT provided; the chord info of the riffs will be used
     "riff_id": fields.String(required=True, description="The riff"),
     "created_at": fields.DateTime(),
 })
@@ -125,7 +126,15 @@ class ExerciseResourceList(Resource):
         try:
             db.session.add(exercise)
             for exercise_item in exercise_items:
+                chord_info = exercise_item.get("chord_info")
+                if not chord_info:
+                    # riff = Riff.query.filter_by(Riff.id==exercise_item["riff_id"]).first()
+                    # print(riff)
+                    # Todo: handle chord_info so that it can be overruled in the exercise.
+                    pass
                 print(f"Adding {exercise_item} to exercise_id: {api.payload['id']}")
+
+
                 record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
                 db.session.add(record)
             db.session.commit()
