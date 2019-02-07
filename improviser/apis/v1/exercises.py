@@ -1,16 +1,17 @@
-import datetime
 import uuid
+import structlog
+
 from flask_login import current_user
 from flask_security import roles_accepted
 from security import quick_token_required
 
-from .riffs import riff_fields
-
-from database import db, RiffExerciseItem
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from database import Riff, RiffExercise
 
+from database import db, Riff, RiffExercise, RiffExerciseItem
+from .riffs import riff_fields
+
+logger = structlog.get_logger(__name__)
 
 api = Namespace("exercises", description="Exercise related operations")
 
@@ -128,18 +129,23 @@ class ExerciseResourceList(Resource):
             for exercise_item in exercise_items:
                 chord_info = exercise_item.get("chord_info")
                 if not chord_info:
-                    # riff = Riff.query.filter_by(Riff.id==exercise_item["riff_id"]).first()
-                    # print(riff)
-                    # Todo: handle chord_info so that it can be overruled in the exercise.
+                    # Try retrieving it from the riff itself
+                    riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
+                    chord_info = riff.chord_info if riff.chord_info else riff.chord
+                    # Todo: handle tranpose correctly
+                else:
+                    # Todo: validate user stuff
                     pass
-                print(f"Adding {exercise_item} to exercise_id: {api.payload['id']}")
+                if chord_info:
+                    exercise_item["chord_info"] = chord_info
+                logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
 
-
-                record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
-                db.session.add(record)
-            db.session.commit()
+                #record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
+            #     db.session.add(record)
+            # db.session.commit()
         except Exception as error:
             db.session.rollback()
+            logger.error("DB exercise add caused a rollback", error=error)
             abort(400, 'DB error: {}'.format(str(error)))
         return 201
 

@@ -1,18 +1,18 @@
 import datetime
-import json
+import structlog
 from database import db
 from flask import request
-from flask_login import login_required, current_user
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff
-from flask_security import roles_required, auth_token_required, roles_accepted
+from flask_security import auth_token_required, roles_accepted
 from security import quick_token_required
+
+logger = structlog.get_logger(__name__)
 
 KEYS = ["c", "cis", "d", "dis", "ees", "e", "f", "fis", "g", "gis", "aes", "a", "ais", "bes", "b"]
 OCTAVES = [-1, 0, 1, 2]
 
 api = Namespace("riffs", description="Riff related operations")
-
 
 riff_serializer = api.model("Riff", {
     "name": fields.String(required=True, description="Unique riff name"),
@@ -28,8 +28,6 @@ riff_render_serializer = api.model("RenderedRiff", {
     "render_valid": fields.Boolean(required=True, description="Whether a render is deemed valid."),
     "image_info": fields.String(description="The metainfo for all images for this riff, per key, octave")
 })
-
-
 
 image_info_marshaller = {
     "key_octave": fields.String,
@@ -54,17 +52,9 @@ riff_fields = {
     'tags': fields.List(fields.String),
 }
 
-music_xml_info_marshaller = {
-    "key_octave": fields.String,
-    "music_xml": fields.String,
-}
-
 riff_detail_fields = {
     **riff_fields,
     'notes': fields.String,
-    'music_xml_info': fields.List(
-        fields.Nested(music_xml_info_marshaller),
-        description='Music XML representation of the riff in all available keys')
 }
 
 riff_arguments = reqparse.RequestParser()
@@ -163,12 +153,12 @@ class RiffResource(Resource):
         riff = Riff.query.filter(Riff.id == riff_id).first()
         riff.tags = [str(tag.name) for tag in riff.riff_tags]
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
-        # todo: marshall dict -> key:music_xml
-        result = []
-        for octave in OCTAVES:
-            result += [{"key_octave": key if not octave else f"{key}_{octave}",
-                        "music_xml": convertToMusicXML(riff.notes, key)} for key in KEYS]
-        riff.music_xml_info = result
+        # Todo: add an parameter to the endpoint to show extended music_xml info or move to separate endpoint
+        # result = []
+        # for octave in OCTAVES:
+        #     result += [{"key_octave": key if not octave else f"{key}_{octave}",
+        #                 "music_xml": convertToMusicXML(riff.notes, key)} for key in KEYS]
+        # riff.music_xml_info = result
         return riff
 
     @auth_token_required
