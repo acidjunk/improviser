@@ -3,6 +3,7 @@ import structlog
 
 from flask_login import current_user
 from flask_security import roles_accepted
+from musthe import Note, Interval
 from security import quick_token_required
 
 from flask import request
@@ -82,6 +83,40 @@ exercise_message_fields = {
    'reason': fields.String,
 }
 
+def tranpsose_chord_info(chord_info, pitch, number_of_bars=None):
+    """
+    Transpose a chord_info string to lilypond chord info
+
+    e.g.:
+    chord_info: d2:m7 g:7 c1:maj7, with pitch: d => e2:m7 a:7 d1:maj7
+    chord_info: C7, pitch: d, number_of_bars: 2 => d1:7 d1:7
+
+    Note: when using C7 notation (from the riff.chord property) -> number of bars is mandatory
+
+    return: new lilypond chord string
+    """
+    notes = {"c": "P1", "cis": "m1", "d": "M2", "ees": "m3", "e": "M3", "f": "P4", "fis": "A4", "g": "P5", "gis": "A5",
+             "a": "M6", "bes": "m7", "b": "M7"}
+
+    if chord_info[0].isupper():
+        root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
+        chord_mood = root_key[1:] if len(root_key) > 1 else ""
+        logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood)
+        # todo: add suff (e.g. maj9) when avail
+        if not number_of_bars or number_of_bars == 1:
+            return f"{root_key}{chord_mood}:1"
+        return f"{root_key}{chord_mood}:1"
+        # return " ".join([f"{root_key}{chord_mood}:1"] for i in range(number_of_bars))
+    else:
+        chords = chord_info.split(" ")
+        logger.info("Using chord-info from riff", chords=chords, pitch=pitch)
+        result = []
+        for chord in chords:
+            root_key, chord_mood = chord.split(":")
+            duration = root_key[1] if len(root_key) == 2 else ""
+            root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower() + duration
+            result.append(f"{root_key}:{chord_mood}")
+        return " ".join(result)
 
 @api.route('/validate-exercise-name/<string:name>')
 class ValidateExerciseNameResource(Resource):
@@ -124,25 +159,25 @@ class ExerciseResourceList(Resource):
     def post(self):
         exercise_items = api.payload.pop("exercise_items", [])
         exercise = RiffExercise(**api.payload, created_by=current_user.id)
-        try:
-            db.session.add(exercise)
-            for exercise_item in exercise_items:
-                chord_info = exercise_item.get("chord_info")
-                if not chord_info:
-                    # Try retrieving it from the riff itself
-                    riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
-                    chord_info = riff.chord_info if riff.chord_info else riff.chord
-                    # Todo: handle tranpose correctly
-                else:
-                    # Todo: validate user stuff
-                    pass
-                if chord_info:
-                    exercise_item["chord_info"] = chord_info
-                logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
+        db.session.add(exercise)
+        for exercise_item in exercise_items:
+            chord_info = exercise_item.get("chord_info")
+            if not chord_info:
+                # Try retrieving it from the riff itself
+                riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
+                chord_info = riff.chord_info if riff.chord_info else riff.chord
+                exercise_item["chord_info"] = tranpsose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
+            else:
+                # Todo: validate `user input` stuff
+                # For now: just use it, and consider it transposed already -> plain simple store it
+                pass
 
-                #record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
-            #     db.session.add(record)
-            # db.session.commit()
+            logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
+            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
+            db.session.add(record)
+
+        try:
+            db.session.commit()
         except Exception as error:
             db.session.rollback()
             logger.error("DB exercise add caused a rollback", error=error)

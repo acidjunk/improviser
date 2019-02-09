@@ -9,3 +9,4 @@ psycopg2-binary==2.7.6.1
 python-ly==0.9.5
 libgravatar==0.2.3
 structlog==19.1.0
+musthe==1.0.0

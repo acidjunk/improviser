@@ -82,13 +82,13 @@ payload = {
             "riff_id": "39eb4025-9a26-4b4e-8146-051004acc25f",
         },
         {
-            "pitch": "c",
+            "pitch": "f",
             "octave": 0,
             "order_number": 6,
             "riff_id": "e7d5ac82-a66b-47a4-a5c2-7ff886d37cee",
         },
         {
-            "pitch": "c",
+            "pitch": "ees",
             "octave": 0,
             "order_number": 7,
             "riff_id": "f3f09615-6938-45e3-9a46-eb381f4a7681",
@@ -100,7 +100,7 @@ payload = {
             "riff_id": "81d9ca8e-0b3d-48b8-b845-0217b93bb0d0",
         },
         {
-            "pitch": "c",
+            "pitch": "b",
             "octave": 0,
             "order_number": 9,
             "riff_id": "e0cbc581-d05e-4a6c-a6dd-487dc6dff91f",
