@@ -1,5 +1,6 @@
 import uuid
 import structlog
+from copy import copy
 
 from flask_login import current_user
 from flask_security import roles_accepted
@@ -52,7 +53,6 @@ exercise_detail_serializer = api.model("RiffExercise", {
 })
 
 exercise_item_fields = {
-    # "riff_exercise_id": fields.String(required=True, description="Unique exercise name"),
     "pitch": fields.String(required=True),
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
@@ -67,7 +67,10 @@ exercise_fields = {
     "created_at": fields.DateTime,
     "created_by": fields.String,
     "exercise_items": fields.Nested(exercise_item_fields),
+}
 
+copy_exercise_fields = {
+    "new_exercise_id": fields.String
 }
 
 exercise_detail_fields = exercise_fields
@@ -154,7 +157,7 @@ class ExerciseResourceList(Resource):
         return exercises
 
     @quick_token_required
-    @roles_accepted('admin', 'moderator', 'member')
+    @roles_accepted('admin', 'moderator', 'student', 'teacher', 'operator')
     @api.expect(exercise_fields)
     def post(self):
         exercise_items = api.payload.pop("exercise_items", [])
@@ -201,14 +204,35 @@ class ExerciseResource(Resource):
         return exercise
 
 
+@api.route('/copy/<string:exercise_id>')
+class CopyExerciseResource(Resource):
 
+    @quick_token_required
+    @roles_accepted('admin', 'moderator', 'student', 'teacher', 'operator')
+    @api.expect(exercise_fields)
+    def post(self, exercise_id):
+        exercise = RiffExercise.query.filter(RiffExercise.id == exercise_id).first()
 
+        # query all exercises of this user that start with the old exercise name:
+        exercise_name_check_query = RiffExercise.query.filter(RiffExercise.created_by == current_user.id)\
+            .filter(RiffExercise.name.startswith(exercise.name)).order_by(RiffExercise.name).all()
+        taken_exercise_names = [item.name for item in exercise_name_check_query]
+        if not taken_exercise_names:
+            raise Exception("Original exer")
+        elif len(taken_exercise_names) == 1:
+            name = f"{exercise.name} Variation 1"
+        else:
+            # loop trough them starting at 1
+            # Todo
+            name = str(uuid.uuid4())
 
+        record = RiffExercise(id=api.payload["new_exercise_id"], name=name, description=exercise.description)
+        db.session.add(record)
 
-
-
-
-
+        try:
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
 
 
 @api.route('/scales')
