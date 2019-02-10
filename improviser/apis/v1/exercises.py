@@ -213,21 +213,35 @@ class CopyExerciseResource(Resource):
     def post(self, exercise_id):
         exercise = RiffExercise.query.filter(RiffExercise.id == exercise_id).first()
 
-        # query all exercises of this user that start with the old exercise name:
+        # Query all exercises of this user that start with the old exercise name:
         exercise_name_check_query = RiffExercise.query.filter(RiffExercise.created_by == current_user.id)\
             .filter(RiffExercise.name.startswith(exercise.name)).order_by(RiffExercise.name).all()
         taken_exercise_names = [item.name for item in exercise_name_check_query]
+        # Start with a name
+        name = f"Copied without a name {str(uuid.uuid4())}"
         if not taken_exercise_names:
             raise Exception("Original exer")
         elif len(taken_exercise_names) == 1:
             name = f"{exercise.name} Variation 1"
         else:
-            # loop trough them starting at 1
-            # Todo
-            name = str(uuid.uuid4())
+            # Take last list item and add one
+            try:
+                words = exercise.name.split(" ")
+                if words[-1].isnumber():
+                    name = " ".join(words[:-1]) + str(int(words[-1])+1)
+                    logger.info("generated name", exercise_name=exercise.name, new_name=name)
+            except:
+                logger.error("Failed generating a name", exercise_name=exercise.name, taken=taken_exercise_names)
 
         record = RiffExercise(id=api.payload["new_exercise_id"], name=name, description=exercise.description)
         db.session.add(record)
+
+        # Copy exercise items
+        for item in exercise.exercise_items:
+            record = RiffExerciseItem(id=str(uuid.uuid4()), riff_exercise_id=api.payload["new_exercise_id"],
+                                      riff_id=item.riff_id, pitch=item.pitch, chord_info=item.chord_info,
+                                      octave=item.octave, order_number=item.order_number)
+            db.session.add(record)
 
         try:
             db.session.commit()
