@@ -57,6 +57,8 @@ exercise_item_fields = {
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
     "riff_id": fields.String(required=True, description="The riff"),
+    "chord_info": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
+                                                            "LilyPond riff info"),
 }
 
 exercise_fields = {
@@ -126,8 +128,6 @@ class ValidateExerciseNameResource(Resource):
 
     @quick_token_required
     def get(self, name):
-        print(current_user)
-
         exercise = RiffExercise.query.filter(RiffExercise.name == name)\
             .filter(RiffExercise.user == current_user).first()
         if not exercise:
@@ -169,7 +169,11 @@ class ExerciseResourceList(Resource):
                 # Try retrieving it from the riff itself
                 riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
                 chord_info = riff.chord_info if riff.chord_info else riff.chord
-                exercise_item["chord_info"] = tranpsose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
+                if chord_info:
+                    logger.info("Using chord_info", riff_id=riff.id, riff_name=riff.name, chord_info=chord_info)
+                    exercise_item["chord_info"] = tranpsose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
+                else:
+                    logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
             else:
                 # Todo: validate `user input` stuff
                 # For now: just use it, and consider it transposed already -> plain simple store it
