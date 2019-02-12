@@ -114,14 +114,19 @@ def tranpsose_chord_info(chord_info, pitch, number_of_bars=None):
         # return " ".join([f"{root_key}{chord_mood}:1"] for i in range(number_of_bars))
     else:
         chords = chord_info.split(" ")
-        logger.info("Using chord-info from riff", chords=chords, pitch=pitch)
+        logger.info("Using chord-info in lilypond format", chords=chords, pitch=pitch)
         result = []
         for chord in chords:
-            root_key, chord_mood = chord.split(":")
-            duration = root_key[1] if len(root_key) == 2 else ""
-            root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower() + duration
-            result.append(f"{root_key}:{chord_mood}")
+            if ":" in chord:
+                root_key, chord_mood = chord.split(":")
+                duration = root_key[1] if len(root_key) == 2 else ""
+                root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower() + duration
+                result.append(f"{root_key}:{chord_mood}")
+            else:
+                logger.error("Expected and : in chord", chord=chord)
+                result.append(f"Error in:{chord}")
         return " ".join(result)
+
 
 @api.route('/validate-exercise-name/<string:name>')
 class ValidateExerciseNameResource(Resource):
