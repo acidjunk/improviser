@@ -3,7 +3,7 @@ import os
 import structlog
 
 from admin_views import (UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView, BaseAdminView,
-                         UserPreferenceAdminView, InstrumentAdminView)
+                         UserPreferenceAdminView, InstrumentAdminView, RiffExerciseItemAdminView)
 
 from flask import Flask, url_for
 from flask_admin import Admin
@@ -15,7 +15,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_security import (Security, user_registered)
 
-from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore, UserPreference, Instrument
+from database import db, Tag, RiffTag, RiffExerciseTag, user_datastore, UserPreference, Instrument, RiffExerciseItem
 from database import User, Role, Riff, RiffExercise
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 
@@ -136,6 +136,7 @@ db.init_app(app)
 mail.init_app(app)
 admin.add_view(RiffAdminView(Riff, db.session))
 admin.add_view(RiffExerciseAdminView(RiffExercise, db.session))
+admin.add_view(RiffExerciseItemAdminView(RiffExerciseItem, db.session))
 admin.add_view(UserAdminView(User, db.session))
 admin.add_view(UserPreferenceAdminView(UserPreference, db.session))
 admin.add_view(InstrumentAdminView(Instrument, db.session))

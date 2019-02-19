@@ -12,6 +12,7 @@ from wtforms import PasswordField
 class UserAdminView(ModelView):
     # Don't display the password on the list of Users
     column_exclude_list = list = ('password',)
+    column_default_sort = ('created_at', True)
 
     # Don't include the standard password field when creating or editing a User (but see below)
     form_excluded_columns = ('password',)
@@ -95,7 +96,7 @@ class RiffAdminView(ModelView):
     Riff.image = String
     column_list = ['id', 'name', 'riff_tags', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
                    'number_of_bars', 'chord', 'created_date', 'image']
-    column_default_sort = ('name', True)
+    column_default_sort = ('created_date', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')
     column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
     can_set_page_size = True
@@ -131,8 +132,24 @@ class RiffAdminView(ModelView):
 
 class RiffExerciseAdminView(ModelView):
     column_list = ['id', 'name', 'riff_exercise_tags', 'description', 'is_public', 'user.username', 'created_at']
-    column_default_sort = ('name', True)
+    column_default_sort = ('created_at', True)
     column_searchable_list = ('id', 'name', 'created_by')
+    can_set_page_size = True
+
+    def is_accessible(self):
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
+
+
+class RiffExerciseItemAdminView(ModelView):
+    column_list = ['id', 'riff_exercise_id', 'riff_id', 'pitch', 'octave', 'chord_info', 'order_number', 'created_at']
+    column_default_sort = ('order_number', False)
+    column_searchable_list = ('id', 'riff_exercise_id', 'riff_id', 'chord_info')
     can_set_page_size = True
 
     def is_accessible(self):
