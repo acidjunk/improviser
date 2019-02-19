@@ -144,293 +144,293 @@ exercise_id = str(uuid.uuid4())
 #         },
 #     ]
 # }
-# payload = {
-#     "id": exercise_id,
-#     "name": "Every summer night - date: " + str(datetime.datetime.now()),
-#     "description": "Chords on all bars of Every summer night",
-#     "root_key": "c",
-#     "is_public": False,
-#     "exercise_items": [
-#         {
-#             "pitch": "b",
-#             "octave": 0,
-#             "order_number": 0,
-#             "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
-#             "chord_info": "*Bm9",
-#         },
-#         {
-#             "pitch": "a",
-#             "octave": 0,
-#             "order_number": 1,
-#             "riff_id": "080286dd-0ac2-4bb9-9269-e70a4c049167",
-#             "chord_info": "*Am9",
-#         },
-#         {
-#             "pitch": "g",
-#             "octave": 0,
-#             "order_number": 2,
-#             "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
-#             "chord_info": "*Gm9 Am9",
-#         },
-#         {
-#             "pitch": "bes",
-#             "octave": 0,
-#             "order_number": 3,
-#             "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
-#             "chord_info": "*BbM7 Gm",
-#         },
-#         {
-#             "pitch": "d",
-#             "octave": 0,
-#             "order_number": 4,
-#             "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
-#             "chord_info": "*Dm9"
-#         },
-#         {
-#             "pitch": "g",
-#             "octave": 0,
-#             "order_number": 5,
-#             "riff_id": "c1c7c6f4-74b3-45a1-a1c5-d17e25e8200a",
-#             "chord_info": "*G9 Gm9",
-#         },
-#
-#         {
-#             "pitch": "f",
-#             "octave": 0,
-#             "order_number": 6,
-#             "riff_id": "17aaf175-a7ed-4419-b76e-3620a38725e4",
-#             "chord_info": "*F Eb"
-#         },
-#         {
-#             "pitch": "bes",
-#             "octave": 0,
-#             "order_number": 7,
-#             "riff_id": "17aaf175-a7ed-4419-b76e-3620a38725e4",
-#             "chord_info": "*Bb Gm"
-#         },
-#         {
-#             "pitch": "f",
-#             "octave": 1,
-#             "order_number": 8,
-#             "riff_id": "89f4c1cd-099d-40be-a4b8-cfeb0483ff68",
-#             "chord_info": "*F G"
-#         },
-#         {
-#             "pitch": "e",
-#             "octave": 0,
-#             "order_number": 9,
-#             "riff_id": "53e6e122-6af6-403b-a8ce-6e1d757724fd",
-#             "chord_info": "*Em7 Em6"
-#         },
-#         {
-#             "pitch": "d",
-#             "octave": 0,
-#             "order_number": 10,
-#             "riff_id": "c33fc346-c75e-4572-b684-66804e874bca",
-#             "chord_info": "*Dm7 *Dm7"
-#         },
-#         {
-#             "pitch": "b",
-#             "octave": 0,
-#             "order_number": 11,
-#             "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
-#             "chord_info": "*Bm9",
-#         },
-#         {
-#             "pitch": "a",
-#             "octave": 0,
-#             "order_number": 12,
-#             "riff_id": "080286dd-0ac2-4bb9-9269-e70a4c049167",
-#             "chord_info": "*Am9",
-#         },
-#         {
-#             "pitch": "g",
-#             "octave": 0,
-#             "order_number": 13,
-#             "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
-#             "chord_info": "*Gm9 Am9",
-#         },
-#         {
-#             "pitch": "bes",
-#             "octave": 0,
-#             "order_number": 14,
-#             "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
-#             "chord_info": "*BbM7 Gm",
-#         },
-#         {
-#             "pitch": "d",
-#             "octave": 0,
-#             "order_number": 15,
-#             "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
-#             "chord_info": "*Dm9"
-#         },
-#         {
-#             "pitch": "g",
-#             "octave": 0,
-#             "order_number": 16,
-#             "riff_id": "c1c7c6f4-74b3-45a1-a1c5-d17e25e8200a",
-#             "chord_info": "*G9 Gm9",
-#         },
-#
-#         {
-#             "pitch": "f",
-#             "octave": 0,
-#             "order_number": 17,
-#             "riff_id": "17aaf175-a7ed-4419-b76e-3620a38725e4",
-#             "chord_info": "*F Eb"
-#         },
-#         {
-#             "pitch": "bes",
-#             "octave": 0,
-#             "order_number": 18,
-#             "riff_id": "17aaf175-a7ed-4419-b76e-3620a38725e4",
-#             "chord_info": "*Bb Gm"
-#         },
-#         {
-#             "pitch": "f",
-#             "octave": 1,
-#             "order_number": 19,
-#             "riff_id": "89f4c1cd-099d-40be-a4b8-cfeb0483ff68",
-#             "chord_info": "*F G"
-#         },
-#         {
-#             "pitch": "e",
-#             "octave": 0,
-#             "order_number": 20,
-#             "riff_id": "53e6e122-6af6-403b-a8ce-6e1d757724fd",
-#             "chord_info": "*Em7 Em6"
-#         },
-#         {
-#             "pitch": "d",
-#             "octave": 0,
-#             "order_number": 21,
-#             "riff_id": "c33fc346-c75e-4572-b684-66804e874bca",
-#             "chord_info": "*Dm7 *Dm7"
-#         },
-#
-#
-#
-#
-#
-#
-#
-#     ]
-# }
 payload = {
     "id": exercise_id,
-    "name": "Band: " + str(datetime.datetime.now()),
+    "name": "Every summer night - date: " + str(datetime.datetime.now()),
     "description": "Chords on all bars of Every summer night",
     "root_key": "c",
     "is_public": False,
     "exercise_items": [
         {
-            "pitch": "c",
-            "octave": 0,
-            "order_number": 0,
-            "riff_id": "19c53d54-5c1d-4a58-8e26-12cb34a52d5f",
-            "chord_info": "*KWARTEN 1",
-        },
-        {
-            "pitch": "c",
-            "octave": 0,
-            "order_number": 0,
-            "riff_id": "9ef14d4f-7a6a-4782-9fc4-fd579b7c1ec6",
-            "chord_info": "*KWARTEN 1",
-        },
-        {
-            "pitch": "c",
-            "octave": 0,
-            "order_number": 0,
-            "riff_id": "2ba196a2-4a5d-42b9-9b84-61efc8a3a7c6",
-            "chord_info": "*KWARTEN 1",
-        },
-        {
-            "pitch": "fis",
-            "octave": 0,
-            "order_number": 3,
-            "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
-            "chord_info": "*F# Maj",
-        },
-        {
-            "pitch": "fis",
-            "octave": 0,
-            "order_number": 3,
-            "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
-            "chord_info": "*F# Maj",
-        },
-        {
-            "pitch": "fis",
-            "octave": 0,
-            "order_number": 3,
-            "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
-            "chord_info": "*F# Maj",
-        },
-        {
             "pitch": "b",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
-            "chord_info": "*B Maj",
+            "order_number": 0,
+            "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
+            "chord_info": "*Bm9",
         },
         {
-            "pitch": "b",
+            "pitch": "a",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
-            "chord_info": "*B Maj",
+            "order_number": 1,
+            "riff_id": "080286dd-0ac2-4bb9-9269-e70a4c049167",
+            "chord_info": "*Am9",
         },
         {
-            "pitch": "b",
+            "pitch": "g",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
-            "chord_info": "*B Maj",
+            "order_number": 2,
+            "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
+            "chord_info": "*Gm9 Am9",
         },
         {
             "pitch": "a",
             "octave": 0,
             "order_number": 3,
-            "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
-            "chord_info": "*A Maj",
+            "riff_id": "3f1cc1a4-905d-4311-befd-eb2d33ae1216",
+            "chord_info": "*BbM7 Gm",
+        },
+        {
+            "pitch": "d",
+            "octave": 0,
+            "order_number": 4,
+            "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
+            "chord_info": "*Dm9"
+        },
+        {
+            "pitch": "g",
+            "octave": 0,
+            "order_number": 5,
+            "riff_id": "c1c7c6f4-74b3-45a1-a1c5-d17e25e8200a",
+            "chord_info": "*G9 Gm9",
+        },
+
+        {
+            "pitch": "e",
+            "octave": 0,
+            "order_number": 6,
+            "riff_id": "cc072e60-ff4c-41b1-b1b3-634de5b32cf8",
+            "chord_info": "*F Eb"
         },
         {
             "pitch": "a",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
-            "chord_info": "*A Maj",
+            "order_number": 7,
+            "riff_id": "c69affc8-d504-4c97-bf46-6c566054bfb8",
+            "chord_info": "*Bb Gm"
+        },
+        {
+            "pitch": "f",
+            "octave": 1,
+            "order_number": 8,
+            "riff_id": "89f4c1cd-099d-40be-a4b8-cfeb0483ff68",
+            "chord_info": "*F G"
+        },
+        {
+            "pitch": "e",
+            "octave": 0,
+            "order_number": 9,
+            "riff_id": "53e6e122-6af6-403b-a8ce-6e1d757724fd",
+            "chord_info": "*Em7 Em6"
+        },
+        {
+            "pitch": "d",
+            "octave": 0,
+            "order_number": 10,
+            "riff_id": "c33fc346-c75e-4572-b684-66804e874bca",
+            "chord_info": "*Dm7 *Dm7"
+        },
+        {
+            "pitch": "b",
+            "octave": 0,
+            "order_number": 11,
+            "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
+            "chord_info": "*Bm9",
         },
         {
             "pitch": "a",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
-            "chord_info": "*A Maj",
+            "order_number": 12,
+            "riff_id": "080286dd-0ac2-4bb9-9269-e70a4c049167",
+            "chord_info": "*Am9",
+        },
+        {
+            "pitch": "g",
+            "octave": 0,
+            "order_number": 13,
+            "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
+            "chord_info": "*Gm9 Am9",
+        },
+        {
+            "pitch": "a",
+            "octave": 0,
+            "order_number": 14,
+            "riff_id": "0b66bc70-58d1-4305-b6cd-ace7adf66eec",
+            "chord_info": "*BbM7 Gm",
+        },
+        {
+            "pitch": "d",
+            "octave": 0,
+            "order_number": 15,
+            "riff_id": "afa5f88a-147b-4471-ac71-4a8d89948ab1",
+            "chord_info": "*Dm9"
+        },
+        {
+            "pitch": "g",
+            "octave": 0,
+            "order_number": 16,
+            "riff_id": "c1c7c6f4-74b3-45a1-a1c5-d17e25e8200a",
+            "chord_info": "*G9 Gm9",
+        },
+
+        {
+            "pitch": "e",
+            "octave": 0,
+            "order_number": 17,
+            "riff_id": "4ffb771d-d443-4237-bc93-719c329d35a1",
+            "chord_info": "*F Eb"
+        },
+        {
+            "pitch": "bes",
+            "octave": 0,
+            "order_number": 18,
+            "riff_id": "17aaf175-a7ed-4419-b76e-3620a38725e4",
+            "chord_info": "*Bb Gm"
+        },
+        {
+            "pitch": "f",
+            "octave": 1,
+            "order_number": 19,
+            "riff_id": "bdd2b9a2-2127-4136-8fa1-75336e1d5ab0",
+            "chord_info": "*F G"
         },
         {
             "pitch": "e",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
-            "chord_info": "*E Maj",
+            "order_number": 20,
+            "riff_id": "53e6e122-6af6-403b-a8ce-6e1d757724fd",
+            "chord_info": "*Em7 Em6"
         },
         {
-            "pitch": "e",
+            "pitch": "d",
             "octave": 0,
-            "order_number": 3,
-            "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
-            "chord_info": "*E Maj",
+            "order_number": 21,
+            "riff_id": "c33fc346-c75e-4572-b684-66804e874bca",
+            "chord_info": "*Dm7 *Dm7"
         },
-        {
-            "pitch": "e",
-            "octave": 0,
-            "order_number": 3,
-            "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
-            "chord_info": "*E Maj",
-        },
+
+
+
+
+
+
 
     ]
 }
+# payload = {
+#     "id": exercise_id,
+#     "name": "Band: " + str(datetime.datetime.now()),
+#     "description": "Chords on all bars of Every summer night",
+#     "root_key": "c",
+#     "is_public": False,
+#     "exercise_items": [
+#         {
+#             "pitch": "c",
+#             "octave": 0,
+#             "order_number": 0,
+#             "riff_id": "19c53d54-5c1d-4a58-8e26-12cb34a52d5f",
+#             "chord_info": "*KWARTEN 1",
+#         },
+#         {
+#             "pitch": "c",
+#             "octave": 0,
+#             "order_number": 0,
+#             "riff_id": "9ef14d4f-7a6a-4782-9fc4-fd579b7c1ec6",
+#             "chord_info": "*KWARTEN 1",
+#         },
+#         {
+#             "pitch": "c",
+#             "octave": 0,
+#             "order_number": 0,
+#             "riff_id": "2ba196a2-4a5d-42b9-9b84-61efc8a3a7c6",
+#             "chord_info": "*KWARTEN 1",
+#         },
+#         {
+#             "pitch": "fis",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
+#             "chord_info": "*F# Maj",
+#         },
+#         {
+#             "pitch": "fis",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
+#             "chord_info": "*F# Maj",
+#         },
+#         {
+#             "pitch": "fis",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
+#             "chord_info": "*F# Maj",
+#         },
+#         {
+#             "pitch": "b",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
+#             "chord_info": "*B Maj",
+#         },
+#         {
+#             "pitch": "b",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
+#             "chord_info": "*B Maj",
+#         },
+#         {
+#             "pitch": "b",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
+#             "chord_info": "*B Maj",
+#         },
+#         {
+#             "pitch": "a",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
+#             "chord_info": "*A Maj",
+#         },
+#         {
+#             "pitch": "a",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
+#             "chord_info": "*A Maj",
+#         },
+#         {
+#             "pitch": "a",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
+#             "chord_info": "*A Maj",
+#         },
+#         {
+#             "pitch": "e",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "6b98e154-7749-4d68-9d14-3e9eac2c2a1d",
+#             "chord_info": "*E Maj",
+#         },
+#         {
+#             "pitch": "e",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "c0595373-32de-428c-a1bf-3ed92615bd82",
+#             "chord_info": "*E Maj",
+#         },
+#         {
+#             "pitch": "e",
+#             "octave": 0,
+#             "order_number": 3,
+#             "riff_id": "3bb742e9-0e79-4882-93ab-03b1886f90ff",
+#             "chord_info": "*E Maj",
+#         },
+#
+#     ]
+# }
 response = requests.post(f"{IMPROVISER_HOST}/v1/exercises/", json=payload, headers=quick_auth_headers)
 if response.status_code not in [200, 201, 204]:
     print(f"Error while creating exercise. Status: {response.status_code} with content: {response.content}")
