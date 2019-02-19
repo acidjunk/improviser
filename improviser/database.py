@@ -129,6 +129,7 @@ class RiffExercise(db.Model):
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     annotations = Column(JSON)
+    tempo = Column(Integer())
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
     riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
     exercise_items = relationship("RiffExerciseItem", cascade="all, delete-orphan", backref="parent")

@@ -17,6 +17,13 @@ logger = structlog.get_logger(__name__)
 
 api = Namespace("exercises", description="Exercise related operations")
 
+annotation_fields = {
+    "from": fields.Integer,
+    "to": fields.Integer,
+    "label": fields.String,
+    "text": fields.String,
+}
+
 exercise_list_serializer = api.model("RiffExercise", {
     "id": fields.String(required=True),
     "name": fields.String(required=True, description="Unique exercise name"),
@@ -49,7 +56,9 @@ exercise_detail_serializer = api.model("RiffExercise", {
     "gravatar_image": fields.String(),
     "tags": fields.List(fields.String),
     "exercise_items": fields.Nested(exercise_item_serializer),
-    "riffs": fields.Nested(riff_fields)
+    "riffs": fields.Nested(riff_fields),
+    "annotations": fields.Nested(annotation_fields),
+    "tempo": fields.Integer()
 })
 
 exercise_item_fields = {
@@ -68,7 +77,9 @@ exercise_fields = {
     "is_public": fields.Boolean,
     "created_at": fields.DateTime,
     "created_by": fields.String,
+    "annotations": fields.Nested(annotation_fields),
     "exercise_items": fields.Nested(exercise_item_fields),
+    "tempo": fields.Integer,
 }
 
 copy_exercise_fields = {
