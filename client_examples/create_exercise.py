@@ -210,7 +210,7 @@ payload = {
         },
         {
             "pitch": "f",
-            "octave": 1,
+            "octave": 0,
             "order_number": 8,
             "riff_id": "89f4c1cd-099d-40be-a4b8-cfeb0483ff68",
             "chord_info": "*F G"
@@ -288,7 +288,7 @@ payload = {
         },
         {
             "pitch": "f",
-            "octave": 1,
+            "octave": 0,
             "order_number": 19,
             "riff_id": "bdd2b9a2-2127-4136-8fa1-75336e1d5ab0",
             "chord_info": "*F G"
