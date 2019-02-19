@@ -307,13 +307,6 @@ payload = {
             "riff_id": "c33fc346-c75e-4572-b684-66804e874bca",
             "chord_info": "*Dm7 *Dm7"
         },
-
-
-
-
-
-
-
     ]
 }
 # payload = {
