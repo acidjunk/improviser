@@ -131,7 +131,7 @@ class RiffAdminView(ModelView):
 
 
 class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'riff_exercise_tags', 'description', 'is_public', 'user.username', 'created_at']
+    column_list = ['id', 'name', 'riff_exercise_tags', 'description', 'annotations', 'is_public', 'user.username', 'created_at']
     column_default_sort = ('created_at', True)
     column_searchable_list = ('id', 'name', 'created_by')
     can_set_page_size = True
@@ -147,7 +147,8 @@ class RiffExerciseAdminView(ModelView):
 
 
 class RiffExerciseItemAdminView(ModelView):
-    column_list = ['id', 'riff_exercise_id', 'riff_id', 'pitch', 'octave', 'chord_info', 'order_number', 'created_at']
+    column_list = ['id', 'riff_exercise_id', 'riff_id', 'pitch', 'octave', 'chord_info', 'number_of_bars',
+                   'order_number', 'created_at']
     column_default_sort = ('order_number', False)
     column_searchable_list = ('id', 'riff_exercise_id', 'riff_id', 'chord_info')
     can_set_page_size = True

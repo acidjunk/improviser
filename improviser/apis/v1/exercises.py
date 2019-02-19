@@ -207,9 +207,8 @@ class ExerciseResource(Resource):
         exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
 
         # Include riffs used in the exercise in the response
-        riffs = []
-
-
+        riff_ids = [item.riff_id for item in exercise.exercise_items]
+        exercise.riffs = Riff.query.filter(Riff.id.in_(riff_ids)).all()
         return exercise
 
 

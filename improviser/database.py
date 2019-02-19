@@ -116,7 +116,7 @@ class Riff(db.Model):
     riff_tags = relationship("Tag", secondary='riff_tags')
 
     def __repr__(self):
-        return '<Riff %r %s>' % (self.name, self.id)
+        return '<Riff %r %s bars, id:%s>' % (self.name, self.number_of_bars, self.id)
 
 
 class RiffExercise(db.Model):
@@ -131,8 +131,7 @@ class RiffExercise(db.Model):
     annotations = Column(JSON)
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
     riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
-    riffs = relationship("Riff", secondary="riff_exercise_items")
-    exercise_items = relationship("RiffExerciseItem", cascade="all,delete", backref=backref("riff_exercises", uselist=True))
+    exercise_items = relationship("RiffExerciseItem", cascade="all, delete-orphan", backref="parent")
 
     def __repr__(self):
         return '<RiffExercise %r %s>>' % (self.name, self.id)
@@ -155,7 +154,8 @@ class RiffExerciseItem(db.Model):
     order_number = Column(Integer, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    riff = relationship("Riff", backref=backref("riffs", uselist=False))
+    # not sure if we want this:
+    riff = relationship("Riff")
 
     def __repr__(self):
         return f'<RiffItem {self.riff.name} in {self.pitch}/{self.octave} chords: {self.chord_info}'
