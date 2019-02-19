@@ -78,12 +78,91 @@ payload = {
         {
             "pitch": "cis",
             "octave": 0,
-            "order_number": 0,
+            "order_number": 1,
             "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
             "chord_info": "*C#m7",
             "number_of_bars": 2
         },
-
+        {
+            "pitch": "d",
+            "octave": 0,
+            "order_number": 2,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Dm7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "ees",
+            "octave": 0,
+            "order_number": 3,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Ebm7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "e",
+            "octave": 0,
+            "order_number": 4,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Em7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "f",
+            "octave": 0,
+            "order_number": 5,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Fm7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "fis",
+            "octave": 0,
+            "order_number": 6,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*#Fm7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "g",
+            "octave": 0,
+            "order_number": 7,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Gm7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "gis",
+            "octave": 0,
+            "order_number": 8,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*G#m7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "a",
+            "octave": 0,
+            "order_number": 9,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Am7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "bes",
+            "octave": 0,
+            "order_number": 10,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Bbm7",
+            "number_of_bars": 2
+        },
+        {
+            "pitch": "b",
+            "octave": 0,
+            "order_number": 11,
+            "riff_id": "5ed49fc9-cd1c-4151-9ef5-20351fd57e45",
+            "chord_info": "*Bm7",
+            "number_of_bars": 2
+        },
     ],
     "tempo": 80
 }
