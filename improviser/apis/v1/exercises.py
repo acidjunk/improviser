@@ -217,6 +217,8 @@ class ExerciseResource(Resource):
         exercise = RiffExercise.query.filter(RiffExercise.id == exercise_id).first()
         exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
 
+        exercise.exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
+
         # Include riffs used in the exercise in the response
         riff_ids = [item.riff_id for item in exercise.exercise_items]
         exercise.riffs = Riff.query.filter(Riff.id.in_(riff_ids)).all()
