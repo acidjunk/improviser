@@ -6,6 +6,7 @@ from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, 
 from database import Riff
 from flask_security import auth_token_required, roles_accepted
 from security import quick_token_required
+from sqlalchemy import cast, String
 
 logger = structlog.get_logger(__name__)
 
@@ -106,8 +107,10 @@ class RiffResourceList(Resource):
     def get(self):
         args = request.args
         # handle case insensitive search
-        if args.get("search_phrase"):
-            riffs_query = Riff.query.filter(Riff.name.ilike('%' + args["search_phrase"] + '%'))
+        search_phrase = args.get("search_phrase")
+        if search_phrase:
+            riffs_query = Riff.query.filter(Riff.name.ilike('%' + search_phrase + '%') |
+                                            cast(Riff.id, String).startswith(search_phrase))
         else:
             riffs_query = Riff.query
 
