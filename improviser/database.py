@@ -128,6 +128,7 @@ class RiffExercise(db.Model):
     is_public = Column(Boolean, default=True)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
     annotations = Column(JSON)
     tempo = Column(Integer())
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
@@ -154,6 +155,7 @@ class RiffExerciseItem(db.Model):
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # not sure if we want this:
     riff = relationship("Riff")

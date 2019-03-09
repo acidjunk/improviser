@@ -1,6 +1,6 @@
+import datetime
 import uuid
 import structlog
-from copy import copy
 
 from flask_login import current_user
 from flask_security import roles_accepted
@@ -11,6 +11,7 @@ from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 
 from database import db, Riff, RiffExercise, RiffExerciseItem
+
 from .riffs import riff_fields
 
 logger = structlog.get_logger(__name__)
@@ -98,6 +99,15 @@ exercise_message_fields = {
    'available': fields.Boolean,
    'reason': fields.String,
 }
+
+
+def row2dict(row):
+    d = {}
+    for column in row.__table__.columns:
+        d[column.name] = str(getattr(row, column.name))
+
+    return d
+
 
 def tranpsose_chord_info(chord_info, pitch, number_of_bars=None):
     """
@@ -223,6 +233,51 @@ class ExerciseResource(Resource):
         riff_ids = [item.riff_id for item in exercise.exercise_items]
         exercise.riffs = Riff.query.filter(Riff.id.in_(riff_ids)).all()
         return exercise
+
+    @quick_token_required
+    @roles_accepted('admin', 'moderator', 'student', 'teacher', 'operator')
+    @api.expect(exercise_fields)
+    def put(self, exercise_id):
+        payload = api.payload
+        exercise = RiffExercise.query.filter_by(id=exercise_id).first()
+        exercise.modified_at = datetime.datetime.now()
+        exercise.name = payload["name"]
+
+        exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
+        payload_exercise_items = sorted(payload["exercise_items"], key=lambda item: item["order_number"])
+
+        for order_number, payload_exercise_item in enumerate(payload_exercise_items):
+            # prepare dicts for compare
+            exercise_item_dict = row2dict(exercise_items[order_number])
+            payload_exercise_item["id"] = exercise_item_dict["id"]
+            payload_exercise_item["order_number"] = str(payload_exercise_item["order_number"])
+            payload_exercise_item["octave"] = str(payload_exercise_item["octave"])
+            del exercise_item_dict["number_of_bars"]
+            del exercise_item_dict["created_at"]
+            del exercise_item_dict["modified_at"]
+
+            added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
+
+            print(f"added: {added}, removed: {removed}, modified: {modified}, same: {same}")
+            if modified:
+                print(f"Updating {order_number}")
+                result = RiffExerciseItem.query.filter_by(id=exercise_item_dict["id"]).update({**payload_exercise_item, "modified_at": datetime.datetime.now()})
+            else:
+                print(f"Skipping update for {order_number}")
+        db.session.commit()
+        return 204
+
+def dict_compare(d1, d2):
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    intersect_keys = d1_keys.intersection(d2_keys)
+    added = d1_keys - d2_keys
+    removed = d2_keys - d1_keys
+    modified = {o : (d1[o], d2[o]) for o in intersect_keys if d1[o] != d2[o]}
+    same = set(o for o in intersect_keys if d1[o] == d2[o])
+    return added, removed, modified, same
+
+
 
 
 @api.route('/copy/<string:exercise_id>')
