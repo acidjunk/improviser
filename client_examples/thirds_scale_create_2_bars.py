@@ -17,7 +17,7 @@ template_notes = {
          "c''", "e''", "d''", "f''", "e''", "g''", "f''", "a''", "g''", "b''", "a''", "c'''", "b''", "d'''"],
     "Thirds down over Major scale with eights:Cmaj":
         ["c'''", "a''", "b''", "g''", "a''", "f''", "g''", "e''", "f''", "d''", "e''", "c''", "d''",
-         "b'", "c''", "a'", "b'", "g'", "a'", "f'", "g'", "e'", "f'", "d'", "e'", "c'", "d'", "b", "c'", "b"],
+         "b'", "c''", "a'", "b'", "g'", "a'", "f'", "g'", "e'", "f'", "d'", "e'", "c'", "d'", "b", "c'", "a"],
     # Todo: add all turnarounds and all alternative endings
 }
 
