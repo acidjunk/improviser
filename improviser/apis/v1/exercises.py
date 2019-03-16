@@ -246,26 +246,63 @@ class ExerciseResource(Resource):
         exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
         payload_exercise_items = sorted(payload["exercise_items"], key=lambda item: item["order_number"])
 
+        changed = False
+
         for order_number, payload_exercise_item in enumerate(payload_exercise_items):
             # prepare dicts for compare
-            exercise_item_dict = row2dict(exercise_items[order_number])
-            payload_exercise_item["id"] = exercise_item_dict["id"]
-            payload_exercise_item["order_number"] = str(payload_exercise_item["order_number"])
-            payload_exercise_item["octave"] = str(payload_exercise_item["octave"])
-            del exercise_item_dict["number_of_bars"]
-            del exercise_item_dict["created_at"]
-            del exercise_item_dict["modified_at"]
-
-            added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
-
-            print(f"added: {added}, removed: {removed}, modified: {modified}, same: {same}")
-            if modified:
-                print(f"Updating {order_number}")
-                result = RiffExerciseItem.query.filter_by(id=exercise_item_dict["id"]).update({**payload_exercise_item, "modified_at": datetime.datetime.now()})
+            if order_number >= len(exercise_items):
+                logger.info("Inserting new exercise item", order_number=order_number, payload=payload_exercise_item)
+                new_exercise_item = {**payload_exercise_item, "riff_exercise_id": exercise_id}
+                new_item = RiffExerciseItem(**new_exercise_item)
+                db.session.add(new_item)
+                changed = True
             else:
-                print(f"Skipping update for {order_number}")
-        db.session.commit()
+                exercise_item_dict = row2dict(exercise_items[order_number])
+                payload_exercise_item["id"] = exercise_item_dict["id"]
+                payload_exercise_item["order_number"] = str(payload_exercise_item["order_number"])
+                payload_exercise_item["octave"] = str(payload_exercise_item["octave"])
+                del exercise_item_dict["number_of_bars"]
+                del exercise_item_dict["created_at"]
+                del exercise_item_dict["modified_at"]
+                added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
+                logger.debug("Handling exercise item", added=added, removed=removed, modified=modified, same=same)
+                if modified:
+                    logger.info("Updating exercise item", order_number=order_number, payload=payload_exercise_item)
+                    RiffExerciseItem.query.filter_by(id=exercise_item_dict["id"]).\
+                        update({**payload_exercise_item, "modified_at": datetime.datetime.now()})
+                    changed = True
+                else:
+                    logger.debug("Skipping update for", order_number=order_number)
+
+        if changed:
+            try:
+                db.session.commit()
+                logger.info("Exercise edit/insert successfully", id=exercise_id)
+            except Exception as error:
+                db.session.rollback()
+                logger.error("DB exercise update caused a rollback", error=error)
+                abort(400, 'DB error: {}'.format(str(error)))
+            # refresh exercise from DB
+            exercise = RiffExercise.query.filter_by(id=exercise_id).first()
+            exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
+
+        deleted = False
+
+        for order_number, exercise_item in enumerate(exercise_items):
+            if order_number >= len(payload_exercise_items):
+                db.session.delete(exercise_item)
+                deleted = True
+
+        if deleted:
+            try:
+                db.session.commit()
+                logger.info("Exercise item delete successfully", id=exercise_id)
+            except Exception as error:
+                db.session.rollback()
+                logger.error("DB exercise update caused a rollback", error=error)
+                abort(400, 'DB error: {}'.format(str(error)))
         return 204
+
 
 def dict_compare(d1, d2):
     d1_keys = set(d1.keys())
@@ -296,7 +333,7 @@ class CopyExerciseResource(Resource):
         # Start with a name
         name = f"Copied without a name {str(uuid.uuid4())}"
         if not taken_exercise_names:
-            raise Exception("Original exer")
+            raise Exception("Original exercise not found?")
         elif len(taken_exercise_names) == 1:
             name = f"{exercise.name} Variation 1"
         else:
@@ -313,7 +350,7 @@ class CopyExerciseResource(Resource):
         db.session.add(record)
 
         # Copy exercise items
-        for item in exercise.exercise_items:
+        for item in exercise.riff_exercise_items:
             record = RiffExerciseItem(id=str(uuid.uuid4()), riff_exercise_id=api.payload["new_exercise_id"],
                                       riff_id=item.riff_id, pitch=item.pitch, chord_info=item.chord_info,
                                       octave=item.octave, order_number=item.order_number)
@@ -321,8 +358,12 @@ class CopyExerciseResource(Resource):
 
         try:
             db.session.commit()
+            logger.info("Exercise copied successfully", id=exercise_id)
         except Exception as error:
             db.session.rollback()
+            logger.error("DB exercise update caused a rollback", error=error)
+            abort(400, 'DB error: {}'.format(str(error)))
+        return 201
 
 
 @api.route('/scales')
