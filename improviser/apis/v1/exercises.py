@@ -11,6 +11,7 @@ from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 
 from database import db, Riff, RiffExercise, RiffExerciseItem
+from sqlalchemy import cast, String
 
 from .riffs import riff_fields
 
@@ -109,7 +110,7 @@ def row2dict(row):
     return d
 
 
-def tranpsose_chord_info(chord_info, pitch, number_of_bars=None):
+def transpose_chord_info(chord_info, pitch, number_of_bars=None):
     """
     Transpose a chord_info string to lilypond chord info
 
@@ -197,7 +198,7 @@ class ExerciseResourceList(Resource):
                 chord_info = riff.chord_info if riff.chord_info else riff.chord
                 if chord_info:
                     logger.info("Using chord_info", riff_id=riff.id, riff_name=riff.name, chord_info=chord_info)
-                    exercise_item["chord_info"] = tranpsose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
+                    exercise_item["chord_info"] = transpose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
                 else:
                     logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
             else:
@@ -315,8 +316,6 @@ def dict_compare(d1, d2):
     return added, removed, modified, same
 
 
-
-
 @api.route('/copy/<string:exercise_id>')
 class CopyExerciseResource(Resource):
 
@@ -325,15 +324,18 @@ class CopyExerciseResource(Resource):
     @api.expect(exercise_fields)
     def post(self, exercise_id):
         exercise = RiffExercise.query.filter(RiffExercise.id == exercise_id).first()
+        if exercise.created_by != current_user or (exercise.is_public and not exercise.is_copyable):
+            return abort(400, "Unable to copy exercise")
 
         # Query all exercises of this user that start with the old exercise name:
-        exercise_name_check_query = RiffExercise.query.filter(RiffExercise.created_by == current_user.id)\
-            .filter(RiffExercise.name.startswith(exercise.name)).order_by(RiffExercise.name).all()
+        exercise_name_check_query = RiffExercise.query.\
+            filter(RiffExercise.created_by == current_user.id).\
+            filter(RiffExercise.name.startswith(exercise.name)).\
+            order_by(RiffExercise.name).all()
         taken_exercise_names = [item.name for item in exercise_name_check_query]
-        # Start with a name
-        name = f"Copied without a name {str(uuid.uuid4())}"
+        # Start with a name, when a user copies this from a public exercise the name will be free
         if not taken_exercise_names:
-            raise Exception("Original exercise not found?")
+            name = exercise.name
         elif len(taken_exercise_names) == 1:
             name = f"{exercise.name} Variation 1"
         else:
@@ -346,7 +348,9 @@ class CopyExerciseResource(Resource):
             except:
                 logger.error("Failed generating a name", exercise_name=exercise.name, taken=taken_exercise_names)
 
-        record = RiffExercise(id=api.payload["new_exercise_id"], name=name, description=exercise.description)
+        record = RiffExercise(id=api.payload["new_exercise_id"], name=name, description=exercise.description,
+                              created_by=current_user, is_public=False, is_copyable=False,
+                              instrument_key=exercise.instrument_key, root_key=exercise.root_key)
         db.session.add(record)
 
         # Copy exercise items
