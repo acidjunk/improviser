@@ -171,10 +171,10 @@ class ExerciseResourceList(Resource):
     def get(self):
         args = request.args
         # handle case insensitive search
+        exercise_query = RiffExercise.query.filter(RiffExercise.created_by == current_user.id)
         if args.get("search_phrase"):
-            exercise_query = RiffExercise.query.filter(RiffExercise.name.ilike('%' + args["search_phrase"] + '%'))
-        else:
-            exercise_query = RiffExercise.query
+            exercise_query = exercise_query.filter(RiffExercise.name.ilike('%' + args["search_phrase"] + '%'))
+
 
         exercises = exercise_query.all()
 
@@ -324,7 +324,9 @@ class CopyExerciseResource(Resource):
     @api.expect(exercise_fields)
     def post(self, exercise_id):
         exercise = RiffExercise.query.filter(RiffExercise.id == exercise_id).first()
-        if exercise.created_by != current_user or (exercise.is_public and not exercise.is_copyable):
+        if exercise.created_by != current_user.id or (exercise.is_public and not exercise.is_copyable):
+            logger.error("Unable to copy exercise", user_id=str(current_user.id), created_by=str(exercise.created_by),
+                         public=exercise.is_public, copyable=exercise.is_copyable)
             return abort(400, "Unable to copy exercise")
 
         # Query all exercises of this user that start with the old exercise name:
@@ -340,16 +342,22 @@ class CopyExerciseResource(Resource):
             name = f"{exercise.name} Variation 1"
         else:
             # Take last list item and add one
+            last_name = taken_exercise_names[-1]
+            logger.info("Trying to get a new name for name", name=last_name, taken=taken_exercise_names)
             try:
-                words = exercise.name.split(" ")
-                if words[-1].isnumber():
+                words = last_name.split(" ")
+                if words[-1].isdigit():
                     name = " ".join(words[:-1]) + str(int(words[-1])+1)
-                    logger.info("generated name", exercise_name=exercise.name, new_name=name)
+                    logger.info("Generated name", exercise_name=exercise.name, name=name)
+                else:
+                    logger.info("Last name doesn't end on a digit: adding Variation 1")
+                    name = f"{last_name} Variation 1"
             except:
                 logger.error("Failed generating a name", exercise_name=exercise.name, taken=taken_exercise_names)
+                return abort(400, "Failed generating a new name")
 
         record = RiffExercise(id=api.payload["new_exercise_id"], name=name, description=exercise.description,
-                              created_by=current_user, is_public=False, is_copyable=False,
+                              created_by=str(current_user.id), is_public=False, is_copyable=False,
                               instrument_key=exercise.instrument_key, root_key=exercise.root_key)
         db.session.add(record)
 
