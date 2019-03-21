@@ -156,7 +156,7 @@ class ValidateExerciseNameResource(Resource):
     @quick_token_required
     def get(self, name):
         exercise = RiffExercise.query.filter(RiffExercise.name == name)\
-            .filter(RiffExercise.user == current_user).first()
+            .filter(RiffExercise.created_by == current_user.id).first()
         if not exercise:
             return {'available': True, 'reason': ''}
         else:
@@ -170,11 +170,12 @@ class ExerciseResourceList(Resource):
     @api.expect(exercise_arguments)
     def get(self):
         args = request.args
-        # handle case insensitive search
-        exercise_query = RiffExercise.query.filter(RiffExercise.created_by == current_user.id)
+        # Get public exercises and exercises owned by this user
+        exercise_query = RiffExercise.query.filter((RiffExercise.created_by == current_user.id) |
+                                                   (RiffExercise.is_public.is_(True)))
         if args.get("search_phrase"):
+            # Handle case insensitive search
             exercise_query = exercise_query.filter(RiffExercise.name.ilike('%' + args["search_phrase"] + '%'))
-
 
         exercises = exercise_query.all()
 
@@ -207,7 +208,8 @@ class ExerciseResourceList(Resource):
                 pass
 
             logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
-            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
+            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"],
+                                      created_by=str(current_user.id))
             db.session.add(record)
 
         try:
@@ -224,8 +226,9 @@ class ExerciseResource(Resource):
 
     @marshal_with(exercise_detail_serializer)
     def get(self, exercise_id):
-        # Todo: check if riff is scaletrainer related otherwise block it for unauthorized users
-        exercise = RiffExercise.query.filter(RiffExercise.id == exercise_id).first()
+        exercise = RiffExercise.query. \
+            filter((RiffExercise.created_by == current_user.id) | (RiffExercise.is_public.is_(True))).\
+            filter(RiffExercise.id == exercise_id).first()
         exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
 
         exercise.exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
@@ -383,6 +386,5 @@ class ScaleTrainerResourceList(Resource):
 
     @marshal_with(riff_fields)
     def get(self):
-        #Todo: query riffs that are allowed in scaletrainer
         riffs = Riff.query.filter(Riff.scale_trainer_enabled).all()
         return riffs
