@@ -126,14 +126,18 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
              "a": "M6", "bes": "m7", "b": "M7"}
 
     if chord_info[0].isupper():
-        root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
-        chord_mood = root_key[1:] if len(root_key) > 1 else ""
-        logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood)
-        # todo: add suff (e.g. maj9) when avail
-        if not number_of_bars or number_of_bars == 1:
+        try:
+            root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
+            chord_mood = root_key[1:] if len(root_key) > 1 else ""
+            logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood)
+            # todo: add suff (e.g. maj9) when avail
+            if not number_of_bars or number_of_bars == 1:
+                return f"{root_key}{chord_mood}:1"
             return f"{root_key}{chord_mood}:1"
-        return f"{root_key}{chord_mood}:1"
-        # return " ".join([f"{root_key}{chord_mood}:1"] for i in range(number_of_bars))
+            # return " ".join([f"{root_key}{chord_mood}:1"] for i in range(number_of_bars))
+        except Exception as error:
+            logger.error("Tranpose had an exception with", chord_info=chord_info, error=error, pitch=pitch)
+            return f"Unable to transpose: {chord_info}"
     else:
         chords = chord_info.split(" ")
         logger.info("Using chord-info in lilypond format", chords=chords, pitch=pitch)
@@ -145,7 +149,7 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
                 root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower() + duration
                 result.append(f"{root_key}:{chord_mood}")
             else:
-                logger.error("Expected and : in chord", chord=chord)
+                logger.error("Expected ':' in chord", chord=chord, complete_chord_info=chord_info)
                 result.append(f"Error in:{chord}")
         return " ".join(result)
 
@@ -189,7 +193,7 @@ class ExerciseResourceList(Resource):
     @api.expect(exercise_fields)
     def post(self):
         exercise_items = api.payload.pop("exercise_items", [])
-        exercise = RiffExercise(**api.payload, created_by=current_user.id)
+        exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
         db.session.add(exercise)
         for exercise_item in exercise_items:
             chord_info = exercise_item.get("chord_info")
@@ -208,8 +212,7 @@ class ExerciseResourceList(Resource):
                 pass
 
             logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
-            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"],
-                                      created_by=str(current_user.id))
+            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
             db.session.add(record)
 
         try:

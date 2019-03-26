@@ -1,10 +1,13 @@
 import datetime
+from typing import List, Tuple
+
 import structlog
 from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff
 from flask_security import auth_token_required, roles_accepted
+from more_itertools import chunked
 from security import quick_token_required
 from sqlalchemy import cast, String
 
@@ -108,6 +111,12 @@ class RiffResourceList(Resource):
         args = request.args
         # handle case insensitive search
         search_phrase = args.get("search_phrase")
+        range_param = args.get("range")
+        sort_param = args.get("sort")
+        filter_param = args.get("filter")
+
+        logger.info("Getting riffs", filter=filter_param, range=range_param, search_phrase=search_phrase, sort=sort_param)
+
         if search_phrase:
             riffs_query = Riff.query.filter(Riff.name.ilike('%' + search_phrase + '%') |
                                             cast(Riff.id, String).startswith(search_phrase))
@@ -116,7 +125,10 @@ class RiffResourceList(Resource):
 
         riffs_query = riffs_query.filter(Riff.render_valid)
 
-        riffs = riffs_query.limit(75).all()
+        riffs, headers = _query_with_filters(query=riffs_query, range=range_param, sort=sort_param, filters=filter_param)
+
+        # Todo: load tags with contains eager?
+        # For now nog server sided tags filter
         for riff in riffs:
             riff.tags = [str(tag.name) for tag in riff.riff_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
@@ -186,3 +198,87 @@ class RiffResourceRendered(Resource):
         riff.render_date = datetime.datetime.now()
         db.session.commit()
         return 204
+
+
+def _query_with_filters(query,
+                        range=None,
+                        sort=None,
+                        filters=None):
+    """
+    Returns filters that can be applied to a existing Riff.query.all() object to get filtered an sorted results
+    :param query:
+    :param range:
+    :param sort:
+    :param filters:
+
+    :return: QueryFilters + Header !
+    """
+    headers = {}
+
+    # Todo: handle list of filters also
+    if filters:
+        try:
+            filter = filters.split(",")
+            print(filter)
+            field = filter[0]
+            value = filter[1]
+            if field.endswith('_gt'):
+                query = query.filter(Riff.__dict__[field[:-3]] > value)
+            elif field.endswith('_gte'):
+                query = query.filter(Riff.__dict__[field[:-4]] >= value)
+            elif field.endswith('_lte'):
+                query = query.filter(Riff.__dict__[field[:-4]] <= value)
+            elif field.endswith('_lt'):
+                query = query.filter(Riff.__dict__[field[:-3]] < value)
+            elif field.endswith('_ne'):
+                query = query.filter(Riff.__dict__[field[:-3]] != value)
+            elif field == "name":
+                query = query.filter(Riff.name.ilike('%' + value + '%'))
+            elif field == "chord":
+                query = query.filter(Riff.chord.ilike('%' + value + '%'))
+            elif field == "riff.tags":
+                pass
+            else:
+                query = query.filter(cast(Riff.__dict__[field], String).startswith(value))
+        except Exception as error:
+            logger.error("Error while handling filter", filter=filter, error=error)
+
+    if sort is not None and len(sort) >= 2:
+        for sort in chunked(sort, 2):
+            # Todo: implement sort on tag
+            if sort and len(sort) == 2:
+                import sqlalchemy.sql.expression as sql_expressions
+                if sort[1].upper() == 'DESC':
+                    query = query.order_by(sql_expressions.desc(Riff.__dict__[sort[0]]))
+                else:
+                    query = query.order_by(sql_expressions.asc(Riff.__dict__[sort[0]]))
+
+    if range:
+        try:
+            range = range.split(",")
+            range_start = int(range[0])
+            range_end = int(range[1])
+        except Exception as error:
+            logger.error("Error while handling range", range=range, error=error)
+            # Todo: show max 5 when user is fiddling with range
+            range_start = 0
+            range_end = 4
+
+        # Range is inclusive so we need to add one
+        range_length = max(range_end - range_start + 1, 0)
+
+        total = query.count()
+        query = query.offset(range_start)
+        query = query.limit(range_length)
+    else:
+        range_start = 0
+        range_end = 50
+        # Range is inclusive so we need to add one
+        range_length = max(range_end - range_start + 1, 0)
+        total = query.count()
+        query = query.offset(range_start)
+        query = query.limit(range_length)
+
+    headers["Content-Range"] = f"Riffs {range_start}-{range_end}/{total}"
+
+    return query.all(), headers
