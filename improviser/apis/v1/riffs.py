@@ -219,7 +219,6 @@ def _query_with_filters(query,
     if filters:
         try:
             filter = filters.split(",")
-            print(filter)
             field = filter[0]
             value = filter[1]
             if field.endswith('_gt'):
@@ -243,8 +242,10 @@ def _query_with_filters(query,
         except Exception as error:
             logger.error("Error while handling filter", filter=filter, error=error)
 
-    if sort is not None and len(sort) >= 2:
-        for sort in chunked(sort, 2):
+    # Todo: handle list of sorts also
+    if sort:
+        try:
+            sort = sort.split(",")
             # Todo: implement sort on tag
             if sort and len(sort) == 2:
                 import sqlalchemy.sql.expression as sql_expressions
@@ -252,6 +253,8 @@ def _query_with_filters(query,
                     query = query.order_by(sql_expressions.desc(Riff.__dict__[sort[0]]))
                 else:
                     query = query.order_by(sql_expressions.asc(Riff.__dict__[sort[0]]))
+        except Exception as error:
+            logger.error("Error while handling sort", filter=sort, error=error)
 
     if range:
         try:
