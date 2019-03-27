@@ -66,3 +66,4 @@ TEST_DATABASE_URL=postgres://improviser:improviser@localhost/improviser_test PYT
 Copyright (C) 2019 René Dohmen <acidjunk@gmail.com>
 
 Licensed under the GNU GENERAL PUBLIC LICENSE Version 3
+A copy of the LICENSE is included in the project.

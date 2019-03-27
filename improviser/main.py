@@ -147,8 +147,6 @@ admin.add_view(BaseAdminView(RiffExerciseTag, db.session))
 
 migrate = Migrate(app, db)
 logger.info("Ready loading admin views and api")
-import logging
-logging.getLogger('flask_cors').level = logging.DEBUG
 
 if __name__ == '__main__':
     app.run()
