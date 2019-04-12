@@ -54,6 +54,7 @@ class UserAdminView(ModelView):
 
 
 class RolesAdminView(ModelView):
+    column_display_pk = True
 
     # Prevent administration of Roles unless the currently logged-in user has the "admin" role
     def is_accessible(self):
@@ -80,6 +81,7 @@ class UserPreferenceAdminView(ModelView):
 
 
 class InstrumentAdminView(ModelView):
+    column_display_pk = True
 
     # Prevent administration of Roles unless the currently logged-in user has the "admin" role
     def is_accessible(self):
@@ -131,7 +133,7 @@ class RiffAdminView(ModelView):
 
 
 class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'riff_exercise_tags', 'description', 'annotations', 'is_public', 'user.username', 'created_at']
+    column_list = ['id', 'name', 'riff_exercise_tags', 'stars', 'description', 'annotations', 'is_public', 'user.username', 'instrument_key', 'instruments', 'created_at']
     column_default_sort = ('created_at', True)
     column_searchable_list = ('id', 'name', 'created_by')
     can_set_page_size = True
@@ -164,6 +166,7 @@ class RiffExerciseItemAdminView(ModelView):
 
 
 class BaseAdminView(ModelView):
+    column_display_pk = True
 
     # Prevent administration of Tags unless the currently logged-in user has the "admin" role
     def is_accessible(self):

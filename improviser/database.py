@@ -128,6 +128,7 @@ class RiffExercise(db.Model):
     instrument_key = Column(String(3), default="c")
     is_public = Column(Boolean, default=False)
     is_copyable = Column(Boolean, default=False)
+    stars = Column(Integer, default=3)
     created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -136,6 +137,7 @@ class RiffExercise(db.Model):
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
     riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
     riff_exercise_items = relationship("RiffExerciseItem", cascade="all, delete-orphan", backref="parent")
+    instruments = relationship("Instrument", secondary="riff_exercise_instruments")
 
     def __repr__(self):
         return '<RiffExercise %r %s>>' % (self.name, self.id)
@@ -185,5 +187,13 @@ class RiffExerciseTag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
     tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+
+
+class RiffExerciseInstrument(db.Model):
+    __tablename__ = 'riff_exercise_instruments'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
+    instrument_id = Column('instrument_id', UUID(as_uuid=True), ForeignKey('instruments.id'), index=True)
+
 
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

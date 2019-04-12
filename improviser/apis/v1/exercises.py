@@ -36,6 +36,9 @@ exercise_list_serializer = api.model("RiffExercise", {
     "created_by": fields.String(),
     "gravatar_image": fields.String(),
     "tags": fields.List(fields.String),
+    "stars": fields.Integer(),
+    "instrument_key": fields.String(),
+    "instruments":  fields.List(fields.String),
 })
 
 exercise_item_serializer = api.model("RiffExerciseItem", {
@@ -194,6 +197,8 @@ class ExerciseResourceList(Resource):
     def post(self):
         exercise_items = api.payload.pop("exercise_items", [])
         exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
+        # Todo: add instruments selection and instrument key
+
         db.session.add(exercise)
         for exercise_item in exercise_items:
             chord_info = exercise_item.get("chord_info")
@@ -306,7 +311,7 @@ class ExerciseResource(Resource):
                 logger.info("Exercise item delete successfully", id=exercise_id)
             except Exception as error:
                 db.session.rollback()
-                logger.error("DB exercise update caused a rollback", error=error)
+                logger.error("DB exercise item delete caused a rollback", error=error)
                 abort(400, 'DB error: {}'.format(str(error)))
         return 204
 
