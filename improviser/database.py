@@ -155,6 +155,7 @@ class RiffExerciseItem(db.Model):
     riff_id = Column('riff_id', UUID(as_uuid=True), ForeignKey('riffs.id'))
     number_of_bars = Column(Integer())
     chord_info = Column(String(255))
+    chord_info_alternate = Column(String(255))
     pitch = Column(String(3), default='c')
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)

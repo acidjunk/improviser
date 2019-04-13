@@ -46,7 +46,8 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
     "pitch": fields.String(required=True),
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
-    "chord_info": fields.String(required=False),  # when NOT provided; the chord info of the riffs will be used
+    "chord_info": fields.String(required=False),  # transposed riff chord info will be used
+    "chord_info_alternate": fields.String(required=False),  # this item is overriden with other chords (lilypond format)
     "riff_id": fields.String(required=True, description="The riff"),
     "created_at": fields.DateTime(),
 })
@@ -71,7 +72,8 @@ exercise_item_fields = {
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
     "riff_id": fields.String(required=True, description="The riff"),
-    "chord_info": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
+    # Todo: save to chord_info_alternate
+    "chord_info_alternate": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
                                                             "LilyPond riff info"),
 }
 
@@ -200,21 +202,24 @@ class ExerciseResourceList(Resource):
         # Todo: add instruments selection and instrument key
 
         db.session.add(exercise)
+
         for exercise_item in exercise_items:
-            chord_info = exercise_item.get("chord_info")
-            if not chord_info:
-                # Try retrieving it from the riff itself
-                riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
-                chord_info = riff.chord_info if riff.chord_info else riff.chord
-                if chord_info:
-                    logger.info("Using chord_info", riff_id=riff.id, riff_name=riff.name, chord_info=chord_info)
-                    exercise_item["chord_info"] = transpose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
-                else:
-                    logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
+            # Try retrieving it from the riff itself
+            riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
+            chord_info = riff.chord_info if riff.chord_info else riff.chord
+            if chord_info:
+                logger.info("Using chord_info", riff_id=riff.id, riff_name=riff.name, chord_info=chord_info)
+                exercise_item["chord_info"] = transpose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
             else:
-                # Todo: validate `user input` stuff
-                # For now: just use it, and consider it transposed already -> plain simple store it
-                pass
+                logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
+
+            # alternate chord info available?
+            chord_info_alternate = exercise_item.get("chord_info_alternate")
+            if chord_info_alternate:
+                # Todo: validate `user input` and tranpose accordingly
+                # For now just save it
+                logger.info("Alternate chord_info available", chord_info_alternate=chord_info_alternate)
+                exercise_item["chord_info_alternate"] = chord_info_alternate
 
             logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
             record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
