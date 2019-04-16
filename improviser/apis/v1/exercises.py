@@ -74,7 +74,7 @@ exercise_item_fields = {
     "riff_id": fields.String(required=True, description="The riff"),
     # Todo: save to chord_info_alternate
     "chord_info_alternate": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
-                                                            "LilyPond riff info"),
+                                                                      "LilyPond riff info"),
 }
 
 exercise_fields = {
@@ -259,7 +259,12 @@ class ExerciseResource(Resource):
         exercise = RiffExercise.query.filter_by(id=exercise_id).first()
         exercise.modified_at = datetime.datetime.now()
         exercise.name = payload["name"]
-
+        exercise.description = payload["description"]
+        exercise.tempo = payload["tempo"]
+        try:
+            exercise.stars = payload["stars"]
+        except:
+            pass
         exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
         payload_exercise_items = sorted(payload["exercise_items"], key=lambda item: item["order_number"])
 

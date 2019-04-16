@@ -1,2 +1,3 @@
 -r base.txt
-xmltodict
+boto3==1.9.130
+xmltodict==0.12.0

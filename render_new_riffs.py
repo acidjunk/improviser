@@ -10,6 +10,7 @@ import os
 import sys
 
 import requests
+import structlog
 import xmltodict
 from boto3.s3.transfer import S3Transfer
 import boto3
@@ -30,6 +31,8 @@ KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 
 
 
 renderer = Render(renderPath=RENDER_PATH)
+logger = structlog.get_logger(__name__)
+
 
 if not LOCAL_RUN:
     if not API_USER or not API_PASS or not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
@@ -107,12 +110,14 @@ def update_riffs(riff_ids, auth_headers, image_info=None):
         payload = {'render_valid': True}
         if image_info:
             payload["image_info"] = image_info[riff_id]
-            print(payload)
-        print("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id))
-        print("Setting riff_id: {} to rendered -> True".format(riff_id))
-        response = requests.put("{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id), json=payload, headers=auth_headers)
-        if response.status_code not in [200, 201, 204]:
-            print("Error while updating riff")
+            logger.debug("Update riff payload, with image metadata info", payload=payload)
+        riff_endpoint = "{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id)
+        response = requests.put(riff_endpoint, json=payload, headers=auth_headers)
+        if response.status_code in [200, 201, 204]:
+            logger.info("Updated render status and metadata of riff", id=riff_id, end_point=riff_endpoint,
+                        status=response.status_code)
+        else:
+            logger.error("Update failed", id=riff_id, end_point=riff_endpoint, status=response.status_code)
 
 
 def clean_garbage():
@@ -159,17 +164,28 @@ def retrieve_metadata(riff_ids, auth_headers, skip_update=False):
 
                 width = round(float(svg_data["svg"]["@width"][:-2])*3.779527559)
                 height = round(float(svg_data["svg"]["@height"][:-2])*3.779527559)
-                # translate(0.0000, 5.0450)
-                staff_center = round(float(svg_data["svg"]["line"][2]["@transform"][:-2].split(",")[1][1:])*6.64)
+                # translate(0.0000r, 5.0450)
+                try:
+                    staff_center_x = float(svg_data["svg"]["line"][2]["@transform"][:-1].split(",")[1][1:])
+                except:
+                    logger.error("staff_center not found", file=file_name)
+                    sys.exit()
+
+                view_box = svg_data["svg"]["@viewBox"].split(" ")
+                corrected_staff_center_x = staff_center_x + abs(float(view_box[1]))
+                metadata_staff_center = round(corrected_staff_center_x*6.64)
+
+                logger.info("dimensions in .svg", corrected_staff_center=corrected_staff_center_x, width=width,
+                            height=height, metadata_staff_center=metadata_staff_center, id=riff_id,
+                            staff_center=staff_center_x, suffix=file_suffix,
+                            view_box=view_box)
+
                 riff_metadata.append({"key_octave": file_suffix, "width": width, "height": height,
-                                      "staff_center": staff_center})
+                                      "staff_center": metadata_staff_center})
             else:
-                # ERROR?????
-                # Todo: comment remove after debugging
-                print("Error: file {} not found".format(file_name))
+                logger.error("file not found", file=file_name)
                 sys.exit()
-                pass
-        print({riff_id: riff_metadata})
+
         if not skip_update:
             update_riffs([riff_id], auth_headers, {riff_id: riff_metadata})
         else:
