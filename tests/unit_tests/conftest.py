@@ -18,7 +18,7 @@ from improviser.database import db, user_datastore
 # from improviser.main import db_migrations
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def database(db_uri):
     """Create and drop test database for a pytest worker."""
     url = make_url(db_uri)
@@ -29,23 +29,28 @@ def database(db_uri):
     engine = create_engine(str(url))
 
     with closing(engine.connect()) as conn:
+        print(f"Drop and create {db_to_create}")
         # Can't drop or create a database from within a transaction; end transaction by committing.
         conn.execute("COMMIT;")
         conn.execute(f'DROP DATABASE IF EXISTS "{db_to_create}";')
         conn.execute("COMMIT;")
         conn.execute(f'CREATE DATABASE "{db_to_create}";')
+        print(f"Drop and create done for {db_to_create}")
     try:
         yield
     finally:
+        print(f"Final drop: {db_to_create}")
+
+        print("Skipping final drop for now")
         with closing(engine.connect()) as conn:
             conn.execute("COMMIT;")
-            conn.execute(f'DROP DATABASE IF EXISTS "{db_to_create}";')
+            conn.execute(f'DROP DATABASE "{db_to_create}";')
 
 
 @pytest.fixture(scope="session")
 def db_uri(worker_id):
     """Ensure that every py.test workerthread uses a own DB, when running the test suite with xdist and `-n auto`."""
-    database_uri = os.environ.get("DATABASE_URI", "postgresql://improviser:improviser@localhost/improviser-test")
+    database_uri = "postgresql://improviser:improviser@localhost/improviser-test"
     if worker_id == "master":
         # pytest is being run without any workers
         print(f"USING DB CONN: {database_uri}")
@@ -67,8 +72,8 @@ def monkeysession():
     mpatch.undo()
 
 
-@pytest.fixture(scope='session')
-def flask_app(monkeysession, database, db_uri):
+@pytest.fixture(scope='function')
+def flask_app(database, db_uri):
     """
     Create a Flask app context for the tests.
     """
@@ -117,6 +122,15 @@ def flask_app(monkeysession, database, db_uri):
     # mail.init_app(app)
 
     db.create_all()
+
+    try:
+        yield app
+    finally:
+        print("Disposing of app")
+        db.drop_all()
+        db.engine.dispose()
+        db.close()
+    # db.drop_all()
     # with app.app_context():
     #     # db_migrations()
     #     try:
@@ -183,10 +197,15 @@ def sqlalchemy(flask_app, monkeypatch):
     monkeypatch.setattr(db, "get_engine", lambda *args: connection)
 
     try:
+        print("Yielding sqlalchemy fixture")
         yield db
     finally:
-        db.session.remove()
-        transaction.rollback()
+        print("Cleaning up transactions stuff")
+        print(db.session)
+        db.session.rollback()
+        db.session.close()
+        # db.session.remove()
+        # transaction.rollback()
         connection.close()
 
 
