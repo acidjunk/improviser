@@ -36,7 +36,7 @@ def database(request):
     pg_db = DB_OPTS["database"]
 
     init_postgresql_database(pg_user, pg_host, pg_port, pg_db)
-    # os.system('psql -d improviser_test < tests/unit_tests/empty_db.psql')
+    os.system('psql -d improviser_test < tests/unit_tests/empty_db.psql')
 
     @request.addfinalizer
     def drop_database():
@@ -81,7 +81,6 @@ def app(database):
     # Needed for REST token login
     # Todo -> check if we can fix this without completely disabling it: it's only needed when login request is not via .json
     app.config['WTF_CSRF_ENABLED'] = False
-
 
     security = Security(app, user_datastore, register_form=ExtendedRegisterForm,
                         confirm_register_form=ExtendedJSONRegisterForm)
