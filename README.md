@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/acidjunk/improviser.svg?branch=master)](https://travis-ci.com/acidjunk/improviser) 
+
 # Improviser
 
 The REST API server for the improviser-client
