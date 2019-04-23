@@ -5,7 +5,7 @@ import structlog
 from admin_views import (UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView, BaseAdminView,
                          UserPreferenceAdminView, InstrumentAdminView, RiffExerciseItemAdminView)
 
-from flask import Flask, url_for
+from flask import Flask, url_for, current_app
 from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
