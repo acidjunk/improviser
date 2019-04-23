@@ -1,5 +1,5 @@
 -r base.txt
-pytest==4.1.1
+pytest==4.4.1
 pytest-flask==0.14.0
 pytest-xdist==1.28.0
 requests==2.21.0

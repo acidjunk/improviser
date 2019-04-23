@@ -127,18 +127,28 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
 
     return: new lilypond chord string
     """
-    notes = {"c": "P1", "cis": "m1", "d": "M2", "ees": "m3", "e": "M3", "f": "P4", "fis": "A4", "g": "P5", "gis": "A5",
+    notes = {"c": "P1", "cis": "A1", "d": "M2", "ees": "m3", "e": "M3", "f": "P4", "fis": "A4", "g": "P5", "gis": "A5",
              "a": "M6", "bes": "m7", "b": "M7"}
+    to_lilypond = {"eb": "ees", "bb": "bes",
+                   "c#": "cis", "f#": "fis", "g#": "gis"}
+    to_liypond_chord = {"M": "maj"}
 
     if chord_info[0].isupper():
         try:
-            root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
-            chord_mood = root_key[1:] if len(root_key) > 1 else ""
+            if chord_info[1].isdigit():
+                root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
+                chord_mood = chord_info[1:] if len(chord_info) > 1 else ""
+            else:
+                root_key = str(Note(chord_info[0:2]) + Interval(notes[pitch])).lower()
+                chord_mood = root_key[3:] if len(root_key) > 3 else ""
             logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood)
             # todo: add suff (e.g. maj9) when avail
             if not number_of_bars or number_of_bars == 1:
-                return f"{root_key}{chord_mood}:1"
-            return f"{root_key}{chord_mood}:1"
+                return f"{root_key}1:{chord_mood}"
+            result = []
+            for i in range(0, number_of_bars):
+                result.append(f"{root_key}1:{chord_mood}")
+            return " ".join(result)
             # return " ".join([f"{root_key}{chord_mood}:1"] for i in range(number_of_bars))
         except Exception as error:
             logger.error("Tranpose had an exception with", chord_info=chord_info, error=error, pitch=pitch)
@@ -151,7 +161,10 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
             if ":" in chord:
                 root_key, chord_mood = chord.split(":")
                 duration = root_key[1] if len(root_key) == 2 else ""
-                root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower() + duration
+                root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower()
+                if root_key in to_lilypond.keys():
+                    root_key = to_lilypond[root_key]
+                root_key = root_key + duration
                 result.append(f"{root_key}:{chord_mood}")
             else:
                 logger.error("Expected ':' in chord", chord=chord, complete_chord_info=chord_info)
@@ -269,6 +282,8 @@ class ExerciseResource(Resource):
             exercise.stars = payload["stars"]
         except:
             pass
+
+        # prepare dicts for compare
         exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
         payload_exercise_items = sorted(payload["exercise_items"], key=lambda item: item["order_number"])
 
@@ -277,7 +292,6 @@ class ExerciseResource(Resource):
         changed = False
 
         for order_number, payload_exercise_item in enumerate(payload_exercise_items):
-            # prepare dicts for compare
             if order_number >= len(exercise_items):
                 logger.info("Inserting new exercise item", order_number=order_number, payload=payload_exercise_item)
                 new_exercise_item = {**payload_exercise_item, "riff_exercise_id": exercise_id}
