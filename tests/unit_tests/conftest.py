@@ -1,4 +1,7 @@
+import datetime
 import os
+import uuid
+
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from contextlib import contextmanager, closing
@@ -14,11 +17,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 # from urllib3_mock import Responses
 
-from improviser.database import db, user_datastore
+from improviser.database import db, user_datastore, Riff
 # from improviser.main import db_migrations
+from sqlalchemy.orm import Session
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def database(db_uri):
     """Create and drop test database for a pytest worker."""
     url = make_url(db_uri)
@@ -36,15 +40,28 @@ def database(db_uri):
         conn.execute("COMMIT;")
         conn.execute(f'CREATE DATABASE "{db_to_create}";')
         print(f"Drop and create done for {db_to_create}")
-    try:
-        yield
-    finally:
-        print(f"Final drop: {db_to_create}")
+    yield database
 
-        print("Skipping final drop for now")
-        with closing(engine.connect()) as conn:
-            conn.execute("COMMIT;")
-            conn.execute(f'DROP DATABASE "{db_to_create}";')
+
+# @pytest.fixture
+# def database(db_uri):
+#     """Create and drop test database for a pytest worker."""
+#     # url = make_url(db_uri)
+#     # db_to_create = url.database
+#     #
+#     # # database to connect to for creating `db_to_create`.
+#     # url.database = "postgres"
+#     # engine = create_engine(str(url))
+#     # with closing(engine.connect()) as conn:
+#     #     print(f"Drop and create {db_to_create}")
+#     #     # Can't drop or create a database from within a transaction; end transaction by committing.
+#     #     conn.execute("COMMIT;")
+#     #     conn.execute(f'DROP DATABASE IF EXISTS "{db_to_create}";')
+#     #     conn.execute("COMMIT;")
+#     #     conn.execute(f'CREATE DATABASE "{db_to_create}";')
+#     #     print(f"Drop and create done for {db_to_create}")
+#     pass
+
 
 
 @pytest.fixture(scope="session")
@@ -72,8 +89,8 @@ def monkeysession():
     mpatch.undo()
 
 
-@pytest.fixture(scope='function')
-def flask_app(database, db_uri):
+@pytest.fixture(scope="function")
+def app(database, db_uri):
     """
     Create a Flask app context for the tests.
     """
@@ -123,100 +140,29 @@ def flask_app(database, db_uri):
 
     db.create_all()
 
-    try:
-        yield app
-    finally:
-        print("Disposing of app")
-        db.drop_all()
-        db.engine.dispose()
-        db.close()
-    # db.drop_all()
-    # with app.app_context():
-    #     # db_migrations()
-    #     try:
-    #         yield app
-    #     finally:
-    #         print("Finally")
-    #         db.drop_all()
-    #         # In addition to dropping all model backed tables we need to drop the Alembic specific table. Without it
-    #         # Alembic thinks it doesn't need to run any migrations on the next test run.
-    #         db.engine.connect(close_with_result=True).execute("DROP TABLE alembic_version;")
-    #         # Drop all connection, so that the database can be dropped
-    #         db.engine.dispose()
+    yield app
+
+    # Clean up : revert DB to a clean state
+    db.session.remove()
+    db.session.commit()
+    db.session.close_all()
+    db.drop_all()
+    # Base.metadata.drop_all(self._engine)
+    db.engine.dispose()
 
 
-    # migrate = Migrate(app, db)
-    # with app.app_context():
-    #     # Normally one would create all model backed tables using `db.create_all()`. However we have delegated that
-    #     # task to Alembic.
-    #     db_migrations()
-    #     try:
-    #         yield app
-    #     finally:
-    #         db.drop_all()
-    #         # In addition to dropping all model backed tables we need to drop the Alembic specific table. Without it
-    #         # Alembic thinks it doesn't need to run any migrations on the next test run.
-    #         db.engine.connect(close_with_result=True).execute("DROP TABLE alembic_version;")
-    #         # Drop all connection, so that the database can be dropped
-    #         db.engine.dispose()
-
-    return app
-
-
-@pytest.fixture(autouse=True)
-def sqlalchemy(flask_app, monkeypatch):
-    """Ensure tests are run in a transaction with automatic rollback.
-
-    As most tests require access to the database either directly or indirectly we've set `autouse=True`. This will
-    have a performance impact on tests that don't need the database, though it makes writing most tests easier by not
-    have to add a `sqlalchemy` parameter to each test' function signature.
-
-    This implementation creates a connection and transaction before yielding to the test function. Any transactions
-    started and committed from within the test will be tied to this outer transaction. From the test function's
-    perspective it looks like everything will indeed be committed; allowing for queries on the database to be
-    performed to see if functions under test have persisted their changes to the database correctly. However once
-    the test function returns this fixture will clean everything up by rolling back the outer transaction; leaving the
-    database in a known state (=empty with the exception of what migrations have added as the initial state).
-
-    Implementation is based on comment https://github.com/mitsuhiko/flask-sqlalchemy/pull/249#issuecomment-141720626
-
-    Args:
-        flask_app: fixture for providing the application context and an initialized database. Although specifying this
-            as an explicit parameter is redundant due to `flask_app`'s autouse setting, we have made the dependency
-            explicit here for the purpose of documentation.
-        monkeypatch: fixture for monkeypatching.
-
-    Yields:
-        SQLAlchemy: SQLAlchemy object (normally referenced in application under the name `db` as in `db.session...`
-
-    """
-    connection = db.engine.connect()
-    transaction = connection.begin()
-
-    # Patch Flask-SQLAlchemy to use our connection
-    monkeypatch.setattr(db, "get_engine", lambda *args: connection)
-
-    try:
-        print("Yielding sqlalchemy fixture")
-        yield db
-    finally:
-        print("Cleaning up transactions stuff")
-        print(db.session)
-        db.session.rollback()
-        db.session.close()
-        # db.session.remove()
-        # transaction.rollback()
-        connection.close()
-
-
-
-
-
-
-def db_migrations():
-    migrations_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../improviser/migrations/")
-    from alembic.config import Config
-    config = Config(migrations_dir + "alembic.ini")
-    config.set_main_option("sqlalchemy.url", current_app.config.get("SQLALCHEMY_DATABASE_URI"))
-    config.set_main_option("script_location", migrations_dir)
-    command.upgrade(config, "head")
+@pytest.fixture
+def riff():
+    riff = Riff(
+        id=str(uuid.uuid4()),
+        name="Major 9 chord up down",
+        number_of_bars=1,
+        notes="c'8 e' g' b' d'' b' g' e'",
+        chord='CM9',
+        chord_info='c1:maj9',
+        render_valid=True,
+        render_date=datetime.datetime.utcnow(),
+    )
+    db.session.add(riff)
+    db.session.commit()
+    return riff
