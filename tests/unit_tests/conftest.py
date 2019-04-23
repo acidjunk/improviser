@@ -17,9 +17,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 # from urllib3_mock import Responses
 
-from improviser.database import db, user_datastore, Riff
+from improviser.database import db, user_datastore, Riff, Instrument, UserPreference, Role, User, RiffExercise
 # from improviser.main import db_migrations
 from sqlalchemy.orm import Session
+
+
+STUDENT_EMAIL = 'student@example.com'
+STUDENT_PASSWORD = 'STUDENTJE'
+TEACHER_EMAIL = 'teacher@example.com'
+TEACHER_PASSWORD = 'TEACHERTJE'
 
 
 @pytest.fixture(scope="session")
@@ -68,25 +74,18 @@ def database(db_uri):
 def db_uri(worker_id):
     """Ensure that every py.test workerthread uses a own DB, when running the test suite with xdist and `-n auto`."""
     database_uri = "postgresql://improviser:improviser@localhost/improviser-test"
+    if os.getenv("DB_USER"):
+        print("Running with TRAVIS!")
+        database_uri = "postgresql://postgres:@localhost/improviser-test"
     if worker_id == "master":
         # pytest is being run without any workers
         print(f"USING DB CONN: {database_uri}")
         return database_uri
+    # using xdist setup
     url = make_url(database_uri)
     url.database = f"{url.database}-{worker_id}"
+    print(f"USING DB CONN: {url}")
     return str(url)
-
-
-@pytest.fixture(scope="session")
-def monkeysession():
-    """Monkeypatch fixture with session scope.
-
-    The `monkeypatch` fixture has `function` scope and as such cannot be used in other fixtures that have a broader
-    scope (eg. `module` or even `session`). This fixture adapts the monkey patching duration to the session scope.
-    """
-    mpatch = MonkeyPatch()
-    yield mpatch
-    mpatch.undo()
 
 
 @pytest.fixture(scope="function")
@@ -147,8 +146,68 @@ def app(database, db_uri):
     db.session.commit()
     db.session.close_all()
     db.drop_all()
-    # Base.metadata.drop_all(self._engine)
     db.engine.dispose()
+
+
+@pytest.fixture
+def instruments():
+    instrument_1 = Instrument(
+        id=str(uuid.uuid4()),
+        name='Generic C"',
+        root_key='c'
+    )
+    instrument_2 = Instrument(
+        id=str(uuid.uuid4()),
+        name='Tenor sax"',
+        root_key='bes'
+    )
+    db.session.add(instrument_1)
+    db.session.add(instrument_2)
+    db.session.commit()
+    return [instrument_1, instrument_2]
+
+
+@pytest.fixture
+def user_roles():
+    roles = ["student", "member", "teacher", "operator", "moderator", "admin"]
+    [db.session.add(Role(id=str(uuid.uuid4()), name=role)) for role in roles]
+    db.session.commit()
+
+
+@pytest.fixture
+def student_unconfirmed(instruments, user_roles):
+    user = user_datastore.create_user(username='student', password=STUDENT_PASSWORD, email=STUDENT_EMAIL)
+    user_datastore.add_role_to_user(user, "student")
+    user_preference = UserPreference(instrument_id=instruments[0].id, user_id=user.id)
+    db.session.add(user_preference)
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def student(student_unconfirmed):
+    user = User.query.filter(User.email == STUDENT_EMAIL).first()
+    user.confirmed_at = datetime.datetime.utcnow()
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def teacher_unconfirmed(instruments, user_roles):
+    user = user_datastore.create_user(username='teacher', password=TEACHER_PASSWORD, email=TEACHER_EMAIL)
+    user_datastore.add_role_to_user(user, "teacher")
+    user_preference = UserPreference(instrument_id=instruments[0].id, user_id=user.id)
+    db.session.add(user_preference)
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def teacher(teacher_unconfirmed):
+    user = User.query.filter(User.email == TEACHER_EMAIL).first()
+    user.confirmed_at = datetime.datetime.utcnow()
+    db.session.commit()
+    return user
 
 
 @pytest.fixture
@@ -166,3 +225,87 @@ def riff():
     db.session.add(riff)
     db.session.commit()
     return riff
+
+
+@pytest.fixture
+def riff_unrendered():
+    riff = Riff(
+        id=str(uuid.uuid4()),
+        name="Major 9 chord up down",
+        number_of_bars=1,
+        notes="c'8 e' g' b' d'' b' g' e'",
+        chord='CM9',
+        chord_info='c1:maj9',
+        render_valid=False,
+    )
+    db.session.add(riff)
+    db.session.commit()
+    return riff
+
+
+@pytest.fixture
+def riff_multi_chord():
+    riff = Riff(
+        id=str(uuid.uuid4()),
+        name="Bebop riff on 2-5-1 in 2 bars",
+        number_of_bars=1,
+        notes="""g''8 fis'' e'' a'' e''4 d''8 g'' \bar "|" g''2 r2""",
+        chord_info='d2:m7 g:7 c1:maj7',
+        multi_chord=True,
+        render_valid=True,
+        render_date=datetime.datetime.utcnow(),
+    )
+    db.session.add(riff)
+    db.session.commit()
+    return riff
+
+
+@pytest.fixture
+def riff_without_chord_info():
+    riff = Riff(
+        id=str(uuid.uuid4()),
+        name="Major sixth up with chord",
+        number_of_bars=1,
+        notes="""c'2 a'""",
+        chord="CM",
+        multi_chord=False,
+        render_valid=True,
+        render_date=datetime.datetime.utcnow(),
+    )
+    db.session.add(riff)
+    db.session.commit()
+    return riff
+
+
+@pytest.fixture
+def riff_without_chord():
+    riff = Riff(
+        id=str(uuid.uuid4()),
+        name="Major sixth up with chord_info",
+        number_of_bars=1,
+        notes="""c'2 a'""",
+        chord_info="c1:maj",
+        multi_chord=False,
+        render_valid=True,
+        render_date=datetime.datetime.utcnow(),
+    )
+    db.session.add(riff)
+    db.session.commit()
+    return riff
+
+
+def riff_exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_without_chord):
+    riff_exercise = RiffExercise(
+        id=str(uuid.uuid4()),
+        name="Exercise 1",
+        description="Some description",
+        root_key="c",
+        instrument_key="c",
+        is_public=True,
+        is_copyable=True,
+        starts=3,
+        created_by=teacher.id
+    )
+    db.session.add(riff_exercise)
+    db.session.commit()
+    return riff_exercise

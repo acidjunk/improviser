@@ -198,9 +198,13 @@ class ExerciseResourceList(Resource):
     @api.expect(exercise_fields)
     def post(self):
         exercise_items = api.payload.pop("exercise_items", [])
-        exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
-        # Todo: add instruments selection and instrument key
 
+        validate_exercise_items_and_error(len(exercise_items))
+        user_exercises = RiffExercise(**api.payload, created_by=str(current_user.id))
+        validate_exercises_and_error(len(user_exercises))
+
+        # Todo: add instruments selection and instrument key
+        exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
         db.session.add(exercise)
 
         for exercise_item in exercise_items:
@@ -268,6 +272,8 @@ class ExerciseResource(Resource):
         exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
         payload_exercise_items = sorted(payload["exercise_items"], key=lambda item: item["order_number"])
 
+        validate_exercise_items_and_error(len(payload_exercise_items))
+
         changed = False
 
         for order_number, payload_exercise_item in enumerate(payload_exercise_items):
@@ -324,6 +330,21 @@ class ExerciseResource(Resource):
                 logger.error("DB exercise item delete caused a rollback", error=error)
                 abort(400, 'DB error: {}'.format(str(error)))
         return 204
+
+
+def validate_exercise_items_and_error(items_length):
+    if items_length > 99:
+        message = "Exercise items constraint reached. Max 100 items for now."
+        logger.error(message, items=items_length)
+        abort(400, message)
+
+
+def validate_exercises_and_error(items_length):
+    if items_length > 1:
+        message = "Exercise constraint reached. Max 20 exercises for free accounts. Contact me if you need more."
+        logger.error(message, items=items_length)
+        abort(400, message)
+
 
 
 def dict_compare(d1, d2):
