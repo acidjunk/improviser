@@ -138,9 +138,15 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
             if chord_info[1].isdigit():
                 root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
                 chord_mood = chord_info[1:] if len(chord_info) > 1 else ""
+                print(f"chord_mood {chord_info}: mood: {chord_mood}")
+            elif chord_info[1] == "#" or chord_info[1] == "b":
+                root_key = str(Note(chord_info[0:2]) + Interval(notes[pitch])).lower()
+                chord_mood = root_key[2:] if len(root_key) > 2 else ""
+                print(f"chord_mood {chord_info}: mood: {chord_mood}")
             else:
                 root_key = str(Note(chord_info[0:2]) + Interval(notes[pitch])).lower()
                 chord_mood = root_key[3:] if len(root_key) > 3 else ""
+                print(f"chord_mood {chord_info}: mood: {chord_mood}")
             logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood)
             # todo: add suff (e.g. maj9) when avail
             if not number_of_bars or number_of_bars == 1:
@@ -358,7 +364,6 @@ def validate_exercises_and_error(items_length):
         message = "Exercise constraint reached. Max 20 exercises for free accounts. Contact me if you need more."
         logger.error(message, items=items_length)
         abort(400, message)
-
 
 
 def dict_compare(d1, d2):
