@@ -127,38 +127,42 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
 
     return: new lilypond chord string
     """
+
+    # *****************************************************************************************************************
+    # Todo: expose via REST API -> so the client can use it to calculate the correct lilypond chord info values upon
+    #  changing the pitch of an exercise item
+    # *****************************************************************************************************************
+
     notes = {"c": "P1", "cis": "A1", "d": "M2", "ees": "m3", "e": "M3", "f": "P4", "fis": "A4", "g": "P5", "gis": "A5",
              "a": "M6", "bes": "m7", "b": "M7"}
     to_lilypond = {"eb": "ees", "bb": "bes",
                    "c#": "cis", "f#": "fis", "g#": "gis"}
-    to_liypond_chord = {"M": "maj"}
+    lilypond_mood = {"M": "maj", "m": "m"}
 
-    if chord_info[0].isupper():
-        try:
-            if chord_info[1].isdigit():
-                root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
-                chord_mood = chord_info[1:] if len(chord_info) > 1 else ""
-                print(f"chord_mood {chord_info}: mood: {chord_mood}")
-            elif chord_info[1] == "#" or chord_info[1] == "b":
-                root_key = str(Note(chord_info[0:2]) + Interval(notes[pitch])).lower()
-                chord_mood = root_key[2:] if len(root_key) > 2 else ""
-                print(f"chord_mood {chord_info}: mood: {chord_mood}")
-            else:
-                root_key = str(Note(chord_info[0:2]) + Interval(notes[pitch])).lower()
-                chord_mood = root_key[3:] if len(root_key) > 3 else ""
-                print(f"chord_mood {chord_info}: mood: {chord_mood}")
-            logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood)
-            # todo: add suff (e.g. maj9) when avail
-            if not number_of_bars or number_of_bars == 1:
-                return f"{root_key}1:{chord_mood}"
-            result = []
-            for i in range(0, number_of_bars):
-                result.append(f"{root_key}1:{chord_mood}")
-            return " ".join(result)
-            # return " ".join([f"{root_key}{chord_mood}:1"] for i in range(number_of_bars))
-        except Exception as error:
-            logger.error("Tranpose had an exception with", chord_info=chord_info, error=error, pitch=pitch)
-            return f"Unable to transpose: {chord_info}"
+    if chord_info[0] == "C":
+        root_key = str(Note("C") + Interval(notes[pitch])).lower()
+        if root_key in to_lilypond.keys():
+            root_key = to_lilypond[root_key]
+        # Done with root key : continue with rest of chord
+        digit = ""
+        if chord_info[1].isdigit():  # Handle C7
+            chord_mood = ""
+            digit = chord_info[1]
+        elif len(chord_info) == 2:  # Handle Cm, CM
+            chord_mood = lilypond_mood[chord_info[1]] if chord_info[1] in lilypond_mood.keys() else chord_info[1]
+        elif len(chord_info) == 3:  # Handle Cm7, CM7, Cm9, CM6
+            chord_mood = lilypond_mood[chord_info[1]] if chord_info[1] in lilypond_mood.keys() else chord_info[1]
+            digit = chord_info[2]
+        else:
+            logger.info("Couldn't parse chord info", chord_info=chord_info)
+            raise Exception
+        logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood, digit=digit)
+        if not number_of_bars or number_of_bars == 1:
+            return f"{root_key}1:{chord_mood}{digit}"
+        result = []
+        for i in range(0, number_of_bars):
+            result.append(f"{root_key}1:{chord_mood}{digit}")
+        return " ".join(result)
     else:
         chords = chord_info.split(" ")
         logger.info("Using chord-info in lilypond format", chords=chords, pitch=pitch)
