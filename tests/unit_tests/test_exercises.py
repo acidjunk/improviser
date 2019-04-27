@@ -51,19 +51,13 @@ def test_transpose_chord_info_dominant7():
     }
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch, number_of_bars=2) == lilypond
-    mapping = {
-        "cis": "cis1:7",
-        "d": "d1:7",
-        "ees": "ees1:7",
-        "e": "e1:7",
-    }
+    mapping = {"cis": "cis1:7", "d": "d1:7", "ees": "ees1:7", "e": "e1:7"}
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch, number_of_bars=1) == lilypond
 
 
 def test_transpose_chord_info_major():
     chord_info = "CM"
-    pitch = "d"
     mapping = {"cis": "cis1:maj", "d": "d1:maj", "ees": "ees1:maj", "e": "e1:maj"}
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch) == lilypond
@@ -71,7 +65,6 @@ def test_transpose_chord_info_major():
 
 def test_transpose_chord_info_major7():
     chord_info = "CM7"
-    pitch = "d"
     mapping = {"cis": "cis1:maj7", "d": "d1:maj7", "ees": "ees1:maj7", "e": "e1:maj7"}
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch) == lilypond
