@@ -28,6 +28,19 @@ def test_transpose_chord_info_lilypond_var_1():
         assert transpose_chord_info(chord_info, pitch) == lilypond
 
 
+def test_transpose_chord_info_lilypond_dim():
+    chord_info = "c2:9 d2:dim9dim5"
+    mapping = {
+        "c": "c2:9 d2:dim9dim5",
+        "cis": "cis2:9 dis2:dim9dim5",
+        "ees": "ees2:9 f2:dim9dim5",
+        "fis": "fis2:9 gis2:dim9dim5",
+        "gis": "gis2:9 ais2:dim9dim5",
+    }
+    for pitch, lilypond in mapping.items():
+        assert transpose_chord_info(chord_info, pitch) == lilypond
+
+
 def test_transpose_chord_info_dominant7():
     chord_info = "C7"
     mapping = {
