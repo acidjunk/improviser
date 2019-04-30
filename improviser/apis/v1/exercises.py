@@ -136,23 +136,33 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
     notes = {"c": "P1", "cis": "A1", "d": "M2", "ees": "m3", "e": "M3", "f": "P4", "fis": "A4", "g": "P5", "gis": "A5",
              "a": "M6", "bes": "m7", "b": "M7"}
     to_lilypond = {"eb": "ees", "bb": "bes",
-                   "c#": "cis", "d#": "dis", "f#": "fis", "g#": "gis", "a#": "ais"}
+                   "c#": "cis", "d#": "dis", "e#": "f", "f#": "fis", "g#": "gis", "a#": "ais", "b#": "c"}
     lilypond_mood = {"M": "maj", "m": "m"}
 
-    if chord_info[0] == "C":
-        root_key = str(Note("C") + Interval(notes[pitch])).lower()
+    if chord_info[0].isupper():
+        if len(chord_info) > 1 and (chord_info[1] == "#" or chord_info[1] == "b"):
+            root_key = str(Note(chord_info[0:2]) + Interval(notes[pitch])).lower()
+            o = 1
+        else:
+            root_key = str(Note(chord_info[0]) + Interval(notes[pitch])).lower()
+            o = 0
         if root_key in to_lilypond.keys():
             root_key = to_lilypond[root_key]
         # Done with root key : continue with rest of chord
         digit = ""
-        if chord_info[1].isdigit():  # Handle C7
+        if chord_info[1+o].isdigit():  # Handle C7, C#7, Bb7
             chord_mood = ""
-            digit = chord_info[1]
-        elif len(chord_info) == 2:  # Handle Cm, CM
-            chord_mood = lilypond_mood[chord_info[1]] if chord_info[1] in lilypond_mood.keys() else chord_info[1]
-        elif len(chord_info) == 3:  # Handle Cm7, CM7, Cm9, CM6
-            chord_mood = lilypond_mood[chord_info[1]] if chord_info[1] in lilypond_mood.keys() else chord_info[1]
-            digit = chord_info[2]
+            digit = chord_info[1+o]
+        elif len(chord_info) == 2+o:  # Handle Cm, C#m, Bbm, CM, C#M
+            chord_mood = lilypond_mood[chord_info[1+o]] if chord_info[1+o] in lilypond_mood.keys() else chord_info[1+o]
+        elif len(chord_info) == 3+o:  # Handle Cm7, C#m7, CM7, BbM9, Cm9, CM6
+            chord_mood = lilypond_mood[chord_info[1+o]] if chord_info[1+o] in lilypond_mood.keys() else chord_info[1+o]
+            digit = chord_info[2+o]
+        elif len(chord_info) == 4+o:  # Handle Cmaj
+            chord_mood = chord_info[1+o:4+o]
+        elif len(chord_info) == 5+o:  # Handle Cmaj7
+            chord_mood = chord_info[1+o:4+o]
+            digit = chord_info[4+o]
         else:
             logger.info("Couldn't parse chord info", chord_info=chord_info)
             raise Exception

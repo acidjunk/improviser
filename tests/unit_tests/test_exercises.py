@@ -62,10 +62,18 @@ def test_transpose_chord_info_major():
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch) == lilypond
 
+    chord_info = "Cmaj"
+    for pitch, lilypond in mapping.items():
+        assert transpose_chord_info(chord_info, pitch) == lilypond
+
 
 def test_transpose_chord_info_major7():
     chord_info = "CM7"
     mapping = {"cis": "cis1:maj7", "d": "d1:maj7", "ees": "ees1:maj7", "e": "e1:maj7"}
+    for pitch, lilypond in mapping.items():
+        assert transpose_chord_info(chord_info, pitch) == lilypond
+
+    chord_info = "Cmaj7"
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch) == lilypond
 
@@ -82,6 +90,28 @@ def test_transpose_chord_info_minor():
     mapping = {"cis": "cis1:m", "d": "d1:m", "ees": "ees1:m", "e": "e1:m"}
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch) == lilypond
+
+
+def test_transpose_alternate_chord_info():
+    alternate_chord_info = "Em7"
+    mapping = {"cis": "f1:m7", "d": "fis1:m7", "ees": "g1:m7", "e": "gis1:m7", "gis": "c1:m7"}
+    for pitch, lilypond in mapping.items():
+        assert transpose_chord_info(alternate_chord_info, pitch) == lilypond
+    alternate_chord_info = "EM7"
+    mapping = {"cis": "f1:maj7", "d": "fis1:maj7", "ees": "g1:maj7", "e": "gis1:maj7", "gis": "c1:maj7"}
+    for pitch, lilypond in mapping.items():
+        assert transpose_chord_info(alternate_chord_info, pitch) == lilypond
+
+
+def test_transpose_alternate_chord_info_lilypond():
+    alternate_chord_info = "e1:m7 e1:9 e1:maj7"
+    mapping = {"cis": "f1:m7 f1:9 f1:maj7",
+               "d": "fis1:m7 fis1:9 fis1:maj7",
+               "ees": "g1:m7 g1:9 g1:maj7",
+               "e": "gis1:m7 gis1:9 gis1:maj7",
+               "gis": "c1:m7 c1:9 c1:maj7"}
+    for pitch, lilypond in mapping.items():
+        assert transpose_chord_info(alternate_chord_info, pitch) == lilypond
 
 
 def test_wrong_chord():
