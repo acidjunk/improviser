@@ -235,8 +235,9 @@ class ExerciseResourceList(Resource):
             riff = Riff.query.filter(Riff.id == exercise_item["riff_id"]).first()
             chord_info = riff.chord_info if riff.chord_info else riff.chord
             if chord_info:
-                logger.info("Using chord_info", riff_id=riff.id, riff_name=riff.name, chord_info=chord_info)
                 exercise_item["chord_info"] = transpose_chord_info(chord_info, exercise_item["pitch"], riff.number_of_bars)
+                logger.info("Using chord_info", riff_id=riff.id, riff_name=riff.name, chord_info=chord_info,
+                            transposed_chord_info=exercise_item["chord_info"])
             else:
                 logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
 
@@ -316,6 +317,20 @@ class ExerciseResource(Resource):
                 del exercise_item_dict["number_of_bars"]
                 del exercise_item_dict["created_at"]
                 del exercise_item_dict["modified_at"]
+
+                riff = Riff.query.filter_by(id=exercise_item_dict["riff_id"]).first()
+                if riff.chord_info:
+                    # check transpose
+                    tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"])
+                    if tranposed_chord != payload_exercise_item["chord_info"]:
+                        logger.error("Client provided other chord, using backend version",
+                                     client=payload_exercise_item["chord_info"], backend=tranposed_chord)
+                        payload_exercise_item["chord_info"] = tranposed_chord
+                else:
+                    logger.warning("riff doesn't contain chord info", id=riff.id, name=riff.name)
+                    # correct faulty ones for now:
+                    payload_exercise_item["chord_info"] = ""
+
                 added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
                 logger.debug("Handling exercise item", added=added, removed=removed, modified=modified, same=same)
                 if modified:
