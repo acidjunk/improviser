@@ -138,10 +138,12 @@ def app(database, db_uri):
     # mail.init_app(app)
 
     db.create_all()
+    api.init_app(app)
 
+    # here we go
     yield app
 
-    # Clean up : revert DB to a clean state
+    # clean up : revert DB to a clean state
     db.session.remove()
     db.session.commit()
     db.session.close_all()

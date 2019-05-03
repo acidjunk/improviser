@@ -118,3 +118,4 @@ def test_wrong_chord():
     chord_info = "Cm19aug12b3"
     with pytest.raises(Exception):
         transpose_chord_info(chord_info, "d")
+

@@ -72,7 +72,8 @@ exercise_item_fields = {
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
     "riff_id": fields.String(required=True, description="The riff"),
-    # Todo: save to chord_info_alternate
+    # Todo: determine if we ever need the chord_info in post/put (always loaded from DB?)
+    # "chord_info": fields.String(required=False),
     "chord_info_alternate": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
                                                                       "LilyPond riff info"),
 }
@@ -104,6 +105,23 @@ exercise_arguments.add_argument('search_phrase', type=str, required=False,
 exercise_message_fields = {
    'available': fields.Boolean,
    'reason': fields.String,
+}
+
+quick_transpose_sub_fields = {
+    "riff_id": fields.String,
+    "pitch": fields.String(required=True),
+}
+
+quick_transpose_fields = {
+    "riffs": fields.Nested(quick_transpose_sub_fields),
+
+}
+
+transpose_fields = {
+    "riff_id": fields.String,  # optional
+    "pitch": fields.String(required=True),
+    "chord_info": fields.String(required=True),
+    "alternate_chord_info": fields.String,
 }
 
 
@@ -332,10 +350,7 @@ class ExerciseResource(Resource):
                 if riff.chord_info:
                     # check transpose
                     tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"])
-                    if tranposed_chord != payload_exercise_item["chord_info"]:
-                        logger.error("Client provided other chord, using backend version",
-                                     client=payload_exercise_item["chord_info"], backend=tranposed_chord)
-                        payload_exercise_item["chord_info"] = tranposed_chord
+                    payload_exercise_item["chord_info"] = tranposed_chord
                 else:
                     logger.warning("riff doesn't contain chord info", id=riff.id, name=riff.name)
                     # correct faulty ones for now:
@@ -389,7 +404,7 @@ def validate_exercise_items_and_error(items_length):
 
 
 def validate_exercises_and_error(items_length):
-    if items_length > 1:
+    if items_length > 20:
         message = "Exercise constraint reached. Max 20 exercises for free accounts. Contact me if you need more."
         logger.error(message, items=items_length)
         abort(400, message)
@@ -475,3 +490,36 @@ class ScaleTrainerResourceList(Resource):
     def get(self):
         riffs = Riff.query.filter(Riff.scale_trainer_enabled).all()
         return riffs
+
+
+@api.route('/transpose-riff')
+class Transpose(Resource):
+
+    @api.expect(transpose_fields)
+    def post(self):
+        pitch = api.payload["pitch"]
+
+        # If a riff_id is present the chord info from the DB wil be used.
+        riff_id = api.payload.get("riff_id")
+        if riff_id:
+            riff = Riff.query.filter(Riff.id == riff_id).first()
+            if riff.chord_info:
+                chord_info = transpose_chord_info(riff.chord_info, pitch)
+            else:
+                chord_info = transpose_chord_info(riff.chord, pitch)
+        else:
+            if api.payload.get("chord_info"):
+                chord_info = transpose_chord_info(api.payload["chord_info"], pitch)
+            else:
+                chord_info = ""
+
+        alternate_chord_info = api.payload.get("alternate_chord_info")
+
+        if alternate_chord_info:
+            logger.info("Alternate chord info found", alternate_chord_info=alternate_chord_info)
+            alternate_chord_info = transpose_chord_info(alternate_chord_info, pitch)
+            logger.info("Alternate chord info transposed", alternate_chord_info=alternate_chord_info)
+        return {
+            "chord_info": chord_info,
+            "alternate_chord_info": alternate_chord_info,
+        }
