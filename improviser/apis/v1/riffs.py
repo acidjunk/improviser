@@ -66,37 +66,37 @@ riff_arguments.add_argument('search_phrase', type=str, required=False,
                             help='Return only items that contain the search_phrase')
 
 
-def convertToMusicXML(lilypond, tranpose='c'):
-    import ly.musicxml
-    e = ly.musicxml.writer()
-
-    prefix = """\\transpose c %s {
-    {
-    \\version "2.12.3"
-    \\clef treble
-    \\time 4/4
-    \override Staff.TimeSignature #'stencil = ##f
-    """
-    postfix = """}
-    }
-    \paper{
-                indent=0\mm
-                line-width=120\mm
-                oddFooterMarkup=##f
-                oddHeaderMarkup=##f
-                bookTitleMarkup = ##f
-                scoreTitleMarkup = ##f
-            }"""
-
-    xml_header = """<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">"""
-
-    lilypond = f"{prefix % tranpose}\n{lilypond}\n{postfix}"
-    e.parse_text(lilypond)
-    # xml = bytes(xml_header, encoding='UTF-8') + e.musicxml().tostring()
-    # return {xml}
-    xml = xml_header + str(e.musicxml().tostring())
-    return xml
+# def convertToMusicXML(lilypond, tranpose='c'):
+#     import ly.musicxml
+#     e = ly.musicxml.writer()
+#
+#     prefix = """\\transpose c %s {
+#     {
+#     \\version "2.12.3"
+#     \\clef treble
+#     \\time 4/4
+#     \override Staff.TimeSignature #'stencil = ##f
+#     """
+#     postfix = """}
+#     }
+#     \paper{
+#                 indent=0\mm
+#                 line-width=120\mm
+#                 oddFooterMarkup=##f
+#                 oddHeaderMarkup=##f
+#                 bookTitleMarkup = ##f
+#                 scoreTitleMarkup = ##f
+#             }"""
+#
+#     xml_header = """<?xml version="1.0" encoding="UTF-8"?>
+# <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">"""
+#
+#     lilypond = f"{prefix % tranpose}\n{lilypond}\n{postfix}"
+#     e.parse_text(lilypond)
+#     # xml = bytes(xml_header, encoding='UTF-8') + e.musicxml().tostring()
+#     # return {xml}
+#     xml = xml_header + str(e.musicxml().tostring())
+#     return xml
 
 
 @api.route('/')
@@ -162,10 +162,15 @@ class UnrenderedRiffResourceList(Resource):
 @api.route('/<string:riff_id>')
 class RiffResource(Resource):
 
+    @quick_token_required
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_detail_fields)
     def get(self, riff_id):
         # Todo: check if riff is scaletrainer related otherwise block it for unauthorized users
-        riff = Riff.query.filter(Riff.id == riff_id).first()
+        try:
+            riff = Riff.query.filter(Riff.id == riff_id).first()
+        except:
+            abort(404, "riff not found")
         riff.tags = [str(tag.name) for tag in riff.riff_tags]
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         # Todo: add an parameter to the endpoint to show extended music_xml info or move to separate endpoint
