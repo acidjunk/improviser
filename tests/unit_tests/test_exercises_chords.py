@@ -36,6 +36,7 @@ def test_transpose_chord_info_lilypond_dim():
         "ees": "ees2:9 f2:dim9dim5",
         "fis": "fis2:9 gis2:dim9dim5",
         "gis": "gis2:9 ais2:dim9dim5",
+        "aes": "aes2:9 bes2:dim9dim5",
     }
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch) == lilypond
@@ -48,6 +49,7 @@ def test_transpose_chord_info_dominant7():
         "d": "d1:7 d1:7",
         "ees": "ees1:7 ees1:7",
         "e": "e1:7 e1:7",
+        "aes": "aes1:7 aes1:7"
     }
     for pitch, lilypond in mapping.items():
         assert transpose_chord_info(chord_info, pitch, number_of_bars=2) == lilypond

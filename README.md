@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/acidjunk/improviser.svg?branch=master)](https://travis-ci.com/acidjunk/improviser) 
+[![Coverage Status](https://coveralls.io/repos/github/acidjunk/improviser/badge.svg?branch=master)](https://coveralls.io/github/acidjunk/improviser?branch=master)
 
 # Improviser
 

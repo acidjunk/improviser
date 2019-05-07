@@ -152,8 +152,8 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
     # *****************************************************************************************************************
 
     notes = {"c": "P1", "cis": "A1", "d": "M2", "ees": "m3", "e": "M3", "f": "P4", "fis": "A4", "g": "P5", "gis": "A5",
-             "a": "M6", "bes": "m7", "b": "M7"}
-    to_lilypond = {"eb": "ees", "bb": "bes",
+             "aes": "m6", "a": "M6", "bes": "m7", "b": "M7"}
+    to_lilypond = {"db": "des", "eb": "ees", "ab": "aes", "bb": "bes",
                    "c#": "cis", "d#": "dis", "e#": "f", "f#": "fis", "g#": "gis", "a#": "ais", "b#": "c"}
     lilypond_mood = {"M": "maj", "m": "m"}
 

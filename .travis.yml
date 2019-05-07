@@ -14,7 +14,6 @@ services:
 install:
    # Install the dependencies the app itself has
    # which in this case I choose to keep in a requirements files
- - pip install coveralls
  - pip install -r requirements/base.txt
  - pip install -r requirements/testing.txt
 
@@ -22,5 +21,6 @@ before_script:
  - psql -c 'create database "improviser-test";' -U postgres
 
 # Tell Travis how to run the test script itself
-script: DB_USER=postgres DB_PASSWORD="" PYTHONPATH=improviser py.test tests/unit_tests/ 
-#after_success: coveralls
+script: DB_USER=postgres DB_PASSWORD="" PYTHONPATH=improviser py.test --cov=improviser tests/unit_tests/
+
+after_success: coveralls
