@@ -3,12 +3,16 @@ import copy
 from datetime import datetime
 import hashlib
 import uuid
+
+import structlog
 from flask_login import current_user
 
 from flask_restplus import Namespace, Resource, fields, marshal_with, abort
 from database import User, Instrument, UserPreference, db
 from flask_security import auth_token_required, roles_accepted
 from security import quick_token_required
+
+logger = structlog.get_logger(__name__)
 
 api = Namespace("users", description="User related operations")
 
@@ -58,6 +62,7 @@ user_preference_serializer = api.model("UserPreference", {
     "ideabook": fields.String(description="Ideabook contents"),
 })
 
+
 @api.route('/')
 @api.doc("Show all users to staff users.")
 class UserResourceList(Resource):
@@ -83,6 +88,8 @@ class UserResource(Resource):
         user.quick_token = quick_token_md5
         print(f"md5: {quick_token_md5}, normal: {quick_token}")
         user.quick_token_created_at = datetime.now()
+
+        logger.info("Selected instrument", instrumnet_name=user.preferences.instrument.name)
 
         # get the response ready, without overwriting the DB
         shallow_user = copy.copy(user)

@@ -1,31 +1,28 @@
 import datetime
+import hashlib
 import os
 import uuid
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
-from contextlib import contextmanager, closing
+from contextlib import closing
 
-from alembic import command
-from flask import Flask, current_app
+from flask import Flask
 from flask_login import LoginManager
-from flask_mail import Mail
-from flask_migrate import Migrate
 from flask_security import Security
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
-# from urllib3_mock import Responses
 
 from improviser.database import db, user_datastore, Riff, Instrument, UserPreference, Role, User, RiffExercise
-# from improviser.main import db_migrations
-from sqlalchemy.orm import Session
 
 
 STUDENT_EMAIL = 'student@example.com'
 STUDENT_PASSWORD = 'STUDENTJE'
 TEACHER_EMAIL = 'teacher@example.com'
 TEACHER_PASSWORD = 'TEACHERTJE'
+
+QUICK_TOKEN = 'da564af5-3767-48c0-acdc-7b610293fd72'
+QUICK_TOKEN_MD5 = hashlib.md5(QUICK_TOKEN.encode('utf-8')).hexdigest()
 
 
 @pytest.fixture(scope="session")
@@ -67,7 +64,6 @@ def database(db_uri):
 #     #     conn.execute(f'CREATE DATABASE "{db_to_create}";')
 #     #     print(f"Drop and create done for {db_to_create}")
 #     pass
-
 
 
 @pytest.fixture(scope="session")
@@ -121,6 +117,7 @@ def app(database, db_uri):
     app.config['SECURITY_REGISTERABLE'] = True
     app.config['SECURITY_CONFIRMABLE'] = True
     app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
+    app.config['TESTING'] = True
 
     # Needed for REST token login
     # Todo -> check if we can fix this without completely disabling it: it's only needed when login request is not via .json
@@ -140,6 +137,31 @@ def app(database, db_uri):
     db.create_all()
     api.init_app(app)
 
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(user_id)
+
+    @login_manager.request_loader
+    def load_user_from_request(request):
+        # try to login using the quick token
+        quick_token = request.headers.get("Quick-Authentication-Token")
+        if quick_token:
+            try:
+                user_id, token = quick_token.split(":")
+            except:
+                return None
+            quick_token_md5 = hashlib.md5(token.encode("utf-8")).hexdigest()
+
+            user = User.query \
+                .filter(User.id == user_id) \
+                .filter(User.quick_token == quick_token_md5) \
+                .first()
+            if user:
+                return user
+
+        # finally, return None if both methods did not login the user
+        return None
+
     # here we go
     yield app
 
@@ -155,7 +177,7 @@ def app(database, db_uri):
 def instruments():
     instrument_1 = Instrument(
         id=str(uuid.uuid4()),
-        name='Generic C"',
+        name='Generic C',
         root_key='c'
     )
     instrument_2 = Instrument(
@@ -190,6 +212,15 @@ def student_unconfirmed(instruments, user_roles):
 def student(student_unconfirmed):
     user = User.query.filter(User.email == STUDENT_EMAIL).first()
     user.confirmed_at = datetime.datetime.utcnow()
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
+def student_logged_in(student):
+    user = User.query.filter(User.email == STUDENT_EMAIL).first()
+    user.quick_token = QUICK_TOKEN_MD5
+    user.quick_token_created_at = datetime.datetime.now()
     db.session.commit()
     return user
 
@@ -233,7 +264,7 @@ def riff():
 def riff_unrendered():
     riff = Riff(
         id=str(uuid.uuid4()),
-        name="Major 9 chord up down",
+        name="Major 9 chord up down unrendered",
         number_of_bars=1,
         notes="c'8 e' g' b' d'' b' g' e'",
         chord='CM9',
