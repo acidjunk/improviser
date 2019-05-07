@@ -1,7 +1,7 @@
-import pytest
+
+def test_riffs_endpoint_without_riffs(client):
+    response = client.get('/v1/riffs', json={}, follow_redirects=True)
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
-def test_riffs_endpoint(client):
+def test_riffs_endpoint(client, riff):
     return client.get('/v1/riffs', json={}, follow_redirects=True)
-
