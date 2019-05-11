@@ -13,8 +13,6 @@ def test_riffs_detail_endpoint_without_auth(client, riff):
     assert response.status_code == 401
 
 
-
-
 def test_riffs_endpoint_with_auth(client, student_logged_in, riff, riff_unrendered, riff_multi_chord):
     headers = {"Quick-Authentication-Token": f"{student_logged_in.id}:{QUICK_TOKEN}"}
     headers["Content-Type"] = "application/json"

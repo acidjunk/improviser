@@ -76,6 +76,7 @@ exercise_item_fields = {
     # "chord_info": fields.String(required=False),
     "chord_info_alternate": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
                                                                       "LilyPond riff info"),
+    # Todo: add extra field for backingtrack stuff
 }
 
 exercise_fields = {
@@ -121,7 +122,7 @@ transpose_fields = {
     "riff_id": fields.String,  # optional
     "pitch": fields.String(required=True),
     "chord_info": fields.String(required=True),
-    "alternate_chord_info": fields.String,
+    "chord_info_alternate": fields.String,
 }
 
 
@@ -513,13 +514,13 @@ class Transpose(Resource):
             else:
                 chord_info = ""
 
-        alternate_chord_info = api.payload.get("alternate_chord_info")
+        chord_info_alternate = api.payload.get("chord_info_alternate")
 
-        if alternate_chord_info:
-            logger.info("Alternate chord info found", alternate_chord_info=alternate_chord_info)
-            alternate_chord_info = transpose_chord_info(alternate_chord_info, pitch)
-            logger.info("Alternate chord info transposed", alternate_chord_info=alternate_chord_info)
+        if chord_info_alternate:
+            logger.info("Alternate chord info found", alternate_chord_info=chord_info_alternate)
+            chord_info_alternate = transpose_chord_info(chord_info_alternate, pitch)
+            logger.info("Alternate chord info transposed", alternate_chord_info=chord_info_alternate)
         return {
             "chord_info": chord_info,
-            "alternate_chord_info": alternate_chord_info,
+            "chord_info_alternate": chord_info_alternate,
         }
