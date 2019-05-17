@@ -76,7 +76,7 @@ exercise_item_fields = {
     # "chord_info": fields.String(required=False),
     "chord_info_alternate": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
                                                                       "LilyPond riff info"),
-    # Todo: add extra field for backingtrack stuff
+    "use_alternate_chord_info_for_backing_track": fields.Boolean(required=False, default=True)
 }
 
 exercise_fields = {
@@ -351,6 +351,10 @@ class ExerciseResource(Resource):
                 if riff.chord_info:
                     # check transpose
                     tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"])
+                    payload_exercise_item["chord_info"] = tranposed_chord
+                elif riff.chord:
+                    # check transpose
+                    tranposed_chord = transpose_chord_info(riff.chord, payload_exercise_item["pitch"])
                     payload_exercise_item["chord_info"] = tranposed_chord
                 else:
                     logger.warning("riff doesn't contain chord info", id=riff.id, name=riff.name)
