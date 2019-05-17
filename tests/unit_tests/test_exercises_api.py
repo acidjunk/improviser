@@ -1,41 +1,39 @@
+from unittest import mock
+
+from tests.unit_tests.conftest import QUICK_TOKEN
 
 
-def test_transpose_without_riff(client, student):
-    payload = {"pitch": "d",
-               "chord_info": "c1:m7 c1:9 c1:maj7",
-               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7" }
-    response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
-
-    assert response.json["chord_info"] == "d1:m7 d1:9 d1:maj7"
-    assert response.json["chord_info_alternate"] == "e1:m7 e1:9 g:maj7"
+def test_exercises_endpoint_without_auth(client):
+    response = client.get('/v1/exercises', follow_redirects=True)
+    assert response.status_code == 401
 
 
-def test_transpose_with_riff(client, student, riff):
-    payload = {"riff_id": riff.id,
-               "pitch": "d",
-               "chord_info": "c1:m7 c1:9 c1:maj7",  # Will be overruled with: `c1:maj9`
-               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7"}
-    response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
-
-    assert response.json["chord_info"] == "d1:maj9"
-    assert response.json["chord_info_alternate"] == "e1:m7 e1:9 g:maj7"
+def test_riffs_detail_endpoint_without_auth(client, exercise_1):
+    response = client.get(f'/v1/exercises/{exercise_1.id}', follow_redirects=True)
+    assert response.status_code == 402
 
 
-def test_transpose_without_chord_info(client, student, riff):
-    payload = {"riff_id": riff.id,
-               "pitch": "d",
-               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7"}
-    response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
+def test_exercises_endpoint_with_auth(client, teacher_logged_in, exercise_1, exercise_2):
+    headers = {"Quick-Authentication-Token": f"{teacher_logged_in.id}:{QUICK_TOKEN}"}
+    headers["Content-Type"] = "application/json"
 
-    assert response.json["chord_info"] == "d1:maj9"
-    assert response.json["chord_info_alternate"] == "e1:m7 e1:9 g:maj7"
+    # somehow check_quick_token() loses the request in test setup
+    with mock.patch('security.check_quick_token', return_value=True):
+        with mock.patch('flask_principal.Permission.can', return_value=True):
+            response = client.get('/v1/exercises', headers=headers, follow_redirects=True)
+            assert response.status_code == 200
+            assert len(response.json) == 2
 
 
-def test_transpose_without_riff_chord_info(client, student, riff_without_chord_info):
-    payload = {"riff_id": riff_without_chord_info.id,
-               "pitch": "d",
-               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7"}
-    response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
+def test_exercise_detail_endpoint_with_auth(client, teacher_logged_in, exercise_1):
+    headers = {"Quick-Authentication-Token": f"{teacher_logged_in.id}:{QUICK_TOKEN}"}
+    headers["Content-Type"] = "application/json"
 
-    assert response.json["chord_info"] == "d1:maj"
-    assert response.json["chord_info_alternate"] == "e1:m7 e1:9 g:maj7"
+    # somehow check_quick_token() loses the request in test setup
+    with mock.patch('security.check_quick_token', return_value=True):
+        with mock.patch('flask_principal.Permission.can', return_value=True):
+            response = client.get(f'/v1/riffs/{exercise_1.id}', headers=headers, follow_redirects=True)
+            assert response.status_code == 200
+            response = client.get('/v1/riffs/1', headers=headers, follow_redirects=True)
+            assert response.status_code == 404
+            assert "riff not found" in response.json["message"]

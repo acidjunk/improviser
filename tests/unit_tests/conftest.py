@@ -244,6 +244,15 @@ def teacher(teacher_unconfirmed):
 
 
 @pytest.fixture
+def teacher_logged_in(teacher):
+    user = User.query.filter(User.email == TEACHER_EMAIL).first()
+    user.quick_token = QUICK_TOKEN_MD5
+    user.quick_token_created_at = datetime.datetime.now()
+    db.session.commit()
+    return user
+
+
+@pytest.fixture
 def riff():
     riff = Riff(
         id=str(uuid.uuid4()),
@@ -327,7 +336,8 @@ def riff_without_chord():
     return riff
 
 
-def riff_exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_without_chord):
+@pytest.fixture
+def exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_without_chord):
     riff_exercise = RiffExercise(
         id=str(uuid.uuid4()),
         name="Exercise 1",
@@ -336,7 +346,25 @@ def riff_exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, ri
         instrument_key="c",
         is_public=True,
         is_copyable=True,
-        starts=3,
+        # starts=3,
+        created_by=teacher.id
+    )
+    db.session.add(riff_exercise)
+    db.session.commit()
+    return riff_exercise
+
+
+@pytest.fixture
+def exercise_2(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_without_chord):
+    riff_exercise = RiffExercise(
+        id=str(uuid.uuid4()),
+        name="Exercise 1",
+        description="Some description",
+        root_key="c",
+        instrument_key="c",
+        is_public=True,
+        is_copyable=True,
+        # starts=3,
         created_by=teacher.id
     )
     db.session.add(riff_exercise)
