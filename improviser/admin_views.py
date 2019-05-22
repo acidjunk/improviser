@@ -149,7 +149,7 @@ class RiffExerciseAdminView(ModelView):
 
 
 class RiffExerciseItemAdminView(ModelView):
-    column_list = ['id', 'riff_exercise_id', 'riff_id', 'pitch', 'octave', 'chord_info', 'number_of_bars',
+    column_list = ['id', 'riff_exercise_id', 'riff_id', 'pitch', 'octave', 'chord_info', 'chord_info_alternate', 'number_of_bars',
                    'order_number', 'created_at']
     column_default_sort = ('order_number', False)
     column_searchable_list = ('id', 'riff_exercise_id', 'riff_id', 'chord_info')
