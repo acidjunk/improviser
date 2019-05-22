@@ -231,12 +231,13 @@ class ExerciseResourceList(Resource):
     @quick_token_required
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher', 'operator')
     @marshal_with(exercise_list_serializer)
-    @api.expect(exercise_arguments)
+    # @api.expect(exercise_arguments)
     def get(self):
-        args = request.args
         # Get public exercises and exercises owned by this user
+        print(type(current_user))
         exercise_query = RiffExercise.query.filter((RiffExercise.created_by == current_user.id) |
                                                    (RiffExercise.is_public.is_(True)))
+        args = request.args
         if args.get("search_phrase"):
             # Handle case insensitive search
             exercise_query = exercise_query.filter(RiffExercise.name.ilike('%' + args["search_phrase"] + '%'))

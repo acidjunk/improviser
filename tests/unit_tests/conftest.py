@@ -13,8 +13,10 @@ from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 
-from improviser.database import db, user_datastore, Riff, Instrument, UserPreference, Role, User, RiffExercise
-
+from improviser.database import (
+    db, user_datastore, Riff, Instrument, UserPreference, Role, User, RiffExercise,
+    RiffExerciseItem
+)
 
 STUDENT_EMAIL = 'student@example.com'
 STUDENT_PASSWORD = 'STUDENTJE'
@@ -338,8 +340,9 @@ def riff_without_chord():
 
 @pytest.fixture
 def exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_without_chord):
+    exercise_id = str(uuid.uuid4())
     riff_exercise = RiffExercise(
-        id=str(uuid.uuid4()),
+        id=exercise_id,
         name="Exercise 1",
         description="Some description",
         root_key="c",
@@ -350,6 +353,10 @@ def exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_wi
         created_by=teacher.id
     )
     db.session.add(riff_exercise)
+    record = RiffExerciseItem(id=str(uuid.uuid4()), riff_id=riff.id, riff_exercise_id=exercise_id,
+                              number_of_bars=riff.number_of_bars, chord_info=riff.chord_info,
+                              pitch="c", octave=0, order_number=0)
+    db.session.add(record)
     db.session.commit()
     return riff_exercise
 
