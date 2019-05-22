@@ -120,6 +120,7 @@ quick_transpose_fields = {
 
 transpose_fields = {
     "riff_id": fields.String,  # optional
+    "exercise_item_id": fields.String,  # optional
     "pitch": fields.String(required=True),
     "chord_info": fields.String(required=True),
     "chord_info_alternate": fields.String,
@@ -269,19 +270,9 @@ class ExerciseResourceList(Resource):
                             transposed_chord_info=exercise_item["chord_info"])
             else:
                 logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
-
-            # alternate chord info available?
-            chord_info_alternate = exercise_item.get("chord_info_alternate")
-            if chord_info_alternate:
-                # Todo: validate `user input` and tranpose accordingly
-                # For now just save it
-                logger.info("Alternate chord_info available", chord_info_alternate=chord_info_alternate)
-                exercise_item["chord_info_alternate"] = chord_info_alternate
-
             logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload['id'])
             record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
             db.session.add(record)
-
         try:
             db.session.commit()
         except Exception as error:
@@ -360,6 +351,10 @@ class ExerciseResource(Resource):
                     logger.warning("riff doesn't contain chord info", id=riff.id, name=riff.name)
                     # correct faulty ones for now:
                     payload_exercise_item["chord_info"] = ""
+
+                if payload_exercise_item.get("chord_info_alternate"):
+                    print("***************")
+                    print("YEAH BABY")
 
                 added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
                 logger.debug("Handling exercise item", added=added, removed=removed, modified=modified, same=same)
@@ -518,11 +513,19 @@ class Transpose(Resource):
             else:
                 chord_info = ""
 
+        # If a exercise_item_id is present the alternate_chord info from the DB wil be used.
+        exercise_item_id = api.payload.get("exercise_item_id")
         chord_info_alternate = api.payload.get("chord_info_alternate")
-
         if chord_info_alternate:
-            logger.info("Alternate chord info found", alternate_chord_info=chord_info_alternate)
-            chord_info_alternate = transpose_chord_info(chord_info_alternate, pitch)
+            logger.info("Alternate chord info found in payload", alternate_chord_info=chord_info_alternate)
+        if exercise_item_id and chord_info_alternate:
+            exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
+
+            # only existing alternate chord info is transposed
+            if exercise_item.chord_info_alternate:
+                chord_info_alternate = "TODO"
+                # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
+
             logger.info("Alternate chord info transposed", alternate_chord_info=chord_info_alternate)
         return {
             "chord_info": chord_info,
