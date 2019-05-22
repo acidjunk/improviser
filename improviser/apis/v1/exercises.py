@@ -227,6 +227,8 @@ class ValidateExerciseNameResource(Resource):
 @api.route('/')
 class ExerciseResourceList(Resource):
 
+    @quick_token_required
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher', 'operator')
     @marshal_with(exercise_list_serializer)
     @api.expect(exercise_arguments)
     def get(self):
@@ -294,11 +296,16 @@ class ExerciseResourceList(Resource):
 @api.route('/<string:exercise_id>')
 class ExerciseResource(Resource):
 
+    @quick_token_required
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher', 'operator')
     @marshal_with(exercise_detail_serializer)
     def get(self, exercise_id):
-        exercise = RiffExercise.query. \
-            filter((RiffExercise.created_by == current_user.id) | (RiffExercise.is_public.is_(True))).\
-            filter(RiffExercise.id == exercise_id).first()
+        try:
+            exercise = RiffExercise.query. \
+                filter((RiffExercise.created_by == current_user.id) | (RiffExercise.is_public.is_(True))).\
+                filter(RiffExercise.id == exercise_id).first()
+        except:
+            abort(404, "exercise not found")
         exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
 
         exercise.exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
