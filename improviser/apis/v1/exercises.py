@@ -231,7 +231,7 @@ class ExerciseResourceList(Resource):
     @quick_token_required
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher', 'operator')
     @marshal_with(exercise_list_serializer)
-    # @api.expect(exercise_arguments)
+    @api.expect(exercise_arguments)
     def get(self):
         # Get public exercises and exercises owned by this user
         print(type(current_user))

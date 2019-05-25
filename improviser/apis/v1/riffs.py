@@ -1,4 +1,5 @@
 import datetime
+import re
 from typing import List, Tuple
 
 import structlog
@@ -222,44 +223,56 @@ def _query_with_filters(query,
 
     # Todo: handle list of filters also
     if filters:
+        filter_parameters = []
+        if filters.count(",") == 1:
+            logger.info("Preparing single column filter")
+            filter_parameters.append(filters)
+        else:
+            logger.info("Preparing multi column filter")
+            filter_parameters = re.findall("[^,]+,[^,]+", filters)
         try:
-            filter = filters.split(",")
-            field = filter[0]
-            value = filter[1]
-            if field.endswith('_gt'):
-                query = query.filter(Riff.__dict__[field[:-3]] > value)
-            elif field.endswith('_gte'):
-                query = query.filter(Riff.__dict__[field[:-4]] >= value)
-            elif field.endswith('_lte'):
-                query = query.filter(Riff.__dict__[field[:-4]] <= value)
-            elif field.endswith('_lt'):
-                query = query.filter(Riff.__dict__[field[:-3]] < value)
-            elif field.endswith('_ne'):
-                query = query.filter(Riff.__dict__[field[:-3]] != value)
-            elif field == "name":
-                query = query.filter(Riff.name.ilike('%' + value + '%'))
-            elif field == "chord":
-                query = query.filter(Riff.chord.ilike('%' + value + '%'))
-            elif field == "riff.tags":
-                pass
-            else:
-                query = query.filter(cast(Riff.__dict__[field], String).startswith(value))
+            for parameter in filter_parameters:
+                field, value = parameter.split(",")
+                if field.endswith('_gt'):
+                    query = query.filter(Riff.__dict__[field[:-3]] > value)
+                elif field.endswith('_gte'):
+                    query = query.filter(Riff.__dict__[field[:-4]] >= value)
+                elif field.endswith('_lte'):
+                    query = query.filter(Riff.__dict__[field[:-4]] <= value)
+                elif field.endswith('_lt'):
+                    query = query.filter(Riff.__dict__[field[:-3]] < value)
+                elif field.endswith('_ne'):
+                    query = query.filter(Riff.__dict__[field[:-3]] != value)
+                elif field == "name":
+                    query = query.filter(Riff.name.ilike('%' + value + '%'))
+                elif field == "chord":
+                    query = query.filter(Riff.chord.ilike('%' + value + '%'))
+                elif field == "riff.tags":
+                    pass
+                else:
+                    query = query.filter(cast(Riff.__dict__[field], String).startswith(value))
         except Exception as error:
             logger.error("Error while handling filter", filter=filter, error=error)
 
-    # Todo: handle list of sorts also
     if sort:
+        sort_parameters = []
+        if sort.count(",") == 1:
+            logger.info("Preparing single column sort")
+            sort_parameters.append(sort)
+        else:
+            logger.info("Preparing multi column sort")
+            sort_parameters = re.findall("[^,]+,[^,]+", sort)
         try:
-            sort = sort.split(",")
-            # Todo: implement sort on tag
-            if sort and len(sort) == 2:
+            for parameter in sort_parameters:
+                field, value = parameter.split(",")
+                # Todo: implement sort on tag
                 import sqlalchemy.sql.expression as sql_expressions
-                if sort[1].upper() == 'DESC':
-                    query = query.order_by(sql_expressions.desc(Riff.__dict__[sort[0]]))
+                if value.upper() == 'DESC':
+                    query = query.order_by(sql_expressions.desc(Riff.__dict__[field]))
                 else:
-                    query = query.order_by(sql_expressions.asc(Riff.__dict__[sort[0]]))
+                    query = query.order_by(sql_expressions.asc(Riff.__dict__[field]))
         except Exception as error:
-            logger.error("Error while handling sort", filter=sort, error=error)
+            logger.error("Error while handling sort", sort=sort, error=error)
 
     if range:
         try:
