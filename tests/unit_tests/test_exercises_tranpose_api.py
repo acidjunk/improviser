@@ -19,6 +19,16 @@ def test_transpose_with_riff(client, riff):
     assert response.json["chord_info"] == "d1:maj9"
 
 
+def test_transpose_with_riff_major(client, riff_major):
+    payload = {"riff_id": riff_major.id,
+               "pitch": "d",
+               "chord_info": "C",  # Will be overruled with: `c1:maj9`
+               }
+    response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
+
+    assert response.json["chord_info"] == "d1"
+
+
 def test_transpose_without_chord_info(client, riff):
     payload = {"riff_id": riff.id,
                "pitch": "d",

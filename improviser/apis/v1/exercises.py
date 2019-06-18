@@ -170,7 +170,11 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
             root_key = to_lilypond[root_key]
         # Done with root key : continue with rest of chord
         digit = ""
-        if chord_info[1+o].isdigit():  # Handle C7, C#7, Bb7
+        separator = ":"
+        if len(chord_info) == 1:
+            chord_mood = ""
+            separator = ""
+        elif chord_info[1+o].isdigit():  # Handle C7, C#7, Bb7
             chord_mood = ""
             digit = chord_info[1+o]
         elif len(chord_info) == 2+o:  # Handle Cm, C#m, Bbm, CM, C#M
@@ -188,10 +192,10 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
             raise Exception
         logger.info("Using chord from riff", root_key=root_key, chord_mood=chord_mood, digit=digit)
         if not number_of_bars or number_of_bars == 1:
-            return f"{root_key}1:{chord_mood}{digit}"
+            return f"{root_key}1{separator}{chord_mood}{digit}"
         result = []
         for i in range(0, number_of_bars):
-            result.append(f"{root_key}1:{chord_mood}{digit}")
+            result.append(f"{root_key}1{separator}{chord_mood}{digit}")
         return " ".join(result)
     else:
         chords = chord_info.split(" ")
@@ -412,8 +416,8 @@ def validate_exercise_items_and_error(items_length):
 
 
 def validate_exercises_and_error(items_length):
-    if items_length > 30:
-        message = "Exercise constraint reached. Max 20 exercises for free accounts. Contact me if you need more."
+    if items_length > 60:
+        message = "Exercise constraint reached. Max 60 exercises for free accounts. Contact me if you need more."
         logger.error(message, items=items_length)
         abort(400, message)
 

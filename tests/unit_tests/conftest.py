@@ -339,6 +339,23 @@ def riff_without_chord():
 
 
 @pytest.fixture
+def riff_major():
+    riff = Riff(
+        id=str(uuid.uuid4()),
+        name="Major chord up",
+        number_of_bars=1,
+        notes="c'8 e' g'",
+        chord='C',
+        chord_info="",
+        render_valid=True,
+        render_date=datetime.datetime.utcnow(),
+    )
+    db.session.add(riff)
+    db.session.commit()
+    return riff
+
+
+@pytest.fixture
 def exercise_1(teacher, riff, riff_multi_chord, riff_without_chord_info, riff_without_chord):
     exercise_id = str(uuid.uuid4())
     riff_exercise = RiffExercise(
