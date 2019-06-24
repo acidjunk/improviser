@@ -4,4 +4,4 @@ dropdb improviser
 echo "creating"
 createdb improviser
 echo "populating"
-psql -d improviser < improviser_dev.psql
+psql -d improviser < improviser_prod.psql

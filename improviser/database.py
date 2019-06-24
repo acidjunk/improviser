@@ -199,4 +199,26 @@ class RiffExerciseInstrument(db.Model):
     instrument_id = Column('instrument_id', UUID(as_uuid=True), ForeignKey('instruments.id'), index=True)
 
 
+class BackingTrack(db.Model):
+    __tablename__ = 'backing_tracks'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String(255), nullable=False)
+    tempo = Column(Integer, default=100)
+    chord_info = Column(String, nullable=False)
+    c_available = Column(Boolean, default=False, nullable=False)
+    cis_available = Column(Boolean, default=False, nullable=False)
+    d_available = Column(Boolean, default=False, nullable=False)
+    ees_available = Column(Boolean, default=False, nullable=False)
+    e_available = Column(Boolean, default=False, nullable=False)
+    f_available = Column(Boolean, default=False, nullable=False)
+    fis_available = Column(Boolean, default=False, nullable=False)
+    g_available = Column(Boolean, default=False, nullable=False)
+    aes_available = Column(Boolean, default=False, nullable=False)
+    a_available = Column(Boolean, default=False, nullable=False)
+    bes_available = Column(Boolean, default=False, nullable=False)
+    b_available = Column(Boolean, default=False, nullable=False)
+    created_date = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

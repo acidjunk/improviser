@@ -165,6 +165,29 @@ class RiffExerciseItemAdminView(ModelView):
             return False
 
 
+class BackingTrackAdminView(ModelView):
+    column_list = ['id', 'name', 'tempo', 'chord_info', 'c_available', 'cis_available', 'd_available', 'ees_available',
+                   'e_available', 'f_available', 'fis_available', 'g_available', 'aes_available', 'a_available',
+                   'bes_available', 'b_available', 'created_date']
+    column_labels = {'c_available': 'C', 'cis_available': 'C#', 'd_available': 'D', 'ees_available': 'Eb',
+                     'e_available': 'E', 'f_available': 'F', 'fis_available': 'F#', 'g_available': 'G',
+                     'aes_available': 'Ab', 'a_available': 'C',
+                     'bes_available': 'Bb', 'b_available': 'B'}
+    column_default_sort = ('created_date', False)
+    column_searchable_list = ('id', 'name', 'chord_info')
+    can_set_page_size = True
+
+    def is_accessible(self):
+        if not current_user:
+            return False
+        try:
+            if 'admin' in current_user.roles:
+                return True
+        except:
+            return False
+
+
+
 class BaseAdminView(ModelView):
     column_display_pk = True
 
