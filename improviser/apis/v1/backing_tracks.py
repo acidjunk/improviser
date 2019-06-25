@@ -11,10 +11,12 @@ backing_track_serializer = api.model("BackingTrack", {
     "name": fields.String(required=True, description="Name"),
     "chord_info": fields.String(description="Chord info in lilypond format"),
     "tempo": fields.Integer(description="Tempo in BPM [40-320]"),
-'c_available': fields.Boolean(), 'cis_available': fields.Boolean(), 'd_available': fields.Boolean(), 'ees_available': fields.Boolean(),
-                     'e_available': fields.Boolean(), 'f_available': fields.Boolean(), 'fis_available': fields.Boolean(), 'g_available': fields.Boolean(),
-                     'aes_available': fields.Boolean(), 'a_available': fields.Boolean(),
-                     'bes_available': fields.Boolean(), 'b_available': fields.Boolean()
+    "c_available": fields.Boolean(), "cis_available": fields.Boolean(), "d_available": fields.Boolean(),
+    "ees_available": fields.Boolean(),
+    "e_available": fields.Boolean(), "f_available": fields.Boolean(), "fis_available": fields.Boolean(),
+    "g_available": fields.Boolean(),
+    "aes_available": fields.Boolean(), "a_available": fields.Boolean(),
+    "bes_available": fields.Boolean(), "b_available": fields.Boolean()
 })
 
 
@@ -28,7 +30,7 @@ class BackingTrackResourceList(Resource):
     @marshal_with(backing_track_serializer)
     @api.expect(backing_track_arguments)
     def get(self):
-        args = request.args
+        # args = request.args
         return BackingTrack.query.all(), 200
 
     @api.expect(backing_track_serializer)

@@ -157,7 +157,7 @@ class RiffExerciseItem(db.Model):
     text_info = Column(String(255))
     chord_info = Column(String(255))
     chord_info_alternate = Column(String(255))
-    use_alternate_chord_info_for_backingtrack = Column(Boolean, default=False)
+    chord_info_backing_track = Column(String(255))
     pitch = Column(String(3), default='c')
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)

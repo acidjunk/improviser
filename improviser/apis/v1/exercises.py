@@ -11,7 +11,6 @@ from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 
 from database import db, Riff, RiffExercise, RiffExerciseItem
-from sqlalchemy import cast, String
 
 from .riffs import riff_fields
 
@@ -48,6 +47,7 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
     "order_number": fields.Integer(required=True),
     "chord_info": fields.String(required=False),  # transposed riff chord info will be used
     "chord_info_alternate": fields.String(required=False),  # this item is overriden with other chords (lilypond format)
+    "chord_info_backing_track": fields.String(required=False),  # this item is overrides backing track chord info
     "riff_id": fields.String(required=True, description="The riff"),
     "created_at": fields.DateTime(),
 })
@@ -76,6 +76,9 @@ exercise_item_fields = {
     # "chord_info": fields.String(required=False),
     "chord_info_alternate": fields.String(required=False, description="Overrule riff chord info (if any) with your own "
                                                                       "LilyPond riff info"),
+    "chord_info_backing_track": fields.String(required=False,
+                                              description="Overrule riff chord info (if any) with your own "
+                                                          "LilyPond riff info to help the BackinTrack matcher"),
     "use_alternate_chord_info_for_backing_track": fields.Boolean(required=False, default=True)
 }
 
@@ -96,7 +99,6 @@ copy_exercise_fields = {
 }
 
 exercise_detail_fields = exercise_fields
-# exercise_detail_fields["riffs"] = fields.List(fields.Nested(riff_fields))
 
 
 exercise_arguments = reqparse.RequestParser()
@@ -124,6 +126,7 @@ transpose_fields = {
     "pitch": fields.String(required=True),
     "chord_info": fields.String(required=True),
     "chord_info_alternate": fields.String,
+    "chord_info_backing_track": fields.String
 }
 
 
@@ -364,10 +367,6 @@ class ExerciseResource(Resource):
                     # correct faulty ones for now:
                     payload_exercise_item["chord_info"] = ""
 
-                if payload_exercise_item.get("chord_info_alternate"):
-                    print("***************")
-                    print("YEAH BABY")
-
                 added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
                 logger.debug("Handling exercise item", added=added, removed=removed, modified=modified, same=same)
                 if modified:
@@ -529,7 +528,7 @@ class Transpose(Resource):
         exercise_item_id = api.payload.get("exercise_item_id")
         chord_info_alternate = api.payload.get("chord_info_alternate")
         if chord_info_alternate:
-            logger.info("Alternate chord info found in payload", alternate_chord_info=chord_info_alternate)
+            logger.info("Alternate chord info found in payload", chord_info_alternate=chord_info_alternate)
         if exercise_item_id and chord_info_alternate:
             exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
 
@@ -538,8 +537,23 @@ class Transpose(Resource):
                 chord_info_alternate = "TODO"
                 # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
 
-            logger.info("Alternate chord info transposed", alternate_chord_info=chord_info_alternate)
+            logger.info("Alternate chord info transposed", chord_info_alternate=chord_info_alternate)
+
+        chord_info_backing_track = api.payload.get("chord_info_backing_track")
+        if chord_info_backing_track:
+            logger.info("Backing track chord info found in payload", chord_info_backing_track=chord_info_backing_track)
+        if exercise_item_id and chord_info_alternate:
+            exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
+
+            # only existing alternate chord info is transposed
+            if exercise_item.chord_info_backing_track:
+                chord_info_backing_track = "TODO"
+                # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
+
+            logger.info("Backing track chord info transposed", chord_info_backing_track=chord_info_backing_track)
+
         return {
             "chord_info": chord_info,
             "chord_info_alternate": chord_info_alternate,
+            "chord_info_backing_track": chord_info_backing_track,
         }

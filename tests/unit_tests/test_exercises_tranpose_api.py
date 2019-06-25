@@ -32,19 +32,27 @@ def test_transpose_with_riff_major(client, riff_major):
 def test_transpose_without_chord_info(client, riff):
     payload = {"riff_id": riff.id,
                "pitch": "d",
-               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7"}
+               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7",
+               "chord_info_backing_track": "d1:m7 d1:9 fis1:maj7"}
     response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
 
     assert response.json["chord_info"] == "d1:maj9"
+    # Should be passed trough as is:
+    assert response.json["chord_info_alternate"] == "d1:m7 d1:9 fis1:maj7"
+    assert response.json["chord_info_backing_track"] == "d1:m7 d1:9 fis1:maj7"
 
 
 def test_transpose_without_riff_chord_info(client, riff_without_chord_info):
     payload = {"riff_id": riff_without_chord_info.id,
                "pitch": "d",
-               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7"}
+               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7",
+               "chord_info_backing_track": "d1:m7 d1:9 fis1:maj7"}
     response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
 
     assert response.json["chord_info"] == "d1:maj"
+    # Should be passed trough as is:
+    assert response.json["chord_info_alternate"] == "d1:m7 d1:9 fis1:maj7"
+    assert response.json["chord_info_backing_track"] == "d1:m7 d1:9 fis1:maj7"
 
 
 def test_transpose_with_alternate_chord_info(client, exercise_1):
@@ -58,3 +66,18 @@ def test_transpose_with_alternate_chord_info(client, exercise_1):
 
     # Should be passed trough as is:
     assert response.json["chord_info_alternate"] == "d1:m7 d1:9 fis1:maj7"
+
+
+def test_transpose_with_backing_track_chord_info(client, exercise_1):
+    # find an exercise_item_id in the exercise
+    exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.order_number == 0).first()
+
+    payload = {"exercise_item_id": exercise_item.id,
+               "pitch": "d",
+               "chord_info_alternate": "d1:m7 d1:9 fis1:maj7",
+               "chord_info_backing_track": "d1:m7 d1:9 fis1:maj7"}
+    response = client.post('/v1/exercises/transpose-riff', json=payload, follow_redirects=True)
+
+    # Should be passed trough as is:
+    assert response.json["chord_info_alternate"] == "d1:m7 d1:9 fis1:maj7"
+    assert response.json["chord_info_backing_track"] == "d1:m7 d1:9 fis1:maj7"
