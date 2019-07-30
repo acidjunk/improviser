@@ -62,6 +62,8 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASS
 # More Flask Security settings
 app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_CONFIRMABLE'] = True
+app.config['SECURITY_RECOVERABLE'] = True
+app.config['SECURITY_CHANGEABLE'] = True
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 
 # Needed for REST token login
