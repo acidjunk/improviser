@@ -65,6 +65,8 @@ app.config['SECURITY_CONFIRMABLE'] = True
 app.config['SECURITY_RECOVERABLE'] = True
 app.config['SECURITY_CHANGEABLE'] = True
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
+app.config['SECURITY_POST_CONFIRM_VIEW'] = "https://www.improviser.education/login"
+app.config['SECURITY_POST_RESET_VIEW'] = "https://www.improviser.education/login"
 
 # Needed for REST token login
 # Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
