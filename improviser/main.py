@@ -47,6 +47,14 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') el
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
 app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT') if os.getenv('SECURITY_PASSWORD_SALT') \
     else 'SALTSALTSALT'
+# More Flask Security settings
+app.config['SECURITY_REGISTERABLE'] = True
+app.config['SECURITY_CONFIRMABLE'] = True
+app.config['SECURITY_RECOVERABLE'] = True
+app.config['SECURITY_CHANGEABLE'] = True
+app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
+app.config['SECURITY_POST_CONFIRM_VIEW'] = "https://www.improviser.education/login"
+app.config['SECURITY_POST_RESET_VIEW'] = "https://www.improviser.education/login"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
@@ -59,14 +67,6 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME') if os.getenv('MAIL_USERNAME') else 'no-reply@example.com'
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASSWORD') else 'somepassword'
-# More Flask Security settings
-app.config['SECURITY_REGISTERABLE'] = True
-app.config['SECURITY_CONFIRMABLE'] = True
-app.config['SECURITY_RECOVERABLE'] = True
-app.config['SECURITY_CHANGEABLE'] = True
-app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
-app.config['SECURITY_POST_CONFIRM_VIEW'] = "https://www.improviser.education/login"
-app.config['SECURITY_POST_RESET_VIEW'] = "https://www.improviser.education/login"
 
 # Needed for REST token login
 # Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
