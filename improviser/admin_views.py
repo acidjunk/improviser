@@ -6,7 +6,7 @@ from flask_security import utils
 from markupsafe import Markup
 from database import Riff
 from sqlalchemy import String
-from wtforms import PasswordField
+from wtforms import PasswordField, TextAreaField
 
 
 class UserAdminView(ModelView):
@@ -137,6 +137,8 @@ class RiffExerciseAdminView(ModelView):
     column_default_sort = ('created_at', True)
     column_searchable_list = ('id', 'name', 'created_by')
     can_set_page_size = True
+    form_overrides = dict(description_nl=TextAreaField)
+
 
     def is_accessible(self):
         if not current_user:
