@@ -34,8 +34,7 @@ app = Flask(__name__, static_url_path='/static')
 # NOTE: the extra headers need to be available in the API gateway: that is handled by zappa_settings.json
 CORS(app, resources='/*', allow_headers='*', origins='*',
      expose_headers='Authorization,Content-Type,Authentication-Token,Quick-Authentication-Token')
-DATABASE_URI = os.getenv('DATABASE_URI', 'postgres://improviser:improviser@localhost/improviser')
-
+DATABASE_URI = os.getenv('DATABASE_URI', 'postgresql://postgres:@localhost/improviser')  # Setup FOR TRAVIS
 app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') else 'super-secret'
 admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
