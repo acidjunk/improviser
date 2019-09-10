@@ -6,10 +6,6 @@ import uuid
 import pytest
 from contextlib import closing
 
-from flask import Flask
-from flask_login import LoginManager
-from flask_security import Security
-from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 
@@ -48,32 +44,13 @@ def database(db_uri):
     yield database
 
 
-# @pytest.fixture
-# def database(db_uri):
-#     """Create and drop test database for a pytest worker."""
-#     # url = make_url(db_uri)
-#     # db_to_create = url.database
-#     #
-#     # # database to connect to for creating `db_to_create`.
-#     # url.database = "postgres"
-#     # engine = create_engine(str(url))
-#     # with closing(engine.connect()) as conn:
-#     #     print(f"Drop and create {db_to_create}")
-#     #     # Can't drop or create a database from within a transaction; end transaction by committing.
-#     #     conn.execute("COMMIT;")
-#     #     conn.execute(f'DROP DATABASE IF EXISTS "{db_to_create}";')
-#     #     conn.execute("COMMIT;")
-#     #     conn.execute(f'CREATE DATABASE "{db_to_create}";')
-#     #     print(f"Drop and create done for {db_to_create}")
-#     pass
-
-
 @pytest.fixture(scope="session")
 def db_uri(worker_id):
     """Ensure that every py.test workerthread uses a own DB, when running the test suite with xdist and `-n auto`."""
     database_uri = "postgresql://improviser:improviser@localhost/improviser-test"
     if os.getenv("DB_USER"):
         print("Running with TRAVIS!")
+        # Todo: why this isn't reached at Travis?
         database_uri = "postgresql://postgres:@localhost/improviser-test"
     if worker_id == "master":
         # pytest is being run without any workers
@@ -82,12 +59,12 @@ def db_uri(worker_id):
     # using xdist setup
     url = make_url(database_uri)
     url.database = f"{url.database}-{worker_id}"
-    print(f"USING DB CONN: {url}")
+    print(f"USING XDIST DB CONN: {url}")
     return str(url)
 
 
 @pytest.fixture(scope="function")
-def app(database, db_uri):
+def app(database):
     """
     Create a Flask app context for the tests.
     """
