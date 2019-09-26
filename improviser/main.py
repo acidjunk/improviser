@@ -67,6 +67,7 @@ app.config['SECURITY_CHANGEABLE'] = True
 app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
 app.config['SECURITY_POST_CONFIRM_VIEW'] = "https://www.improviser.education/login"
 app.config['SECURITY_POST_RESET_VIEW'] = "https://www.improviser.education/login"
+app.config["FRONTEND_URI"] = os.getenv("FRONTEND_URI") if os.getenv("FRONTEND_URI") else "localhost:5000"
 
 # Needed for REST token login
 # Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
