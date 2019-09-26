@@ -67,39 +67,6 @@ riff_arguments.add_argument('search_phrase', type=str, required=False,
                             help='Return only items that contain the search_phrase')
 
 
-# def convertToMusicXML(lilypond, tranpose='c'):
-#     import ly.musicxml
-#     e = ly.musicxml.writer()
-#
-#     prefix = """\\transpose c %s {
-#     {
-#     \\version "2.12.3"
-#     \\clef treble
-#     \\time 4/4
-#     \override Staff.TimeSignature #'stencil = ##f
-#     """
-#     postfix = """}
-#     }
-#     \paper{
-#                 indent=0\mm
-#                 line-width=120\mm
-#                 oddFooterMarkup=##f
-#                 oddHeaderMarkup=##f
-#                 bookTitleMarkup = ##f
-#                 scoreTitleMarkup = ##f
-#             }"""
-#
-#     xml_header = """<?xml version="1.0" encoding="UTF-8"?>
-# <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">"""
-#
-#     lilypond = f"{prefix % tranpose}\n{lilypond}\n{postfix}"
-#     e.parse_text(lilypond)
-#     # xml = bytes(xml_header, encoding='UTF-8') + e.musicxml().tostring()
-#     # return {xml}
-#     xml = xml_header + str(e.musicxml().tostring())
-#     return xml
-
-
 @api.route('/')
 @api.doc("Show all riffs to users with sufficient rights. Provides the ability to filter on riff status and to search.")
 class RiffResourceList(Resource):

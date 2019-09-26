@@ -89,7 +89,7 @@ class UserResource(Resource):
         print(f"md5: {quick_token_md5}, normal: {quick_token}")
         user.quick_token_created_at = datetime.now()
 
-        logger.info("Selected instrument", instrumnet_name=user.preferences.instrument.name)
+        logger.info("Selected instrument", instrument_name=user.preferences.instrument.name)
 
         # get the response ready, without overwriting the DB
         shallow_user = copy.copy(user)

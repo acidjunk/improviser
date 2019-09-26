@@ -56,6 +56,8 @@ class User(db.Model, UserMixin):
     quick_token = Column(String(255), index=True)
     quick_token_created_at = Column(DateTime())
 
+    fs_uniquifier = Column(String(255))
+
     # Human-readable values for the User when editing user related stuff.
     def __str__(self):
         return f'{self.username} : {self.email}'
