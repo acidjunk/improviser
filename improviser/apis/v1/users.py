@@ -5,6 +5,7 @@ import hashlib
 import uuid
 
 import structlog
+from apis.helpers import get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters
 from flask_login import current_user
 
 from flask_restplus import Namespace, Resource, fields, marshal_with, abort
@@ -62,17 +63,28 @@ user_preference_serializer = api.model("UserPreference", {
     "ideabook": fields.String(description="Ideabook contents"),
 })
 
+parser = api.parser()
+parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
+parser.add_argument("sort", location="args", help='Sort: default=["name","ASC"]')
+parser.add_argument("filter", location="args", help="Filter default=[]")
 
-@api.route('/')
+
+@api.route("/")
 @api.doc("Show all users to staff users.")
 class UserResourceList(Resource):
-
-    @auth_token_required
-    @roles_accepted('admin', 'operator')
+    @roles_accepted("admin")
     @marshal_with(user_fields)
+    @api.doc(parser=parser)
     def get(self):
-        users = User.query.all()
-        return users
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args, "username")
+        filter = get_filter_from_args(args)
+
+        query_result, content_range = query_with_filters(
+            User, User.query, range, sort, filter, quick_search_columns=["username", "email"]
+        )
+        return query_result, 200, {"Content-Range": content_range}
 
 
 @api.route('/current-user')

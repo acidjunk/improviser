@@ -3,6 +3,7 @@ import re
 from typing import List, Tuple
 
 import structlog
+from apis.helpers import get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters
 from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
@@ -66,43 +67,44 @@ riff_arguments = reqparse.RequestParser()
 riff_arguments.add_argument('search_phrase', type=str, required=False,
                             help='Return only items that contain the search_phrase')
 
+parser = api.parser()
+parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
+parser.add_argument("sort", location="args", help='Sort: default=["name","ASC"]')
+parser.add_argument("filter", location="args", help="Filter default=[]")
+
 
 @api.route('/')
 @api.doc("Show all riffs to users with sufficient rights. Provides the ability to filter on riff status and to search.")
 class RiffResourceList(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_fields)
     @api.expect(riff_arguments)
     def get(self):
-        args = request.args
-        # handle case insensitive search
-        search_phrase = args.get("search_phrase")
-        range_param = args.get("range")
-        sort_param = args.get("sort")
-        filter_param = args.get("filter")
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args)
+        filter = get_filter_from_args(args)
 
-        logger.info("Getting riffs", filter=filter_param, range=range_param, search_phrase=search_phrase, sort=sort_param)
+        query_result, content_range = query_with_filters(
+            Riff,
+            Riff.query,
+            range,
+            sort,
+            filter,
+            quick_search_columns=["name", "id"]
+        )
 
-        if search_phrase:
-            riffs_query = Riff.query.filter(Riff.name.ilike('%' + search_phrase + '%') |
-                                            cast(Riff.id, String).startswith(search_phrase))
-        else:
-            riffs_query = Riff.query
+        # riffs_query = riffs_query.filter(Riff.render_valid)
 
-        riffs_query = riffs_query.filter(Riff.render_valid)
-
-        riffs, headers = _query_with_filters(query=riffs_query, range=range_param, sort=sort_param, filters=filter_param)
 
         # Todo: load tags with contains eager?
         # For now nog server sided tags filter
-        for riff in riffs:
+        for riff in query_result:
             riff.tags = [str(tag.name) for tag in riff.riff_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
-        return riffs
+        return query_result, 200, {"Content-Range": content_range}
 
-    @auth_token_required
     @roles_accepted('admin', 'moderator', 'teacher')
     @api.expect(riff_serializer)
     def post(self):
@@ -130,7 +132,6 @@ class UnrenderedRiffResourceList(Resource):
 @api.route('/<string:riff_id>')
 class RiffResource(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_detail_fields)
     def get(self, riff_id):
@@ -149,7 +150,6 @@ class RiffResource(Resource):
         # riff.music_xml_info = result
         return riff
 
-    @auth_token_required
     @roles_accepted('admin', 'moderator', 'teacher')
     @api.expect(riff_serializer)
     def put(self, riff_id):
@@ -161,7 +161,6 @@ class RiffResource(Resource):
 @api.route('/rendered/<string:riff_id>')
 class RiffResourceRendered(Resource):
 
-    @auth_token_required
     @roles_accepted('admin')
     @api.expect(riff_render_serializer)
     def put(self, riff_id):
