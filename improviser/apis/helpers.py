@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 import boto3
 import structlog
-from database import db
+from database import db, RiffTag, Tag, Riff, RiffExercise, RiffExerciseTag
 from flask_restplus import abort
 from sqlalchemy import String, cast, or_
 from sqlalchemy.sql import expression
@@ -125,12 +125,25 @@ def query_with_filters(
                 elif column == "id":
                     query = query.filter_by(id=searchPhrase)
                 elif column == "q":
-                    logger.debug(
-                        "Activating multi kolom filter", column=column, quick_search_columns=quick_search_columns
-                    )
                     conditions = []
                     for item in quick_search_columns:
                         conditions.append(cast(model.__dict__[item], String).ilike("%" + searchPhrase + "%"))
+                    query = query.filter(or_(*conditions))
+                elif column == "tags":
+                    print(f"MODEL: {model}")
+                    # First fetch all the tags that match
+                    tags = Tag.query.filter(Tag.name.ilike(searchPhrase + "%")).all()
+                    if len(tags):
+                        if "database.RiffExercise" in str(model):
+                            query = query.join(RiffExerciseTag)
+                        elif "database.Riff" in str(model):
+                            query = query.join(RiffTag)
+                        conditions = []
+                        for tag in tags:
+                            if "database.RiffExercise" in str(model):
+                                conditions.append(RiffExerciseTag.tag_id == tag.id)
+                            elif "database.Riff" in str(model):
+                                conditions.append(RiffTag.tag_id == tag.id)
                     query = query.filter(or_(*conditions))
                 else:
                     query = query.filter(cast(model.__dict__[column], String).ilike("%" + searchPhrase + "%"))
