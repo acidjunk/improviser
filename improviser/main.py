@@ -32,8 +32,11 @@ logger = structlog.get_logger(__name__)
 # Create app
 app = Flask(__name__, static_url_path='/static')
 # NOTE: the extra headers need to be available in the API gateway: that is handled by zappa_settings.json
-CORS(app, supports_credentials=True,
-resources='/*', allow_headers='*', origins='*',
+CORS(app,
+     supports_credentials=True,
+     resources='/*',
+     allow_headers='*',
+     origins='*',
      expose_headers='Authorization,Content-Type,Authentication-Token,Quick-Authentication-Token,Content-Range')
 DATABASE_URI = os.getenv('DATABASE_URI', 'postgresql://postgres:@localhost/improviser-test')  # Setup FOR TRAVIS
 app.config['DEBUG'] = False if not os.getenv("DEBUG") else True

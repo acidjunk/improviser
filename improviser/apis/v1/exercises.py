@@ -1,6 +1,7 @@
 import datetime
 import uuid
 import structlog
+from apis.helpers import query_with_filters, get_range_from_args, get_sort_from_args, get_filter_from_args
 
 from flask_login import current_user
 from flask_security import roles_accepted
@@ -130,6 +131,12 @@ transpose_fields = {
 }
 
 
+parser = api.parser()
+parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
+parser.add_argument("sort", location="args", help='Sort: default=["name","ASC"]')
+parser.add_argument("filter", location="args", help="Filter default=[]")
+
+
 def row2dict(row):
     d = {}
     for column in row.__table__.columns:
@@ -235,28 +242,33 @@ class ValidateExerciseNameResource(Resource):
 @api.route('/')
 class ExerciseResourceList(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher', 'operator')
     @marshal_with(exercise_list_serializer)
     @api.expect(exercise_arguments)
     def get(self):
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args)
+        filter = get_filter_from_args(args)
+
         # Get public exercises and exercises owned by this user
-        print(type(current_user))
         exercise_query = RiffExercise.query.filter((RiffExercise.created_by == current_user.id) |
                                                    (RiffExercise.is_public.is_(True)))
-        args = request.args
-        if args.get("search_phrase"):
-            # Handle case insensitive search
-            exercise_query = exercise_query.filter(RiffExercise.name.ilike('%' + args["search_phrase"] + '%'))
 
-        exercises = exercise_query.all()
+        query_result, content_range = query_with_filters(
+            RiffExercise,
+            exercise_query,
+            range,
+            sort,
+            filter,
+            quick_search_columns=["name", "id"]
+        )
 
-        for exercise in exercises:
+        for exercise in query_result:
             exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
 
-        return exercises
+        return query_result, 200, {"Content-Range": content_range}
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'student', 'teacher', 'operator')
     @api.expect(exercise_fields)
     def post(self):
@@ -295,7 +307,6 @@ class ExerciseResourceList(Resource):
 @api.route('/<string:exercise_id>')
 class ExerciseResource(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher', 'operator')
     @marshal_with(exercise_detail_serializer)
     def get(self, exercise_id):
@@ -314,7 +325,6 @@ class ExerciseResource(Resource):
         exercise.riffs = Riff.query.filter(Riff.id.in_(riff_ids)).all()
         return exercise
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'student', 'teacher', 'operator')
     @api.expect(exercise_fields)
     def put(self, exercise_id):
@@ -435,7 +445,6 @@ def dict_compare(d1, d2):
 @api.route('/copy/<string:exercise_id>')
 class CopyExerciseResource(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator', 'student', 'teacher', 'operator')
     @api.expect(exercise_fields)
     def post(self, exercise_id):

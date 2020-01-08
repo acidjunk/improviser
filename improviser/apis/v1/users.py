@@ -113,14 +113,12 @@ class UserResource(Resource):
 @api.route('/preferences')
 class UserPreferenceResource(Resource):
 
-    @quick_token_required
     @marshal_with(user_preference_fields)
     def get(self):
         user_preference = UserPreference.query.filter(UserPreference.user_id == current_user.id).first()
         user_preference.instrument_name = user_preference.instrument.name
         return user_preference
 
-    @quick_token_required
     @api.expect(user_preference_serializer)
     def patch(self):
         user_preference = UserPreference.query.filter(UserPreference.user_id == current_user.id).first()
@@ -166,7 +164,6 @@ class ValidateEmailResource(Resource):
 @api.doc("Show all instruments to users.")
 class InstrumentResourceList(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'student')
     @marshal_with(instrument_fields)
     def get(self):
