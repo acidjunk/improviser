@@ -54,7 +54,7 @@ riff_fields = {
     'image_info': fields.Nested(image_info_marshaller),
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
-    'created_date': fields.DateTime,
+    'created_at': fields.DateTime,
     'tags': fields.List(fields.String),
 }
 

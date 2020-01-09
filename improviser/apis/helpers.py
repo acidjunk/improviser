@@ -130,10 +130,10 @@ def query_with_filters(
                         conditions.append(cast(model.__dict__[item], String).ilike("%" + searchPhrase + "%"))
                     query = query.filter(or_(*conditions))
                 elif column == "tags":
-                    print(f"MODEL: {model}")
                     # First fetch all the tags that match
                     tags = Tag.query.filter(Tag.name.ilike(searchPhrase + "%")).all()
                     if len(tags):
+                        # Todo: cleanup tag mess and somehow make it generic
                         if "database.RiffExercise" in str(model):
                             query = query.join(RiffExerciseTag)
                         elif "database.Riff" in str(model):
@@ -144,7 +144,7 @@ def query_with_filters(
                                 conditions.append(RiffExerciseTag.tag_id == tag.id)
                             elif "database.Riff" in str(model):
                                 conditions.append(RiffTag.tag_id == tag.id)
-                    query = query.filter(or_(*conditions))
+                        query = query.filter(or_(*conditions))
                 else:
                     query = query.filter(cast(model.__dict__[column], String).ilike("%" + searchPhrase + "%"))
 
