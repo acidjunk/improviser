@@ -77,13 +77,10 @@ class BackingTrackResourceList(Resource):
         data = request.get_json()
         backing_track = BackingTrack(id=str(uuid.uuid4()), **api.payload)
 
-        backing_track_update = {}
-        file_cols = ["file"]
-        for file_col in file_cols:
-            if data.get(file_col) and type(data[file_col]) == dict:
-                name = uuid.uuid4()
-                upload_file(data[file_col]["src"], name)  # todo: use mime-type in first part of
-                backing_track.file = name
+        if data.get("file") and type(data["file"]) == dict:
+            name = f"{uuid.uuid4()}.mp3"
+            upload_file(data["file"]["src"], name)
+            backing_track.file = name
         save(backing_track)
         return backing_track, 201
 
@@ -109,15 +106,13 @@ class BackingTrackResource(Resource):
         # todo: raise 404 o abort
 
         data = request.get_json()
-
         backing_track_update = {}
         file_cols = ["file"]
         for file_col in file_cols:
             if data.get(file_col) and type(data[file_col]) == dict:
-                name = uuid.uuid4()
+                name = f"{uuid.uuid4()}.mp3"
                 upload_file(data[file_col]["src"], name)  # todo: use mime-type in first part of
                 backing_track_update[file_col] = name
-
         item = update(item, backing_track_update)
 
         return item, 201

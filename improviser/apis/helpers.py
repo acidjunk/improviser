@@ -176,8 +176,8 @@ def upload_file(blob, file_name):
     image = base64.b64decode(image_base64)
 
     # Todo: make dynamic / easier to configure separate media service
-    s3_object = s3.Object("improviser.education", f"/static/backing_tracks/{file_name}")
-    resp = s3_object.put(Body=image, ContentType="image/png")
+    s3_object = s3.Object("improviser.education", f"static/backing_tracks/{file_name}")
+    resp = s3_object.put(Body=image, ContentType="audio/mp3")
 
     if resp["ResponseMetadata"]["HTTPStatusCode"] == 200:
         logger.info("Uploaded file to S3", file_name=file_name)

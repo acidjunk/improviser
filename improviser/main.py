@@ -31,6 +31,8 @@ logger = structlog.get_logger(__name__)
 
 # Create app
 app = Flask(__name__, static_url_path='/static')
+app.url_map.strict_slashes = False
+
 # NOTE: the extra headers need to be available in the API gateway: that is handled by zappa_settings.json
 CORS(app,
      supports_credentials=True,
