@@ -206,10 +206,12 @@ class BackingTrack(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), nullable=False)
     tempo = Column(Integer, default=100)
-    chord_info = Column(JSON, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    complete = Column("complete", Boolean(), default=False)
+    chord_info = Column(String, nullable=False)
     file = Column(String(255), unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    approved_at = Column(DateTime)
+    approved = Column("approved", Boolean(), default=False)
 
 
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

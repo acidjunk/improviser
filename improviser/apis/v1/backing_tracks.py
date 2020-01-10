@@ -4,12 +4,10 @@ import uuid
 import structlog
 from apis.helpers import (
     get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters, load,
-    name_file,
     upload_file,
     update,
     save
 )
-from database import db
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import BackingTrack
@@ -21,10 +19,12 @@ logger = structlog.get_logger(__name__)
 api = Namespace("backing tracks", description="BackingTrack related operations")
 
 backing_track_serializer = api.model("BackingTrack", {
+    "id": fields.String(),
     "name": fields.String(required=True, description="Name"),
     "chord_info": fields.String(description="Chord info in lilypond format"),
     "tempo": fields.Integer(description="Tempo in BPM [40-320]"),
-    "file": fields.Integer(description="Backing track mp3"),
+    "file": fields.String(description="Backing track mp3"),
+    "approved": fields.Boolean(description="Approve toggle for admins")
 })
 
 backing_track_fields = {
@@ -32,8 +32,10 @@ backing_track_fields = {
     'name': fields.String,
     'chord_info': fields.String,
     'file': fields.String,
-    'complete': fields.Boolean,
     'created_at': fields.DateTime,
+    'modified_at': fields.DateTime,
+    'approved': fields.Boolean,
+    'approved_at': fields.DateTime,
 }
 
 parser = api.parser()
@@ -77,6 +79,8 @@ class BackingTrackResourceList(Resource):
         data = request.get_json()
         backing_track = BackingTrack(id=str(uuid.uuid4()), **api.payload)
 
+        # todo: remove approved from payload: only approve on update...
+
         if data.get("file") and type(data["file"]) == dict:
             name = f"{uuid.uuid4()}.mp3"
             upload_file(data["file"]["src"], name)
@@ -103,7 +107,13 @@ class BackingTrackResource(Resource):
         args = file_upload.parse_args()
         logger.warning("Ignoring files via args! (using JSON body)", args=args)
         item = load(BackingTrack, id)
-        # todo: raise 404 o abort
+
+        api.payload["modified_at"] = datetime.datetime.utcnow()
+        if api.payload.get("approved"):
+            if api.payload["approved"] and not item.approved:
+                api.payload["approved_at"] = datetime.datetime.utcnow()
+            if not api.payload["approved"] and item.approved:
+                api.payload["approved_at"] = None
 
         data = request.get_json()
         backing_track_update = {}
@@ -111,8 +121,8 @@ class BackingTrackResource(Resource):
         for file_col in file_cols:
             if data.get(file_col) and type(data[file_col]) == dict:
                 name = f"{uuid.uuid4()}.mp3"
-                upload_file(data[file_col]["src"], name)  # todo: use mime-type in first part of
+                upload_file(data[file_col]["src"], name)
                 backing_track_update[file_col] = name
-        item = update(item, backing_track_update)
+        item = update(item, {**api.payload, **backing_track_update})
 
         return item, 201
