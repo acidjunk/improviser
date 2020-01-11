@@ -116,6 +116,7 @@ class Riff(db.Model):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     image_info = Column(JSON)
     riff_tags = relationship("Tag", secondary='riff_tags')
+    riff_to_tags = relationship("RiffTag")
 
     def __repr__(self):
         return '<Riff %r %s bars, id:%s>' % (self.name, self.number_of_bars, self.id)
@@ -138,6 +139,7 @@ class RiffExercise(db.Model):
     tempo = Column(Integer())
     user = relationship("User", backref=backref("riff_exercises", uselist=False))
     riff_exercise_tags = relationship("Tag", secondary="riff_exercise_tags")
+    riff_exercise_to_tags = relationship("RiffExerciseTag")
     riff_exercise_items = relationship("RiffExerciseItem", cascade="all, delete-orphan", backref="parent")
     instruments = relationship("Instrument", secondary="riff_exercise_instruments")
 
@@ -183,7 +185,6 @@ class RiffTag(db.Model):
     tag = db.relationship("Tag", lazy=True)
 
     def __repr__(self):
-        print(self.tag)
         return self.tag.name
 
 
@@ -192,6 +193,11 @@ class RiffExerciseTag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
     tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+    riff_exercise = db.relationship("RiffExercise", lazy=True)
+    tag = db.relationship("Tag", lazy=True)
+
+    def __repr__(self):
+        return self.tag.name
 
 
 class RiffExerciseInstrument(db.Model):

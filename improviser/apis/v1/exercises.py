@@ -8,7 +8,6 @@ from flask_security import roles_accepted
 from musthe import Note, Interval
 from security import quick_token_required
 
-from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 
 from database import db, Riff, RiffExercise, RiffExerciseItem
@@ -26,6 +25,11 @@ annotation_fields = {
     "text": fields.String,
 }
 
+tag_info_marshaller = {
+    "id": fields.String,
+    "name": fields.String,
+}
+
 exercise_list_serializer = api.model("RiffExercise", {
     "id": fields.String(required=True),
     "name": fields.String(required=True, description="Unique exercise name"),
@@ -35,7 +39,7 @@ exercise_list_serializer = api.model("RiffExercise", {
     "created_at": fields.DateTime(),
     "created_by": fields.String(),
     "gravatar_image": fields.String(),
-    "tags": fields.List(fields.String),
+    "tags": fields.Nested(tag_info_marshaller),
     "stars": fields.Integer(),
     "instrument_key": fields.String(),
     "instruments":  fields.List(fields.String),
@@ -54,6 +58,7 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
 })
 
 exercise_detail_serializer = api.model("RiffExercise", {
+    "id": fields.String(),
     "name": fields.String(required=True, description="Unique exercise name"),
     "description": fields.String(required=True, description="Description", default=False),
     "is_public": fields.Boolean(required=True, description="Is this riff exercise visible to everyone?", default=False),
@@ -61,7 +66,7 @@ exercise_detail_serializer = api.model("RiffExercise", {
     "created_at": fields.DateTime(),
     "created_by": fields.String(),
     "gravatar_image": fields.String(),
-    "tags": fields.List(fields.String),
+    "tags": fields.Nested(tag_info_marshaller),
     "exercise_items": fields.Nested(exercise_item_serializer),
     "riffs": fields.Nested(riff_fields),
     "annotations": fields.Nested(annotation_fields),
@@ -100,7 +105,6 @@ copy_exercise_fields = {
 }
 
 exercise_detail_fields = exercise_fields
-
 
 exercise_arguments = reqparse.RequestParser()
 exercise_arguments.add_argument('search_phrase', type=str, required=False,
@@ -265,7 +269,7 @@ class ExerciseResourceList(Resource):
         )
 
         for exercise in query_result:
-            exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
+            exercise.tags = [{"id": tag.id, "name": tag.tag.name} for tag in exercise.riff_exercise_to_tags]
 
         return query_result, 200, {"Content-Range": content_range}
 
@@ -317,6 +321,7 @@ class ExerciseResource(Resource):
         except:
             abort(404, "exercise not found")
         exercise.tags = [str(tag.name) for tag in exercise.riff_exercise_tags]
+        exercise.tags = [{"id": tag.id, "name": tag.tag.name} for tag in exercise.riff_exercise_to_tags]
 
         exercise.exercise_items = sorted(exercise.riff_exercise_items, key=lambda item: item.order_number)
 

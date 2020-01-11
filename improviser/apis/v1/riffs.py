@@ -42,6 +42,11 @@ image_info_marshaller = {
     "staff_center": fields.Integer,
 }
 
+tag_info_marshaller = {
+    "id": fields.String,
+    "name": fields.String,
+}
+
 riff_fields = {
     'id': fields.String,
     'difficulty': fields.String,
@@ -55,13 +60,14 @@ riff_fields = {
     'render_valid': fields.Boolean,
     'render_date': fields.DateTime,
     'created_at': fields.DateTime,
-    'tags': fields.List(fields.String),
+    'tags': fields.Nested(tag_info_marshaller),
 }
 
 riff_detail_fields = {
     **riff_fields,
     'notes': fields.String,
 }
+
 
 riff_arguments = reqparse.RequestParser()
 riff_arguments.add_argument('search_phrase', type=str, required=False,
@@ -95,13 +101,11 @@ class RiffResourceList(Resource):
             quick_search_columns=["name", "id"]
         )
 
+        # TODO: determine if we can live with unrendered riffs?
         # riffs_query = riffs_query.filter(Riff.render_valid)
 
-
-        # Todo: load tags with contains eager?
-        # For now nog server sided tags filter
         for riff in query_result:
-            riff.tags = [str(tag.name) for tag in riff.riff_tags]
+            riff.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
             riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         return query_result, 200, {"Content-Range": content_range}
 
@@ -118,17 +122,6 @@ class RiffResourceList(Resource):
         return 201
 
 
-@api.route('/unrendered')
-@api.doc("Show all unrendered riffs to users with sufficient rights.")
-class UnrenderedRiffResourceList(Resource):
-
-    @quick_token_required
-    @roles_accepted('admin', 'moderator')
-    @marshal_with(riff_detail_fields)
-    def get(self):
-        return Riff.query.filter(Riff.render_valid.is_(False)).all()
-
-
 @api.route('/<string:riff_id>')
 class RiffResource(Resource):
 
@@ -140,7 +133,7 @@ class RiffResource(Resource):
             riff = Riff.query.filter(Riff.id == riff_id).first()
         except:
             abort(404, "riff not found")
-        riff.tags = [str(tag.name) for tag in riff.riff_tags]
+        riff.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
         riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         # Todo: add an parameter to the endpoint to show extended music_xml info or move to separate endpoint
         # result = []
@@ -156,6 +149,17 @@ class RiffResource(Resource):
         riff = Riff.query.filter_by(id=riff_id).first()
         # Todo implement real update
         return 204
+
+
+@api.route('/unrendered')
+@api.doc("Show all unrendered riffs to users with sufficient rights.")
+class UnrenderedRiffResourceList(Resource):
+
+    @quick_token_required
+    @roles_accepted('admin', 'moderator')
+    @marshal_with(riff_detail_fields)
+    def get(self):
+        return Riff.query.filter(Riff.render_valid.is_(False)).all()
 
 
 @api.route('/rendered/<string:riff_id>')
