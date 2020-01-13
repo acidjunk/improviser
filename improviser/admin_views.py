@@ -97,8 +97,8 @@ class InstrumentAdminView(ModelView):
 class RiffAdminView(ModelView):
     Riff.image = String
     column_list = ['id', 'name', 'riff_tags', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
-                   'number_of_bars', 'chord', 'created_date', 'image']
-    column_default_sort = ('created_date', True)
+                   'number_of_bars', 'chord', 'created_at', 'image']
+    column_default_sort = ('created_at', True)
     column_filters = ('render_valid', 'number_of_bars', 'chord')
     column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
     can_set_page_size = True
