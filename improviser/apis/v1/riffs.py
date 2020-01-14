@@ -155,7 +155,6 @@ class RiffResource(Resource):
 @api.doc("Show all unrendered riffs to users with sufficient rights.")
 class UnrenderedRiffResourceList(Resource):
 
-    @quick_token_required
     @roles_accepted('admin', 'moderator')
     @marshal_with(riff_detail_fields)
     def get(self):

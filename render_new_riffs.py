@@ -69,24 +69,6 @@ def merge_two_dicts(x, y):
     return z
 
 
-def login():
-    default_headers = {'content-type': 'application/json'}
-
-    response = requests.post(IMPROVISER_HOST + '/login',
-                             data=json.dumps({'email': API_USER, 'password': API_PASS}),
-                             headers=default_headers).json()
-    token = response['response']['user']['authentication_token']  # set token value
-    user_id = response['response']['user']['id']
-    auth_headers = merge_two_dicts(default_headers, {"Authentication-Token": token})
-
-    print("Auth header initialised")
-    response = requests.get(IMPROVISER_HOST + '/v1/users/current-user', headers=auth_headers).json()
-    quick_auth_headers = merge_two_dicts(default_headers,
-                                         {"Quick-Authentication-Token": "{}:{}".format(user_id,response['quick_token'])})
-    print("Quick Auth header initialised")
-    return auth_headers, quick_auth_headers
-
-
 def sync():
     """Sync all .png and .svg files to S3 bucket."""
     current_dir = os.getcwd()
@@ -105,14 +87,14 @@ def sync():
     os.chdir(current_dir)
 
 
-def update_riffs(riff_ids, auth_headers, image_info=None):
+def update_riffs(riff_ids, session, image_info=None):
     for riff_id in riff_ids:
         payload = {'render_valid': True}
         if image_info:
             payload["image_info"] = image_info[riff_id]
             logger.debug("Update riff payload, with image metadata info", payload=payload)
         riff_endpoint = "{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id)
-        response = requests.put(riff_endpoint, json=payload, headers=auth_headers)
+        response = session.put(riff_endpoint, json=payload)
         if response.status_code in [200, 201, 204]:
             logger.info("Updated render status and metadata of riff", id=riff_id, end_point=riff_endpoint,
                         status=response.status_code)
@@ -146,7 +128,7 @@ def clean_png():
     os.chdir(current_dir)
 
 
-def retrieve_metadata(riff_ids, auth_headers, skip_update=False):
+def retrieve_metadata(riff_ids, session, skip_update=False):
     for riff_id in riff_ids:
         filelist = []
         for key in KEYS:
@@ -187,7 +169,7 @@ def retrieve_metadata(riff_ids, auth_headers, skip_update=False):
                 sys.exit()
 
         if not skip_update:
-            update_riffs([riff_id], auth_headers, {riff_id: riff_metadata})
+            update_riffs([riff_id], session, {riff_id: riff_metadata})
         else:
             print("Skipping update")
 
@@ -197,6 +179,10 @@ if __name__ == '__main__':
     pid = str(os.getpid())
     pidfile = "/tmp/render_new_riffs.pid"
 
+    session = requests.Session()
+    data = {"email": API_USER, "password": API_PASS}
+    url = "https://api.improviser.education/login"
+    response = session.post(url, data=data)
 
     if os.path.isfile(pidfile):
         print("%s already exists, exiting" % pidfile)
@@ -208,9 +194,7 @@ if __name__ == '__main__':
 
     open(pidfile, 'w').write(pid)
 
-    auth_headers, quick_auth_headers = login()
-
-    response = requests.get(ENDPOINT_RIFFS + '/unrendered', headers=quick_auth_headers)
+    response = session.get(ENDPOINT_RIFFS + '/unrendered')
     if response.status_code != 200:
         print("Unable to query riffs")
         os.unlink(pidfile)
@@ -218,6 +202,7 @@ if __name__ == '__main__':
 
     riffs = response.json()
     print(riffs)
+
     rendered_riffs = []
     for riff in riffs:
         if not riff["render_valid"]:
@@ -228,7 +213,7 @@ if __name__ == '__main__':
             if not LOCAL_RUN:
                 clean_garbage()
                 sync()
-                retrieve_metadata(rendered_riffs, auth_headers)
+                retrieve_metadata(rendered_riffs, session)
                 clean_png()
 
     os.unlink(pidfile)
