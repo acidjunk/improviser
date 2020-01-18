@@ -78,11 +78,11 @@ class UserResourceList(Resource):
     def get(self):
         args = parser.parse_args()
         range = get_range_from_args(args)
-        sort = get_sort_from_args(args, "username")
+        sort = get_sort_from_args(args, "email")
         filter = get_filter_from_args(args)
 
         query_result, content_range = query_with_filters(
-            User, User.query, range, sort, filter, quick_search_columns=["username", "email"]
+            User, User.query, range, sort, filter, quick_search_columns=["username", "email", "first_name", "last_name"]
         )
         return query_result, 200, {"Content-Range": content_range}
 
