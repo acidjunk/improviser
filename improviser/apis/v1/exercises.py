@@ -58,7 +58,6 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
 })
 
 exercise_detail_serializer = api.model("RiffExercise", {
-    "id": fields.String(),
     "name": fields.String(required=True, description="Unique exercise name"),
     "description": fields.String(required=True, description="Description", default=False),
     "is_public": fields.Boolean(required=True, description="Is this riff exercise visible to everyone?", default=False),

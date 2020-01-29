@@ -1,11 +1,13 @@
 import datetime
 import re
+from copy import copy
 from typing import List, Tuple
 
 import structlog
 from apis.helpers import get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters
 from database import db
 from flask import request
+from flask_login import current_user
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff
 from flask_security import auth_token_required, roles_accepted
@@ -92,17 +94,19 @@ class RiffResourceList(Resource):
         sort = get_sort_from_args(args)
         filter = get_filter_from_args(args)
 
+        riffs_query = Riff.query
+        if "admin" in current_user.roles:
+            logger.debug("Also showing unrendered logs for admin user", user_id=current_user.id, roles=[role.name for role in current_user.roles])
+            riffs_query = riffs_query.filter(Riff.render_valid)
+
         query_result, content_range = query_with_filters(
             Riff,
-            Riff.query,
+            riffs_query,
             range,
             sort,
             filter,
             quick_search_columns=["name", "id"]
         )
-
-        # TODO: determine if we can live with unrendered riffs?
-        # riffs_query = riffs_query.filter(Riff.render_valid)
 
         for riff in query_result:
             riff.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
@@ -133,15 +137,22 @@ class RiffResource(Resource):
             riff = Riff.query.filter(Riff.id == riff_id).first()
         except:
             abort(404, "riff not found")
-        riff.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
-        riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
+
+        riff_copy = copy(riff)
+        riff_copy.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
+        riff_copy.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
+
+        if "admin" not in current_user.roles:
+            logger.debug("Disabling notes for non admin user", user_id=current_user.id, roles=[role.name for role in current_user.roles])
+            riff_copy.notes = ''
+
         # Todo: add an parameter to the endpoint to show extended music_xml info or move to separate endpoint
         # result = []
         # for octave in OCTAVES:
         #     result += [{"key_octave": key if not octave else f"{key}_{octave}",
         #                 "music_xml": convertToMusicXML(riff.notes, key)} for key in KEYS]
         # riff.music_xml_info = result
-        return riff
+        return riff_copy
 
     @roles_accepted('admin', 'moderator', 'teacher')
     @api.expect(riff_serializer)

@@ -10,7 +10,7 @@ from apis.helpers import (
 )
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
-from database import BackingTrack
+from database import BackingTrack, RiffExercise
 from flask_security import roles_accepted
 from werkzeug.datastructures import FileStorage
 
@@ -126,3 +126,23 @@ class BackingTrackResource(Resource):
         item = update(item, {**api.payload, **backing_track_update})
 
         return item, 201
+
+
+@api.route('/for/<exercise_id>')
+class BackingTrackWizardResourceList(Resource):
+
+    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
+    @marshal_with(backing_track_fields)
+    def get(self, exercise_id):
+        exercise = load(RiffExercise, exercise_id)
+
+        print("*************************")
+        print("Doing backing track stuff")
+        print("*************************")
+
+        # Todo : implement a first simple version
+        # convert all flats / "es" to sharps / "is"
+
+        # For now return all backing tracks
+        query_result = BackingTrack.query.all()
+        return query_result, 200

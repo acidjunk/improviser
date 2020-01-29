@@ -85,8 +85,6 @@ class UserPreference(db.Model):
     instrument = relationship("Instrument", backref=backref("parent", uselist=False))
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))
     user = relationship("User", backref=backref("preferences", uselist=False))
-    recent_exercises = Column(JSON)
-    recent_lessons = Column(JSON)
     language = Column(String(2), default='en')
     ideabook = Column(JSON)
 
@@ -150,6 +148,22 @@ class RiffExercise(db.Model):
     def gravatar_image(self):
         g = Gravatar(self.user.email)
         return g.get_image(size=100)
+
+
+class RecentRiffExercise(db.Model):
+    __tablename__ = 'recent_riff_exercises'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
+    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
+    riff_exercise = relationship("RiffExercise", backref=backref("recent_riff_exercises", uselist=False))
+
+    @property
+    def riff_exercise_name(self):
+        return self.riff_exercise.name
+
+
 
 
 class RiffExerciseItem(db.Model):

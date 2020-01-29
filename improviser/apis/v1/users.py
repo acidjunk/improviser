@@ -20,10 +20,7 @@ api = Namespace("users", description="User related operations")
 user_preference_fields = {
     'instrument_id': fields.String,
     'instrument_name': fields.String,
-    'recent_exercises': fields.String,
-    'recent_lessons': fields.String,
     'language': fields.String,
-    'ideabook': fields.String,
 }
 
 user_fields = {
@@ -57,10 +54,7 @@ instrument_fields = {
 
 user_preference_serializer = api.model("UserPreference", {
     "instrument_id": fields.String(description="Id of users instrument"),
-    "recent_exercises": fields.String(description="JSON list of recently used exercises"),
-    "recent_lessons": fields.String(description="JSON list of recently used lessons"),
     "language": fields.String(description="Preferred language"),
-    "ideabook": fields.String(description="Ideabook contents"),
 })
 
 parser = api.parser()
@@ -126,10 +120,6 @@ class UserPreferenceResource(Resource):
             user_preference.language = api.payload["language"]
         if api.payload.get("instrument_id"):
             user_preference.instrument_id = api.payload["instrument_id"]
-        if api.payload.get("recent_exercises"):
-            user_preference.recent_exercises = api.payload["recent_exercises"]
-        if api.payload.get("recent_lessons"):
-            user_preference.recent_lessons = api.payload["recent_lessons"]
         try:
             db.session.commit()
         except Exception as error:
