@@ -145,6 +145,10 @@ class RiffExercise(db.Model):
         return '<RiffExercise %r %s>>' % (self.name, self.id)
 
     @property
+    def get_normalised_chord_info(self):
+        return "floempje"
+
+    @property
     def gravatar_image(self):
         g = Gravatar(self.user.email)
         return g.get_image(size=100)
@@ -162,8 +166,6 @@ class RecentRiffExercise(db.Model):
     @property
     def riff_exercise_name(self):
         return self.riff_exercise.name
-
-
 
 
 class RiffExerciseItem(db.Model):

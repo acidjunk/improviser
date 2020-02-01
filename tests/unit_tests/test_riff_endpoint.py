@@ -24,7 +24,8 @@ def test_riffs_endpoint_with_auth(client, student_logged_in, riff, riff_unrender
             assert response.status_code == 200
             assert len(response.json) == 2
 
-            response = client.get('/v1/riffs?search_phrase=bebop', headers=headers, follow_redirects=True)
+            # test column search
+            response = client.get('/v1/riffs/?range=[0,19]&sort=%5B%22created_at%22,%22DESC%22%5D&filter=%7B%27name%27:%27bebop%27%7D', headers=headers, follow_redirects=True)
             assert response.status_code == 200
             assert len(response.json) == 1
 

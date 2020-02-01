@@ -95,9 +95,10 @@ class RiffResourceList(Resource):
         filter = get_filter_from_args(args)
 
         riffs_query = Riff.query
-        if "admin" in current_user.roles:
-            logger.debug("Also showing unrendered logs for admin user", user_id=current_user.id, roles=[role.name for role in current_user.roles])
+        if "admin" not in current_user.roles:
             riffs_query = riffs_query.filter(Riff.render_valid)
+        else:
+            logger.debug("Showing unrendered riffs for non admin user", user_id=current_user.id, roles=[role.name for role in current_user.roles])
 
         query_result, content_range = query_with_filters(
             Riff,
