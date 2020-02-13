@@ -104,15 +104,16 @@ def query_with_filters(
     quick_search_columns: List = ["name"],
 ):
     if filters != "":
+        logger.info("filters dict", filters=filters)
         for column, searchPhrase in filters.items():
             if isinstance(searchPhrase, list):
-                # OR query
-                logger.error("Returning first only: todo fix", first_item=searchPhrase[0])
-                searchPhrase = searchPhrase[0]
-            logger.info("TYPE", searchPhrase=type(searchPhrase))
-            logger.info("Query parameters set to custom filter for column", column=column, searchPhrase=searchPhrase)
-
-            if searchPhrase is not None:
+                logger.info("Query parameters set to GET_MANY, ID column only", column=column, searchPhrase=searchPhrase)
+                conditions = []
+                for item in searchPhrase:
+                    conditions.append(model.__dict__["id"] == item)
+                query = query.filter(or_(*conditions))
+            elif searchPhrase is not None:
+                logger.info("Query parameters set to custom filter for column", column=column, searchPhrase=searchPhrase)
                 if type(searchPhrase) == bool:
                     query = query.filter(model.__dict__[column].is_(searchPhrase))
                 elif column.endswith("_gt"):

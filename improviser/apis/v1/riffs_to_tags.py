@@ -1,6 +1,9 @@
 import uuid
 
-from apis.helpers import get_range_from_args, get_sort_from_args, load, query_with_filters, save, update
+from apis.helpers import (
+    get_range_from_args, get_sort_from_args, load, query_with_filters, save, update,
+    get_filter_from_args
+)
 from database import Riff, RiffTag, Tag
 from flask_restplus import Namespace, Resource, abort, fields, marshal_with
 from flask_security import roles_accepted
@@ -32,8 +35,9 @@ class RiffsToTagsResourceList(Resource):
         args = parser.parse_args()
         range = get_range_from_args(args)
         sort = get_sort_from_args(args, "id")
+        filter = get_filter_from_args(args)
 
-        query_result, content_range = query_with_filters(RiffTag, RiffTag.query, range, sort, "")
+        query_result, content_range = query_with_filters(RiffTag, RiffTag.query, range, sort, filter)
         return query_result, 200, {"Content-Range": content_range}
 
     @roles_accepted("admin")
