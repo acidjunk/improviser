@@ -38,6 +38,7 @@ exercise_list_serializer = api.model("RiffExercise", {
     "root_key": fields.String(required=True, description="Root key of exercise (for printing purposes in the future)", default=False),
     "created_at": fields.DateTime(),
     "created_by": fields.String(),
+    "modified_at": fields.DateTime(),
     "gravatar_image": fields.String(),
     "tags": fields.Nested(tag_info_marshaller),
     "stars": fields.Integer(),
@@ -46,7 +47,7 @@ exercise_list_serializer = api.model("RiffExercise", {
 })
 
 exercise_item_serializer = api.model("RiffExerciseItem", {
-    "riff_exercise_id": fields.String(required=True, description="Unique exercise name"),
+    "riff_exercise_id": fields.String(required=True),
     "pitch": fields.String(required=True),
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
@@ -58,12 +59,14 @@ exercise_item_serializer = api.model("RiffExerciseItem", {
 })
 
 exercise_detail_serializer = api.model("RiffExercise", {
+    "id": fields.String(required=True),
     "name": fields.String(required=True, description="Unique exercise name"),
     "description": fields.String(required=True, description="Description", default=False),
     "is_public": fields.Boolean(required=True, description="Is this riff exercise visible to everyone?", default=False),
     "root_key": fields.String(required=True, description="Root key of exercise (for printing purposes in the future)", default=False),
     "created_at": fields.DateTime(),
     "created_by": fields.String(),
+    "modified_at": fields.DateTime(),
     "gravatar_image": fields.String(),
     "tags": fields.Nested(tag_info_marshaller),
     "exercise_items": fields.Nested(exercise_item_serializer),
