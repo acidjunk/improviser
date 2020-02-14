@@ -146,26 +146,22 @@ class RiffExercise(db.Model):
 
     @property
     def get_normalised_chord_info(self):
-        return "floempje"
+        print("Getiing normalised stuff")
+
+        # chord_info: string of lilypond chord stuff / bar
+
+
+        chord_info = []
+        for item in self.riff_exercise_items:
+            # First first check if chord_info is avail in item relation
+            if item.chord_info:
+                chord_info.append(item.chord_info)
+        return chord_info
 
     @property
     def gravatar_image(self):
         g = Gravatar(self.user.email)
         return g.get_image(size=100)
-
-
-class RecentRiffExercise(db.Model):
-    __tablename__ = 'recent_riff_exercises'
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
-    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
-    riff_exercise = relationship("RiffExercise", backref=backref("recent_riff_exercises", uselist=False))
-
-    @property
-    def riff_exercise_name(self):
-        return self.riff_exercise.name
 
 
 class RiffExerciseItem(db.Model):
@@ -189,6 +185,20 @@ class RiffExerciseItem(db.Model):
 
     def __repr__(self):
         return f'<RiffItem {self.riff.name} in {self.pitch}/{self.octave} chords: {self.chord_info}'
+
+
+class RecentRiffExercise(db.Model):
+    __tablename__ = 'recent_riff_exercises'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
+    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
+    riff_exercise = relationship("RiffExercise", backref=backref("recent_riff_exercises", uselist=False))
+
+    @property
+    def riff_exercise_name(self):
+        return self.riff_exercise.name
 
 
 # Setup tagging for all resources that need it

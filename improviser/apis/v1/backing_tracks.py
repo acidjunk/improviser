@@ -6,7 +6,7 @@ from apis.helpers import (
     get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters, load,
     upload_file,
     update,
-    save
+    save,
 )
 from flask import request
 from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
@@ -135,11 +135,24 @@ class BackingTrackWizardResourceList(Resource):
     @marshal_with(backing_track_fields)
     def get(self, exercise_id):
         exercise = load(RiffExercise, exercise_id)
+        chords = exercise.get_normalised_chord_info
+        number_of_chords = len(chords)
 
-        print("*************************")
-        print("Doing backing track stuff")
-        print("*************************")
+        # songs need to be of certain lengths: 1,2,3,4,6,8 (prime or divisble)
+        # for each divide we will search backingtracks
 
+        largest_divider = 0
+        for i in range(2, number_of_chords):
+            if number_of_chords % i == 0:
+                largest_divider = i
+        # Todo: check if largest_divider is actually repeated
+
+        # loop_size = 12
+        print("*************************")
+        print("Doing backing track stuff, found chordlist:")
+        print(chords)
+        print(f"number_of_chords: {len(chords)} number_of_items: {len(exercise.riff_exercise_items)}, loop_size: {largest_divider}")
+        print("*************************")
         # Todo : implement a first simple version
         # convert all flats / "es" to sharps / "is"
 
