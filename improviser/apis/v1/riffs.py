@@ -1,10 +1,14 @@
 import datetime
 import re
+import uuid
 from copy import copy
 from typing import List, Tuple
 
 import structlog
-from apis.helpers import get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters
+from apis.helpers import (
+    get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters, save, load,
+    update
+)
 from database import db
 from flask import request
 from flask_login import current_user
@@ -23,6 +27,7 @@ OCTAVES = [-1, 0, 1, 2]
 api = Namespace("riffs", description="Riff related operations")
 
 riff_serializer = api.model("Riff", {
+    "id": fields.String(),
     "name": fields.String(required=True, description="Unique riff name"),
     "number_of_bars": fields.Integer(required=True, description="Number of bars"),
     "notes": fields.String(required=True, description="Lilypond representation of the riff"),
@@ -98,7 +103,9 @@ class RiffResourceList(Resource):
         if "admin" not in current_user.roles:
             riffs_query = riffs_query.filter(Riff.render_valid)
         else:
-            logger.debug("Showing unrendered riffs for non admin user", user_id=current_user.id, roles=[role.name for role in current_user.roles])
+            logger.debug("Showing unrendered riffs for non admin user",
+                         user_id=current_user.id,
+                         roles=[role.name for role in current_user.roles])
 
         query_result, content_range = query_with_filters(
             Riff,
@@ -116,26 +123,26 @@ class RiffResourceList(Resource):
 
     @roles_accepted('admin', 'moderator', 'teacher')
     @api.expect(riff_serializer)
+    @api.marshal_with(riff_serializer)
     def post(self):
-        riff = Riff(**api.payload)
-        try:
-            db.session.add(riff)
-            db.session.commit()
-        except Exception as error:
-            db.session.rollback()
-            abort(400, 'DB error: {}'.format(str(error)))
-        return 201
+        riff = Riff(id=str(uuid.uuid4()), **api.payload)
+        save(riff)
+        print(riff)
+        return riff, 201
 
 
-@api.route('/<string:riff_id>')
+
+
+
+@api.route('/<string:id>')
 class RiffResource(Resource):
 
     @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
     @marshal_with(riff_detail_fields)
-    def get(self, riff_id):
+    def get(self, id):
         # Todo: check if riff is scaletrainer related otherwise block it for unauthorized users
         try:
-            riff = Riff.query.filter(Riff.id == riff_id).first()
+            riff = Riff.query.filter(Riff.id == id).first()
         except:
             abort(404, "riff not found")
 
@@ -155,12 +162,14 @@ class RiffResource(Resource):
         # riff.music_xml_info = result
         return riff_copy
 
-    @roles_accepted('admin', 'moderator', 'teacher')
+    @roles_accepted("admin", "moderator")
     @api.expect(riff_serializer)
-    def put(self, riff_id):
-        riff = Riff.query.filter_by(id=riff_id).first()
-        # Todo implement real update
-        return 204
+    @api.marshal_with(riff_serializer)
+    def put(self, id):
+        """Edit Tag"""
+        item = load(Riff, id)
+        item = update(item, api.payload)
+        return item, 201
 
 
 @api.route('/unrendered')
@@ -173,13 +182,13 @@ class UnrenderedRiffResourceList(Resource):
         return Riff.query.filter(Riff.render_valid.is_(False)).all()
 
 
-@api.route('/rendered/<string:riff_id>')
+@api.route('/rendered/<string:id>')
 class RiffResourceRendered(Resource):
 
     @roles_accepted('admin')
     @api.expect(riff_render_serializer)
-    def put(self, riff_id):
-        riff = Riff.query.filter_by(id=riff_id).first()
+    def put(self, id):
+        riff = Riff.query.filter_by(id=id).first()
         riff.render_valid = api.payload["render_valid"]
         riff.image_info = api.payload["image_info"]
         riff.render_date = datetime.datetime.now()

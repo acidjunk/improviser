@@ -129,6 +129,9 @@ def query_with_filters(
                 elif column == "id":
                     query = query.filter_by(id=searchPhrase)
                 elif column == "q":
+                    logger.debug(
+                        "Activating multi kolom filter", column=column, quick_search_columns=quick_search_columns
+                    )
                     conditions = []
                     for item in quick_search_columns:
                         conditions.append(cast(model.__dict__[item], String).ilike("%" + searchPhrase + "%"))
@@ -160,10 +163,9 @@ def query_with_filters(
 
     range_start = int(range[0])
     range_end = int(range[1])
-    # Range is inclusive so we need to add one
     if len(range) >= 2:
-        # Range is inclusive so we need to add one
         total = query.count()
+        # Range is inclusive so we need to add one
         range_length = max(range_end - range_start + 1, 0)
         query = query.offset(range_start)
         query = query.limit(range_length)

@@ -48,7 +48,7 @@ class TagResourceList(Resource):
     @api.expect(tag_serializer)
     @api.marshal_with(tag_serializer)
     def post(self):
-        """New Shops"""
+        """New Tag"""
         tag = Tag(id=str(uuid.uuid4()), **api.payload)
         save(tag)
         return tag, 201
