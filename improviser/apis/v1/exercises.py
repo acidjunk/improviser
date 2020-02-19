@@ -48,6 +48,7 @@ exercise_list_serializer = api.model("RiffExercise", {
 
 exercise_item_serializer = api.model("RiffExerciseItem", {
     "riff_exercise_id": fields.String(required=True),
+    "number_of_bars": fields.String(required=True),
     "pitch": fields.String(required=True),
     "octave": fields.Integer(required=True),
     "order_number": fields.Integer(required=True),
