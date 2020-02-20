@@ -164,5 +164,14 @@ admin.add_view(BaseAdminView(RiffExerciseTag, db.session))
 migrate = Migrate(app, db)
 logger.info("Ready loading admin views and api")
 
+
+# Todo: move to better place
+@app.cli.command("fix-exercise-chords")
+def fix_exercise_chord():
+    exercises = RiffExercise.query.all()
+    for exercise in exercises:
+        print(exercise.name)
+
+
 if __name__ == '__main__':
     app.run()
