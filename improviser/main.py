@@ -3,9 +3,17 @@ import os
 import structlog
 
 from admin_views import (
-    UserAdminView, RiffExerciseAdminView, RolesAdminView, RiffAdminView, BaseAdminView,
-    UserPreferenceAdminView, InstrumentAdminView, RiffExerciseItemAdminView, BackingTrackAdminView
+    UserAdminView,
+    RiffExerciseAdminView,
+    RolesAdminView,
+    RiffAdminView,
+    BaseAdminView,
+    UserPreferenceAdminView,
+    InstrumentAdminView,
+    RiffExerciseItemAdminView,
+    BackingTrackAdminView,
 )
+from apis.v1.exercises import transpose_chord_info
 
 from flask import Flask, url_for, current_app
 from flask_admin import Admin
@@ -15,11 +23,18 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_security import (Security, user_registered)
+from flask_security import Security, user_registered
 
 from database import (
-    db, Tag, RiffTag, RiffExerciseTag, user_datastore, UserPreference, Instrument, RiffExerciseItem,
-    BackingTrack
+    db,
+    Tag,
+    RiffTag,
+    RiffExerciseTag,
+    user_datastore,
+    UserPreference,
+    Instrument,
+    RiffExerciseItem,
+    BackingTrack,
 )
 from database import User, Role, Riff, RiffExercise
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
@@ -30,58 +45,63 @@ from version import VERSION
 logger = structlog.get_logger(__name__)
 
 # Create app
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__, static_url_path="/static")
 app.url_map.strict_slashes = False
 
 # NOTE: the extra headers need to be available in the API gateway: that is handled by zappa_settings.json
-CORS(app,
-     supports_credentials=True,
-     resources='/*',
-     allow_headers='*',
-     origins='*',
-     expose_headers='Authorization,Content-Type,Authentication-Token,Quick-Authentication-Token,Content-Range')
-DATABASE_URI = os.getenv('DATABASE_URI', 'postgresql://postgres:@localhost/improviser-test')  # Setup FOR TRAVIS
-app.config['DEBUG'] = False if not os.getenv("DEBUG") else True
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') else 'super-secret'
-admin = Admin(app, name='iMproviser', template_mode='bootstrap3')
+CORS(
+    app,
+    supports_credentials=True,
+    resources="/*",
+    allow_headers="*",
+    origins="*",
+    expose_headers="Authorization,Content-Type,Authentication-Token,Quick-Authentication-Token,Content-Range",
+)
+DATABASE_URI = os.getenv("DATABASE_URI", "postgresql://postgres:@localhost/improviser-test")  # Setup FOR TRAVIS
+app.config["DEBUG"] = False if not os.getenv("DEBUG") else True
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") if os.getenv("SECRET_KEY") else "super-secret"
+admin = Admin(app, name="iMproviser", template_mode="bootstrap3")
 
-app.config['VERSION'] = VERSION
-app.config['FLASK_ADMIN_SWATCH'] = 'flatly'
-app.config['FLASK_ADMIN_FLUID_LAYOUT'] = True
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') if os.getenv('SECRET_KEY') else 'super-secret'
-app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
-app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT') if os.getenv('SECURITY_PASSWORD_SALT') \
-    else 'SALTSALTSALT'
+app.config["VERSION"] = VERSION
+app.config["FLASK_ADMIN_SWATCH"] = "flatly"
+app.config["FLASK_ADMIN_FLUID_LAYOUT"] = True
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") if os.getenv("SECRET_KEY") else "super-secret"
+app.config["SECURITY_PASSWORD_HASH"] = "pbkdf2_sha256"
+app.config["SECURITY_PASSWORD_SALT"] = (
+    os.getenv("SECURITY_PASSWORD_SALT") if os.getenv("SECURITY_PASSWORD_SALT") else "SALTSALTSALT"
+)
 # More Flask Security settings
-app.config['SECURITY_REGISTERABLE'] = True
-app.config['SECURITY_CONFIRMABLE'] = True
-app.config['SECURITY_RECOVERABLE'] = True
-app.config['SECURITY_CHANGEABLE'] = True
-app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'username']
-app.config['SECURITY_POST_CONFIRM_VIEW'] = "https://www.improviser.education/login"
-app.config['SECURITY_POST_RESET_VIEW'] = "https://www.improviser.education/login"
-app.config['SECURITY_BACKWARDS_COMPAT_AUTH_TOKEN'] = True
+app.config["SECURITY_REGISTERABLE"] = True
+app.config["SECURITY_CONFIRMABLE"] = True
+app.config["SECURITY_RECOVERABLE"] = True
+app.config["SECURITY_CHANGEABLE"] = True
+app.config["SECURITY_USER_IDENTITY_ATTRIBUTES"] = ["email", "username"]
+app.config["SECURITY_POST_CONFIRM_VIEW"] = "https://www.improviser.education/login"
+app.config["SECURITY_POST_RESET_VIEW"] = "https://www.improviser.education/login"
+app.config["SECURITY_BACKWARDS_COMPAT_AUTH_TOKEN"] = True
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+app.config["SQLALCHEMY_COMMIT_ON_TEARDOWN"] = True
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Replace the next six lines with your own SMTP server settings
-app.config['SECURITY_EMAIL_SENDER'] = os.getenv('SECURITY_EMAIL_SENDER') if os.getenv('SECURITY_EMAIL_SENDER') \
-    else 'no-reply@example.com'
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER') if os.getenv('MAIL_SERVER') else 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME') if os.getenv('MAIL_USERNAME') else 'no-reply@example.com'
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD') if os.getenv('MAIL_PASSWORD') else 'somepassword'
+app.config["SECURITY_EMAIL_SENDER"] = (
+    os.getenv("SECURITY_EMAIL_SENDER") if os.getenv("SECURITY_EMAIL_SENDER") else "no-reply@example.com"
+)
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER") if os.getenv("MAIL_SERVER") else "smtp.gmail.com"
+app.config["MAIL_PORT"] = 465
+app.config["MAIL_USE_SSL"] = True
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME") if os.getenv("MAIL_USERNAME") else "no-reply@example.com"
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD") if os.getenv("MAIL_PASSWORD") else "somepassword"
 
 # Needed for REST token login
 # Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
-app.config['WTF_CSRF_ENABLED'] = False
+app.config["WTF_CSRF_ENABLED"] = False
 
 
 # Setup Flask-Security with extended user registration
-security = Security(app, user_datastore, register_form=ExtendedRegisterForm,
-                    confirm_register_form=ExtendedJSONRegisterForm)
+security = Security(
+    app, user_datastore, register_form=ExtendedRegisterForm, confirm_register_form=ExtendedJSONRegisterForm,
+)
 login_manager = LoginManager(app)
 mail = Mail()
 
@@ -95,12 +115,7 @@ def shutdown_session(exception=None):
 # flask-security views.
 @security.context_processor
 def security_context_processor():
-    return dict(
-        admin_base_template=admin.base_template,
-        admin_view=admin.index_view,
-        h=admin_helpers,
-        get_url=url_for
-    )
+    return dict(admin_base_template=admin.base_template, admin_view=admin.index_view, h=admin_helpers, get_url=url_for,)
 
 
 # ensure that new users are in an role
@@ -114,7 +129,7 @@ def on_user_registered(sender, user, confirm_token):
         db.session.add(user_preference)
         db.session.commit()
     except Exception as error:
-        print(F"error while creating user prefs?: {error}")
+        print(f"error while creating user prefs?: {error}")
         db.session.rollback()
 
 
@@ -129,10 +144,7 @@ def load_user_from_request(request):
             return None
 
         quick_token_md5 = hashlib.md5(token.encode("utf-8")).hexdigest()
-        user = User.query \
-            .filter(User.id == user_id) \
-            .filter(User.quick_token == quick_token_md5) \
-            .first()
+        user = User.query.filter(User.id == user_id).filter(User.quick_token == quick_token_md5).first()
         if user:
             return user
 
@@ -170,8 +182,45 @@ logger.info("Ready loading admin views and api")
 def fix_exercise_chord():
     exercises = RiffExercise.query.all()
     for exercise in exercises:
-        print(exercise.name)
+        logger.info("Working for exercise", name=exercise.name)
+        for item in exercise.riff_exercise_items:
+            if item.riff.number_of_bars != item.number_of_bars:
+                logger.info(
+                    "Correcting number_of_bars for exercise_item", name=exercise.name, item=item.order_number,
+                )
+                item.number_of_bars = item.riff.number_of_bars
+
+            # Check chord syntax
+            # *Cm7 and Cm7 will be converted to c1:m7
+            item_chord_info = item.chord_info
+            if item_chord_info:
+                if item_chord_info.startswith("*"):
+                    item_chord_info = item_chord_info[1:]
+                if item_chord_info[0].isupper():
+                    try:
+                        new_chord_info = transpose_chord_info(
+                            item_chord_info, "c", number_of_bars=item.riff.number_of_bars,
+                        )
+                        logger.info(
+                            "Correcting chord for exercise_item from item",
+                            name=exercise.name,
+                            current_chord_info=item_chord_info,
+                            new_chord_info=new_chord_info,
+                        )
+                    except ValueError:
+                        # Todo: correct pitch
+                        new_chord_info = (
+                            transpose_chord_info(item.riff.chord_info, "c", number_of_bars=item.riff.number_of_bars,)
+                            if item.riff.chord_info
+                            else transpose_chord_info(item.riff.chord, "c", number_of_bars=item.riff.number_of_bars,)
+                        )
+                        logger.info(
+                            "Correcting chord for exercise_item from riff",
+                            name=exercise.name,
+                            current_chord_info=item_chord_info,
+                            new_chord_info=new_chord_info,
+                        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
