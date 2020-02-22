@@ -11,11 +11,11 @@ from wtforms import PasswordField, TextAreaField
 
 class UserAdminView(ModelView):
     # Don't display the password on the list of Users
-    column_exclude_list = list = ('password',)
-    column_default_sort = ('created_at', True)
+    column_exclude_list = list = ("password",)
+    column_default_sort = ("created_at", True)
 
     # Don't include the standard password field when creating or editing a User (but see below)
-    form_excluded_columns = ('password',)
+    form_excluded_columns = ("password",)
 
     # Automatically display human-readable names for the current and available Roles when creating or editing a User
     column_auto_select_related = True
@@ -26,7 +26,7 @@ class UserAdminView(ModelView):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
@@ -40,7 +40,7 @@ class UserAdminView(ModelView):
         form_class = super(UserAdminView, self).scaffold_form()
 
         # Add a password field, naming it "password2" and labeling it "New Password".
-        form_class.password2 = PasswordField('New Password')
+        form_class.password2 = PasswordField("New Password")
         return form_class
 
     # This callback executes when the user saves changes to a newly-created or edited User -- before the changes are
@@ -61,7 +61,7 @@ class RolesAdminView(ModelView):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
@@ -74,7 +74,7 @@ class UserPreferenceAdminView(ModelView):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
@@ -88,7 +88,7 @@ class InstrumentAdminView(ModelView):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
@@ -96,98 +96,154 @@ class InstrumentAdminView(ModelView):
 
 class RiffAdminView(ModelView):
     Riff.image = String
-    column_list = ['id', 'name', 'riff_tags', 'render_valid', 'render_date', 'notes', 'chord_info', 'multi_chord',
-                   'number_of_bars', 'chord', 'created_at', 'image']
-    column_default_sort = ('created_at', True)
-    column_filters = ('render_valid', 'number_of_bars', 'chord')
-    column_searchable_list = ('id', 'name', 'chord', 'notes', 'number_of_bars')
+    column_list = [
+        "id",
+        "name",
+        "riff_tags",
+        "render_valid",
+        "render_date",
+        "notes",
+        "chord_info",
+        "multi_chord",
+        "number_of_bars",
+        "chord",
+        "created_at",
+        "image",
+    ]
+    column_default_sort = ("created_at", True)
+    column_filters = ("render_valid", "number_of_bars", "chord")
+    column_searchable_list = ("id", "name", "chord", "notes", "number_of_bars")
     can_set_page_size = True
 
     def is_accessible(self):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
 
-    @action('render', 'Render', 'Are you sure you want to re-render selected riffs?')
+    @action("render", "Render", "Are you sure you want to re-render selected riffs?")
     def action_approve(self, ids):
         try:
             query = Riff.query.filter(Riff.id.in_(ids))
             count = 0
             for riff in query.all():
                 riff.render_valid = False
-                flash('{} render of riffs successfully rescheduled.'.format(count))
+                flash("{} render of riffs successfully rescheduled.".format(count))
         except Exception as error:
             if not self.handle_view_exception(error):
-                flash('Failed to schedule re-render riff. {error}'.format(error=str(error)))
+                flash("Failed to schedule re-render riff. {error}".format(error=str(error)))
 
     def _list_thumbnail(view, context, model, name):
         return Markup(f'<img src="https://www.improviser.education/static/rendered/80/riff_{model.id}_c.png">')
 
-    column_formatters = {
-        'image': _list_thumbnail
-    }
+    column_formatters = {"image": _list_thumbnail}
 
 
 class RiffExerciseAdminView(ModelView):
-    column_list = ['id', 'name', 'riff_exercise_tags', 'stars', 'description', 'annotations', 'is_public', 'user.username', 'instrument_key', 'instruments', 'created_at']
-    column_default_sort = ('created_at', True)
-    column_searchable_list = ('id', 'name', 'created_by')
+    column_list = [
+        "id",
+        "name",
+        "riff_exercise_tags",
+        "stars",
+        "description",
+        "annotations",
+        "is_public",
+        "user.username",
+        "instrument_key",
+        "instruments",
+        "created_at",
+    ]
+    column_default_sort = ("created_at", True)
+    column_searchable_list = ("id", "name", "created_by")
     can_set_page_size = True
     form_overrides = dict(description_nl=TextAreaField)
-
 
     def is_accessible(self):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
 
 
 class RiffExerciseItemAdminView(ModelView):
-    column_list = ['id', 'riff_exercise_id', 'riff_id', 'pitch', 'octave', 'chord_info', 'chord_info_alternate', 'number_of_bars',
-                   'order_number', 'created_at']
-    column_default_sort = ('order_number', False)
-    column_searchable_list = ('id', 'riff_exercise_id', 'riff_id', 'chord_info')
+    column_list = [
+        "id",
+        "riff_exercise_id",
+        "riff_id",
+        "pitch",
+        "octave",
+        "chord_info",
+        "chord_info_alternate",
+        "number_of_bars",
+        "order_number",
+        "created_at",
+    ]
+    column_default_sort = ("order_number", False)
+    column_searchable_list = ("id", "riff_exercise_id", "riff_id", "chord_info")
     can_set_page_size = True
 
     def is_accessible(self):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
 
 
 class BackingTrackAdminView(ModelView):
-    column_list = ['id', 'name', 'tempo', 'chord_info', 'c_available', 'cis_available', 'd_available', 'ees_available',
-                   'e_available', 'f_available', 'fis_available', 'g_available', 'aes_available', 'a_available',
-                   'bes_available', 'b_available', 'created_date']
-    column_labels = {'c_available': 'C', 'cis_available': 'C#', 'd_available': 'D', 'ees_available': 'Eb',
-                     'e_available': 'E', 'f_available': 'F', 'fis_available': 'F#', 'g_available': 'G',
-                     'aes_available': 'Ab', 'a_available': 'C',
-                     'bes_available': 'Bb', 'b_available': 'B'}
-    column_default_sort = ('created_date', False)
-    column_searchable_list = ('id', 'name', 'chord_info')
+    column_list = [
+        "id",
+        "name",
+        "tempo",
+        "chord_info",
+        "c_available",
+        "cis_available",
+        "d_available",
+        "ees_available",
+        "e_available",
+        "f_available",
+        "fis_available",
+        "g_available",
+        "aes_available",
+        "a_available",
+        "bes_available",
+        "b_available",
+        "created_date",
+    ]
+    column_labels = {
+        "c_available": "C",
+        "cis_available": "C#",
+        "d_available": "D",
+        "ees_available": "Eb",
+        "e_available": "E",
+        "f_available": "F",
+        "fis_available": "F#",
+        "g_available": "G",
+        "aes_available": "Ab",
+        "a_available": "C",
+        "bes_available": "Bb",
+        "b_available": "B",
+    }
+    column_default_sort = ("created_date", False)
+    column_searchable_list = ("id", "name", "chord_info")
     can_set_page_size = True
 
     def is_accessible(self):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False
-
 
 
 class BaseAdminView(ModelView):
@@ -198,7 +254,7 @@ class BaseAdminView(ModelView):
         if not current_user:
             return False
         try:
-            if 'admin' in current_user.roles:
+            if "admin" in current_user.roles:
                 return True
         except:
             return False

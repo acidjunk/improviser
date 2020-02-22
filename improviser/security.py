@@ -8,17 +8,17 @@ from werkzeug.local import LocalProxy
 from wtforms import StringField, BooleanField
 from wtforms.validators import DataRequired
 
-_security = LocalProxy(lambda: current_app.extensions['security'])
+_security = LocalProxy(lambda: current_app.extensions["security"])
 
 
-class ExtraUserFields():
-    username = StringField('Username', [DataRequired()])
-    first_name = StringField('First Name', [DataRequired()])
-    last_name = StringField('Last Name', [DataRequired()])
-    mail_offers = BooleanField('May we mail you about new offers?',
-                               false_values={False, 'false', ''})
-    mail_announcements = BooleanField('May we mail you about platform announcements?',
-                                      false_values={False, 'false', ''}, default='true')
+class ExtraUserFields:
+    username = StringField("Username", [DataRequired()])
+    first_name = StringField("First Name", [DataRequired()])
+    last_name = StringField("Last Name", [DataRequired()])
+    mail_offers = BooleanField("May we mail you about new offers?", false_values={False, "false", ""})
+    mail_announcements = BooleanField(
+        "May we mail you about platform announcements?", false_values={False, "false", ""}, default="true"
+    )
 
 
 class ExtendedRegisterForm(RegisterForm, ExtraUserFields):
@@ -39,11 +39,8 @@ def check_quick_token():
     except:
         return False
 
-    quick_token_md5 = hashlib.md5(token.encode('utf-8')).hexdigest()
-    user = User.query\
-        .filter(User.id == user_id)\
-        .filter(User.quick_token == quick_token_md5) \
-        .first()
+    quick_token_md5 = hashlib.md5(token.encode("utf-8")).hexdigest()
+    user = User.query.filter(User.id == user_id).filter(User.quick_token == quick_token_md5).first()
     if user:
         return True
     return False
@@ -65,4 +62,5 @@ def quick_token_required(fn):
             return _security._unauthorized_callback()
         else:
             return _get_unauthorized_response()
+
     return decorated

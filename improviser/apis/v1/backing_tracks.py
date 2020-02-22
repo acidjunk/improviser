@@ -3,7 +3,11 @@ import uuid
 
 import structlog
 from apis.helpers import (
-    get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters, load,
+    get_range_from_args,
+    get_sort_from_args,
+    get_filter_from_args,
+    query_with_filters,
+    load,
     upload_file,
     update,
     save,
@@ -18,24 +22,27 @@ logger = structlog.get_logger(__name__)
 
 api = Namespace("backing tracks", description="BackingTrack related operations")
 
-backing_track_serializer = api.model("BackingTrack", {
-    "id": fields.String(),
-    "name": fields.String(required=True, description="Name"),
-    "chord_info": fields.String(description="Chord info in lilypond format"),
-    "tempo": fields.Integer(description="Tempo in BPM [40-320]"),
-    "file": fields.String(description="Backing track mp3"),
-    "approved": fields.Boolean(description="Approve toggle for admins")
-})
+backing_track_serializer = api.model(
+    "BackingTrack",
+    {
+        "id": fields.String(),
+        "name": fields.String(required=True, description="Name"),
+        "chord_info": fields.String(description="Chord info in lilypond format"),
+        "tempo": fields.Integer(description="Tempo in BPM [40-320]"),
+        "file": fields.String(description="Backing track mp3"),
+        "approved": fields.Boolean(description="Approve toggle for admins"),
+    },
+)
 
 backing_track_fields = {
-    'id': fields.String,
-    'name': fields.String,
-    'chord_info': fields.String,
-    'file': fields.String,
-    'created_at': fields.DateTime,
-    'modified_at': fields.DateTime,
-    'approved': fields.Boolean,
-    'approved_at': fields.DateTime,
+    "id": fields.String,
+    "name": fields.String,
+    "chord_info": fields.String,
+    "file": fields.String,
+    "created_at": fields.DateTime,
+    "modified_at": fields.DateTime,
+    "approved": fields.Boolean,
+    "approved_at": fields.DateTime,
 }
 
 parser = api.parser()
@@ -46,9 +53,9 @@ parser.add_argument("filter", location="args", help="Filter default=[]")
 file_upload = reqparse.RequestParser()
 file_upload.add_argument("file", type=FileStorage, location="files", help="file")
 
-@api.route('/')
-class BackingTrackResourceList(Resource):
 
+@api.route("/")
+class BackingTrackResourceList(Resource):
     @roles_accepted("admin")
     @marshal_with(backing_track_fields)
     @api.doc(parser=parser)
@@ -59,12 +66,7 @@ class BackingTrackResourceList(Resource):
         filter = get_filter_from_args(args)
 
         query_result, content_range = query_with_filters(
-            BackingTrack,
-            BackingTrack.query,
-            range,
-            sort,
-            filter,
-            quick_search_columns=["name", "file", "tempo"],
+            BackingTrack, BackingTrack.query, range, sort, filter, quick_search_columns=["name", "file", "tempo"],
         )
 
         return query_result, 200, {"Content-Range": content_range}
@@ -99,7 +101,6 @@ class BackingTrackResource(Resource):
         item = load(BackingTrack, id)
         return item, 200
 
-
     @roles_accepted("admin")
     @marshal_with(backing_track_serializer)
     @api.expect(file_upload)
@@ -128,10 +129,9 @@ class BackingTrackResource(Resource):
         return item, 201
 
 
-@api.route('/for/<exercise_id>')
+@api.route("/for/<exercise_id>")
 class BackingTrackWizardResourceList(Resource):
-
-    @roles_accepted('admin', 'moderator', 'member', 'student', 'teacher')
+    @roles_accepted("admin", "moderator", "member", "student", "teacher")
     @marshal_with(backing_track_fields)
     def get(self, exercise_id):
         exercise = load(RiffExercise, exercise_id)
@@ -151,7 +151,9 @@ class BackingTrackWizardResourceList(Resource):
         print("*************************")
         print("Doing backing track stuff, found chordlist:")
         print(chords)
-        print(f"number_of_chords: {len(chords)} number_of_items: {len(exercise.riff_exercise_items)}, loop_size: {largest_divider}")
+        print(
+            f"number_of_chords: {len(chords)} number_of_items: {len(exercise.riff_exercise_items)}, loop_size: {largest_divider}"
+        )
         print("*************************")
         # Todo : implement a first simple version
         # convert all flats / "es" to sharps / "is"

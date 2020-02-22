@@ -16,14 +16,14 @@ db = SQLAlchemy()
 
 
 class RolesUsers(db.Model):
-    __tablename__ = 'roles_users'
+    __tablename__ = "roles_users"
     id = Column(Integer(), primary_key=True)
-    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))
-    role_id = Column('role_id', UUID(as_uuid=True), ForeignKey('role.id'))
+    user_id = Column("user_id", UUID(as_uuid=True), ForeignKey("user.id"))
+    role_id = Column("role_id", UUID(as_uuid=True), ForeignKey("role.id"))
 
 
 class Role(db.Model, RoleMixin):
-    __tablename__ = 'role'
+    __tablename__ = "role"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(80), unique=True)
     description = Column(String(255))
@@ -38,7 +38,7 @@ class Role(db.Model, RoleMixin):
 
 
 class User(db.Model, UserMixin):
-    __tablename__ = 'user'
+    __tablename__ = "user"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String(255), unique=True)
     first_name = Column(String(255), index=True)
@@ -48,7 +48,7 @@ class User(db.Model, UserMixin):
     active = Column(Boolean())
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     confirmed_at = Column(DateTime())
-    roles = relationship('Role', secondary='roles_users', backref=backref('users', lazy='dynamic'))
+    roles = relationship("Role", secondary="roles_users", backref=backref("users", lazy="dynamic"))
 
     mail_offers = Column(Boolean, default=False)
     mail_announcements = Column(Boolean, default=True)
@@ -60,7 +60,7 @@ class User(db.Model, UserMixin):
 
     # Human-readable values for the User when editing user related stuff.
     def __str__(self):
-        return f'{self.username} : {self.email}'
+        return f"{self.username} : {self.email}"
 
     # __hash__ is required to avoid the exception TypeError: unhashable type: 'Role' when saving a User
     def __hash__(self):
@@ -68,29 +68,29 @@ class User(db.Model, UserMixin):
 
 
 class Instrument(db.Model):
-    __tablename__ = 'instruments'
+    __tablename__ = "instruments"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), unique=True)
-    root_key = Column(String(3), default='c')
+    root_key = Column(String(3), default="c")
 
     # __str__ is required by Flask-Admin, so we can have human-readable values for the Role when editing a User.
     def __str__(self):
-        return f'Instrument: {self.name}, Key: {self.root_key}'
+        return f"Instrument: {self.name}, Key: {self.root_key}"
 
 
 class UserPreference(db.Model):
-    __tablename__ = 'user_preferences'
+    __tablename__ = "user_preferences"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    instrument_id = Column('instrument_id', UUID(as_uuid=True), ForeignKey('instruments.id'))
+    instrument_id = Column("instrument_id", UUID(as_uuid=True), ForeignKey("instruments.id"))
     instrument = relationship("Instrument", backref=backref("parent", uselist=False))
-    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('user.id'))
+    user_id = Column("user_id", UUID(as_uuid=True), ForeignKey("user.id"))
     user = relationship("User", backref=backref("preferences", uselist=False))
-    language = Column(String(2), default='en')
+    language = Column(String(2), default="en")
     ideabook = Column(JSON)
 
 
 class Tag(db.Model):
-    __tablename__ = 'tags'
+    __tablename__ = "tags"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(60), unique=True, index=True)
 
@@ -99,7 +99,7 @@ class Tag(db.Model):
 
 
 class Riff(db.Model):
-    __tablename__ = 'riffs'
+    __tablename__ = "riffs"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), unique=True, index=True)
     number_of_bars = Column(Integer())
@@ -113,15 +113,15 @@ class Riff(db.Model):
     # Todo: rename to created_at (to reflect naming convention)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     image_info = Column(JSON)
-    riff_tags = relationship("Tag", secondary='riff_tags')
+    riff_tags = relationship("Tag", secondary="riff_tags")
     riff_to_tags = relationship("RiffTag")
 
     def __repr__(self):
-        return '<Riff %r %s bars, id:%s>' % (self.name, self.number_of_bars, self.id)
+        return "<Riff %r %s bars, id:%s>" % (self.name, self.number_of_bars, self.id)
 
 
 class RiffExercise(db.Model):
-    __tablename__ = 'riff_exercises'
+    __tablename__ = "riff_exercises"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255))
     description = Column(String())
@@ -130,7 +130,7 @@ class RiffExercise(db.Model):
     is_public = Column(Boolean, default=False)
     is_copyable = Column(Boolean, default=False)
     stars = Column(Integer, default=3)
-    created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
+    created_by = Column("created_by", UUID(as_uuid=True), ForeignKey("user.id"))
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
     annotations = Column(JSON)
@@ -142,14 +142,13 @@ class RiffExercise(db.Model):
     instruments = relationship("Instrument", secondary="riff_exercise_instruments")
 
     def __repr__(self):
-        return '<RiffExercise %r %s>>' % (self.name, self.id)
+        return "<RiffExercise %r %s>>" % (self.name, self.id)
 
     @property
     def get_normalised_chord_info(self):
         print("Getiing normalised stuff")
 
         # chord_info: string of lilypond chord stuff / bar
-
 
         chord_info = []
         for item in self.riff_exercise_items:
@@ -165,16 +164,16 @@ class RiffExercise(db.Model):
 
 
 class RiffExerciseItem(db.Model):
-    __tablename__ = 'riff_exercise_items'
+    __tablename__ = "riff_exercise_items"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'))
-    riff_id = Column('riff_id', UUID(as_uuid=True), ForeignKey('riffs.id'))
+    riff_exercise_id = Column("riff_exercise_id", UUID(as_uuid=True), ForeignKey("riff_exercises.id"))
+    riff_id = Column("riff_id", UUID(as_uuid=True), ForeignKey("riffs.id"))
     number_of_bars = Column(Integer())
     text_info = Column(String(255))
     chord_info = Column(String(255))
     chord_info_alternate = Column(String(255))
     chord_info_backing_track = Column(String(255))
-    pitch = Column(String(3), default='c')
+    pitch = Column(String(3), default="c")
     octave = Column(Integer(), default=0)
     order_number = Column(Integer, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -184,16 +183,16 @@ class RiffExerciseItem(db.Model):
     riff = relationship("Riff")
 
     def __repr__(self):
-        return f'<RiffItem {self.riff.name} in {self.pitch}/{self.octave} chords: {self.chord_info}'
+        return f"<RiffItem {self.riff.name} in {self.pitch}/{self.octave} chords: {self.chord_info}"
 
 
 class RecentRiffExercise(db.Model):
-    __tablename__ = 'recent_riff_exercises'
+    __tablename__ = "recent_riff_exercises"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    created_by = Column('created_by', UUID(as_uuid=True), ForeignKey('user.id'))
-    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
+    created_by = Column("created_by", UUID(as_uuid=True), ForeignKey("user.id"))
+    riff_exercise_id = Column("riff_exercise_id", UUID(as_uuid=True), ForeignKey("riff_exercises.id"), index=True)
     riff_exercise = relationship("RiffExercise", backref=backref("recent_riff_exercises", uselist=False))
 
     @property
@@ -203,10 +202,10 @@ class RecentRiffExercise(db.Model):
 
 # Setup tagging for all resources that need it
 class RiffTag(db.Model):
-    __tablename__ = 'riff_tags'
+    __tablename__ = "riff_tags"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    riff_id = Column('riff_id', UUID(as_uuid=True), ForeignKey('riffs.id'), index=True)
-    tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+    riff_id = Column("riff_id", UUID(as_uuid=True), ForeignKey("riffs.id"), index=True)
+    tag_id = Column("tag_id", UUID(as_uuid=True), ForeignKey("tags.id"), index=True)
     riff = db.relationship("Riff", lazy=True)
     tag = db.relationship("Tag", lazy=True)
 
@@ -215,10 +214,10 @@ class RiffTag(db.Model):
 
 
 class RiffExerciseTag(db.Model):
-    __tablename__ = 'riff_exercise_tags'
+    __tablename__ = "riff_exercise_tags"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
-    tag_id = Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id'), index=True)
+    riff_exercise_id = Column("riff_exercise_id", UUID(as_uuid=True), ForeignKey("riff_exercises.id"), index=True)
+    tag_id = Column("tag_id", UUID(as_uuid=True), ForeignKey("tags.id"), index=True)
     riff_exercise = db.relationship("RiffExercise", lazy=True)
     tag = db.relationship("Tag", lazy=True)
 
@@ -227,14 +226,14 @@ class RiffExerciseTag(db.Model):
 
 
 class RiffExerciseInstrument(db.Model):
-    __tablename__ = 'riff_exercise_instruments'
+    __tablename__ = "riff_exercise_instruments"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    riff_exercise_id = Column('riff_exercise_id', UUID(as_uuid=True), ForeignKey('riff_exercises.id'), index=True)
-    instrument_id = Column('instrument_id', UUID(as_uuid=True), ForeignKey('instruments.id'), index=True)
+    riff_exercise_id = Column("riff_exercise_id", UUID(as_uuid=True), ForeignKey("riff_exercises.id"), index=True)
+    instrument_id = Column("instrument_id", UUID(as_uuid=True), ForeignKey("instruments.id"), index=True)
 
 
 class BackingTrack(db.Model):
-    __tablename__ = 'backing_tracks'
+    __tablename__ = "backing_tracks"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), nullable=False)
     tempo = Column(Integer, default=100)

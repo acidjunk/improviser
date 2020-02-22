@@ -11,8 +11,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd119ce7cbc49'
-down_revision = 'de9503a121ab'
+revision = "d119ce7cbc49"
+down_revision = "de9503a121ab"
 branch_labels = None
 depends_on = None
 
@@ -42,10 +42,11 @@ def add_user_prefs_to_all_users(conn):
             conn.execute(
                 sa.text(
                     """INSERT INTO user_preferences (id, instrument_id, user_id) VALUES 
-                    (:id, :instrument_id, :user_id);"""),
+                    (:id, :instrument_id, :user_id);"""
+                ),
                 id=uuid.uuid4(),
                 user_id=user[0],
-                instrument_id=instrument[0]
+                instrument_id=instrument[0],
             )
             print(f"Created preference for user_id: {user[0]}")
 

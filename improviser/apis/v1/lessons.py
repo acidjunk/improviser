@@ -7,19 +7,23 @@ from database import RiffExercise
 
 api = Namespace("lessons", description="Lesson related operations")
 
-lesson_serializer = api.model("Exercise", {
-    "name": fields.String(required=True, description="Name"),
-    "description": fields.String(description="Description as shown in the lesson list and overviews")
-})
+lesson_serializer = api.model(
+    "Exercise",
+    {
+        "name": fields.String(required=True, description="Name"),
+        "description": fields.String(description="Description as shown in the lesson list and overviews"),
+    },
+)
 
 
 lesson_arguments = reqparse.RequestParser()
-lesson_arguments.add_argument('search_phrase', type=str, required=False,
-                            help='Return only items that contain the search_phrase')
+lesson_arguments.add_argument(
+    "search_phrase", type=str, required=False, help="Return only items that contain the search_phrase"
+)
 
-@api.route('/')
+
+@api.route("/")
 class LessonResourceList(Resource):
-
     @marshal_with(lesson_serializer)
     @api.expect(lesson_arguments)
     def get(self):
@@ -30,4 +34,3 @@ class LessonResourceList(Resource):
     @api.expect(lesson_serializer)
     def post(self):
         return 501
-

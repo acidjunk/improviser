@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9dd401b4375a'
-down_revision = '7418f933e467'
+revision = "9dd401b4375a"
+down_revision = "7418f933e467"
 branch_labels = None
 depends_on = None
 
@@ -35,7 +35,8 @@ def add_instrument_to_all_exercises(conn):
         conn.execute(
             sa.text(
                 """INSERT INTO riff_exercise_instruments(id, riff_exercise_id, instrument_id) VALUES 
-                    (:id, :riff_exercise_id, :instrument_id);"""),
+                    (:id, :riff_exercise_id, :instrument_id);"""
+            ),
             id=uuid.uuid4(),
             riff_exercise_id=exercise[0],
             instrument_id=instrument[0],

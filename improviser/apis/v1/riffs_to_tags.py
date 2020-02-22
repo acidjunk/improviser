@@ -1,8 +1,13 @@
 import uuid
 
 from apis.helpers import (
-    get_range_from_args, get_sort_from_args, load, query_with_filters, save, update,
-    get_filter_from_args
+    get_range_from_args,
+    get_sort_from_args,
+    load,
+    query_with_filters,
+    save,
+    update,
+    get_filter_from_args,
 )
 from database import Riff, RiffTag, Tag
 from flask_restplus import Namespace, Resource, abort, fields, marshal_with
