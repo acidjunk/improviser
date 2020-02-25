@@ -1,5 +1,7 @@
 import hashlib
 import os
+
+import click
 import structlog
 
 from admin_views import (
@@ -40,6 +42,8 @@ from database import User, Role, Riff, RiffExercise
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 
 from apis import api
+from sqlalchemy import or_
+from utils import fix_exercise_chords
 from version import VERSION
 
 logger = structlog.get_logger(__name__)
@@ -179,48 +183,26 @@ logger.info("Ready loading admin views and api")
 
 # Todo: move to better place
 @app.cli.command("fix-exercise-chords")
-def fix_exercise_chord():
-    exercises = RiffExercise.query.all()
-    for exercise in exercises:
-        logger.info("Working for exercise", name=exercise.name)
-        for item in exercise.riff_exercise_items:
-            if item.riff.number_of_bars != item.number_of_bars:
-                logger.info(
-                    "Correcting number_of_bars for exercise_item", name=exercise.name, item=item.order_number,
-                )
-                item.number_of_bars = item.riff.number_of_bars
+@click.argument("exercises", nargs=-1)
+@click.option("--all/--not-all", "-A", default=False)
+def fix_all_exercise_chords(exercises, all):
+    if exercises:
+        exercise_query = RiffExercise.query
 
-            # Check chord syntax
-            # *Cm7 and Cm7 will be converted to c1:m7
-            item_chord_info = item.chord_info
-            if item_chord_info:
-                if item_chord_info.startswith("*"):
-                    item_chord_info = item_chord_info[1:]
-                if item_chord_info[0].isupper():
-                    try:
-                        new_chord_info = transpose_chord_info(
-                            item_chord_info, "c", number_of_bars=item.riff.number_of_bars,
-                        )
-                        logger.info(
-                            "Correcting chord for exercise_item from item",
-                            name=exercise.name,
-                            current_chord_info=item_chord_info,
-                            new_chord_info=new_chord_info,
-                        )
-                    except ValueError:
-                        # Todo: correct pitch
-                        new_chord_info = (
-                            transpose_chord_info(item.riff.chord_info, "c", number_of_bars=item.riff.number_of_bars,)
-                            if item.riff.chord_info
-                            else transpose_chord_info(item.riff.chord, "c", number_of_bars=item.riff.number_of_bars,)
-                        )
-                        logger.info(
-                            "Correcting chord for exercise_item from riff",
-                            name=exercise.name,
-                            current_chord_info=item_chord_info,
-                            new_chord_info=new_chord_info,
-                        )
+        conditions = []
+        for item in exercises:
+            conditions.append(RiffExercise.id == item)
+        exercise_query = exercise_query.filter(or_(*conditions))
+    elif all:
+        logger.info("Querying ALL exercises")
+        exercise_query = RiffExercise.query
+    else:
+        logger.warning("Cowardly refusing to run on all without `--all` mode set.")
+        return
 
+    for index, exercise in enumerate(exercise_query.all()):
+        logger.info("Working for exercise", name=exercise.name, counter=index)
+        fix_exercise_chords(exercise)
 
 if __name__ == "__main__":
     app.run()
