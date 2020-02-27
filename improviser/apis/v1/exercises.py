@@ -57,7 +57,7 @@ exercise_item_serializer = api.model(
     "RiffExerciseItem",
     {
         "riff_exercise_id": fields.String(required=True),
-        "number_of_bars": fields.String(required=True),
+        "number_of_bars": fields.Integer(required=True),
         "pitch": fields.String(required=True),
         "octave": fields.Integer(required=True),
         "order_number": fields.Integer(required=True),
@@ -332,6 +332,7 @@ class ExerciseResourceList(Resource):
 
         # Todo: add instruments selection and instrument key
         exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
+        exercise.modified_at = datetime.datetime.now()
         db.session.add(exercise)
 
         for exercise_item in exercise_items:
@@ -352,7 +353,7 @@ class ExerciseResourceList(Resource):
             else:
                 logger.warning("Couldn't find any chord_info for riff", riff_id=riff.id, riff_name=riff.name)
             logger.info("Adding item to exercise", item=exercise_item, exercise_id=api.payload["id"])
-            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"])
+            record = RiffExerciseItem(**exercise_item, id=str(uuid.uuid4()), riff_exercise_id=api.payload["id"], number_of_bars=riff.number_of_bars)
             db.session.add(record)
         try:
             db.session.commit()
@@ -413,7 +414,25 @@ class ExerciseResource(Resource):
         for order_number, payload_exercise_item in enumerate(payload_exercise_items):
             if order_number >= len(exercise_items):
                 logger.info("Inserting new exercise item", order_number=order_number, payload=payload_exercise_item)
-                new_exercise_item = {**payload_exercise_item, "riff_exercise_id": exercise_id}
+
+                # Todo: remove double chord code in new/update
+                riff = Riff.query.filter_by(id=exercise_item_dict["riff_id"]).first()
+                if riff.chord_info:
+                    # check transpose
+                    tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"], riff.number_of_bars)
+                    payload_exercise_item["chord_info"] = tranposed_chord
+                elif riff.chord:
+                    # check transpose
+                    tranposed_chord = transpose_chord_info(riff.chord, payload_exercise_item["pitch"], riff.number_of_bars)
+                    payload_exercise_item["chord_info"] = tranposed_chord
+                else:
+                    logger.warning("riff doesn't contain chord info", id=riff.id, name=riff.name)
+                    # correct faulty ones for now:
+                    payload_exercise_item["chord_info"] = ""
+                ################
+
+                new_exercise_item = {**payload_exercise_item, "riff_exercise_id": exercise_id,  "number_of_bars": riff.number_of_bars,  "created_at": datetime.datetime.now(), "modified_at": datetime.datetime.now()}
+                # Todo: remove double code in new/update
                 new_item = RiffExerciseItem(**new_exercise_item)
                 db.session.add(new_item)
                 changed = True
@@ -426,26 +445,28 @@ class ExerciseResource(Resource):
                 del exercise_item_dict["created_at"]
                 del exercise_item_dict["modified_at"]
 
+                # Todo: remove double chord code in new/update
                 riff = Riff.query.filter_by(id=exercise_item_dict["riff_id"]).first()
                 if riff.chord_info:
                     # check transpose
-                    tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"])
+                    tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"], riff.number_of_bars)
                     payload_exercise_item["chord_info"] = tranposed_chord
                 elif riff.chord:
                     # check transpose
-                    tranposed_chord = transpose_chord_info(riff.chord, payload_exercise_item["pitch"])
+                    tranposed_chord = transpose_chord_info(riff.chord, payload_exercise_item["pitch"], riff.number_of_bars)
                     payload_exercise_item["chord_info"] = tranposed_chord
                 else:
                     logger.warning("riff doesn't contain chord info", id=riff.id, name=riff.name)
                     # correct faulty ones for now:
                     payload_exercise_item["chord_info"] = ""
+                ################
 
                 added, removed, modified, same = dict_compare(exercise_item_dict, payload_exercise_item)
                 logger.debug("Handling exercise item", added=added, removed=removed, modified=modified, same=same)
                 if modified:
                     logger.info("Updating exercise item", order_number=order_number, payload=payload_exercise_item)
                     RiffExerciseItem.query.filter_by(id=exercise_item_dict["id"]).update(
-                        {**payload_exercise_item, "modified_at": datetime.datetime.now()}
+                        {**payload_exercise_item, "number_of_bars": riff.number_of_bars, "modified_at": datetime.datetime.now()}
                     )
                     changed = True
                 else:
