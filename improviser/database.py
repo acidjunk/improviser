@@ -94,6 +94,9 @@ class Tag(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(60), unique=True, index=True)
 
+    riffs_to_tags = relationship("RiffTag", cascade="save-update, merge, delete")
+    riff_exercises_to_tags = relationship("RiffExerciseTag", cascade="save-update, merge, delete")
+
     def __repr__(self):
         return self.name
 

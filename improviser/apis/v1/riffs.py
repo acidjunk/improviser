@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 import structlog
 from apis.helpers import (
-    get_range_from_args,
+    delete, get_range_from_args,
     get_sort_from_args,
     get_filter_from_args,
     query_with_filters,
@@ -135,7 +135,6 @@ class RiffResourceList(Resource):
     def post(self):
         riff = Riff(id=str(uuid.uuid4()), **api.payload)
         save(riff)
-        print(riff)
         return riff, 201
 
 
@@ -179,6 +178,12 @@ class RiffResource(Resource):
         item = update(item, api.payload)
         return item, 201
 
+    @roles_accepted("admin")
+    def delete(self, id):
+        """Edit Tag"""
+        item = load(Riff, id)
+        delete(item)
+        return "", 204
 
 @api.route("/unrendered")
 @api.doc("Show all unrendered riffs to users with sufficient rights.")

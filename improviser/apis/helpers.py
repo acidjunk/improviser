@@ -95,6 +95,15 @@ def update(item, payload):
     return item
 
 
+def delete(item):
+    try:
+        db.session.delete(item)
+        db.session.commit()
+    except Exception as error:
+        db.session.rollback()
+        abort(400, "DB error: {}".format(str(error)))
+
+
 def query_with_filters(
     model,
     query,

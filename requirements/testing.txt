@@ -1,7 +1,6 @@
 -r base.txt
-pytest==4.4.1
+pytest-flask==1.0.0
 pytest-cov==2.7.1
-pytest-flask==0.14.0
 pytest-xdist==1.28.0
 requests==2.21.0
 pytest-flask-sqlalchemy==1.0.2
