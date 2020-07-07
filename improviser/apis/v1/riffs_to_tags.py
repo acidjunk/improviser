@@ -10,7 +10,7 @@ from apis.helpers import (
     get_filter_from_args,
 )
 from database import Riff, RiffTag, Tag
-from flask_restplus import Namespace, Resource, abort, fields, marshal_with
+from flask_restx import Namespace, Resource, abort, fields, marshal_with
 from flask_security import roles_accepted
 
 api = Namespace("riffs-to-tags", description="Riff to tag related operations")

@@ -8,7 +8,7 @@ import structlog
 from apis.helpers import get_range_from_args, get_sort_from_args, get_filter_from_args, query_with_filters
 from flask_login import current_user
 
-from flask_restplus import Namespace, Resource, fields, marshal_with, abort
+from flask_restx import Namespace, Resource, fields, marshal_with, abort
 from database import User, Instrument, UserPreference, db
 from flask_security import auth_token_required, roles_accepted
 from security import quick_token_required
@@ -122,7 +122,7 @@ class UserPreferenceResource(Resource):
         except Exception as error:
             db.session.rollback()
             abort(400, "DB error: {}".format(str(error)))
-        return 204
+        return "", 204
 
 
 @api.route("/validate-username/<string:username>")

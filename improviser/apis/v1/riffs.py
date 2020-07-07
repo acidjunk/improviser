@@ -17,7 +17,7 @@ from apis.helpers import (
 from database import db
 from flask import request
 from flask_login import current_user
-from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
+from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff
 from flask_security import auth_token_required, roles_accepted
 from more_itertools import chunked

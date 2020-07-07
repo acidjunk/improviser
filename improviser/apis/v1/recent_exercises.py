@@ -5,7 +5,7 @@ import structlog
 from apis.helpers import save
 from database import RecentRiffExercise, db
 from flask_login import current_user
-from flask_restplus import Namespace, Resource, fields, marshal_with
+from flask_restx import Namespace, Resource, fields, marshal_with
 from flask_security import roles_accepted
 from sqlalchemy import desc
 

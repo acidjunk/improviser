@@ -11,7 +11,7 @@ from apis.helpers import (
     update,
 )
 from database import Tag
-from flask_restplus import Namespace, Resource, fields, marshal_with
+from flask_restx import Namespace, Resource, fields, marshal_with
 from flask_security import roles_accepted
 
 logger = structlog.get_logger(__name__)

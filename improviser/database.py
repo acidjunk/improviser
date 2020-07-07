@@ -1,3 +1,4 @@
+import enum
 import hashlib
 import sqlalchemy
 
@@ -8,7 +9,7 @@ from flask_security import RoleMixin, UserMixin, SQLAlchemySessionUserDatastore
 from flask_sqlalchemy import SQLAlchemy
 from libgravatar import Gravatar
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, JSON, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
 
@@ -246,6 +247,50 @@ class BackingTrack(db.Model):
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
     approved_at = Column(DateTime)
     approved = Column("approved", Boolean(), default=False)
+
+
+class Lesson(db.Model):
+    __tablename__ = "lessons"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String(255))
+    blog_intro = Column(String())
+    blog_publish = Column(Boolean, default=True)
+    created_by = Column("created_by", UUID(as_uuid=True), ForeignKey("user.id"))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    user = relationship("User", backref=backref("lessons", uselist=False))
+
+    def __repr__(self):
+        return "<Lesson %r %s>" % (self.name, self.id)
+
+
+class LessonItemEnum(enum.Enum):
+    TEXT = 1
+    RIFF = 2
+    RIFF_EXERCISE = 3
+    BACKING_TRACK = 4
+    YOUTUBE = 3
+
+
+class LessonItem(db.Model):
+    __tablename__ = "lesson_items"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    item_type = Column(Enum(LessonItemEnum))
+    lesson_id = Column("lesson_id", UUID(as_uuid=True), ForeignKey("lessons.id"))
+    riff_id = Column("riff_id", UUID(as_uuid=True), ForeignKey("riffs.id"), nullable=True)
+    riff_pitch = Column(String(3), nullable=True)
+    riff_octave = Column(Integer(), nullable=True)
+    riff_chord_info = Column(String(20), nullable=True)
+    riff_exercise_id = Column("riff_exercise_id", UUID(as_uuid=True), ForeignKey("riff_exercises.id"), nullable=True)
+    backing_track_id = Column("backing_track_id", UUID(as_uuid=True), ForeignKey("backing_tracks.id"), nullable=True)
+    item_label = Column(String(255), nullable=True)
+    item_text = Column(String(), nullable=True)
+    order_number = Column(Integer, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    def __repr__(self):
+        return f"<LessonItem {self.item_type} with ID {self.id}>"
 
 
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)

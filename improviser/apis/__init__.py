@@ -1,4 +1,4 @@
-from flask_restplus import Api
+from flask_restx import Api
 
 from .v1.backing_tracks import api as backing_tracks_ns
 from .v1.exercises import api as exercises_ns

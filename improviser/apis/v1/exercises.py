@@ -8,7 +8,7 @@ from flask_security import roles_accepted
 from musthe import Note, Interval
 from security import quick_token_required
 
-from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
+from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abort
 
 from database import db, Riff, RiffExercise, RiffExerciseItem
 

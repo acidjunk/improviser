@@ -1,7 +1,7 @@
 import datetime
 from database import db
 from flask import request
-from flask_restplus import Namespace, Resource, fields, marshal_with, reqparse, abort
+from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import RiffExercise
 
 
