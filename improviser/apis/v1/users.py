@@ -102,6 +102,20 @@ class UserResource(Resource):
         return shallow_user
 
 
+@api.route("/me")
+@api.doc("Retrieve info about currently logged in users and handle the quick-token session of users.")
+class UserResource(Resource):
+    @roles_accepted("admin", "moderator", "operator", "student", "teacher")
+    @marshal_with({**user_fields, **quick_auth_fields})
+    def get(self):
+        user = User.query.filter(User.id == current_user.id).first()
+
+        # get the response ready, without overwriting the DB
+        shallow_user = copy.copy(user)
+        shallow_user.preferences.instrument_name = user.preferences.instrument.name
+        return shallow_user
+
+
 @api.route("/preferences")
 class UserPreferenceResource(Resource):
     @marshal_with(user_preference_fields)
