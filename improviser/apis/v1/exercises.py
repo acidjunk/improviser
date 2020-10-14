@@ -416,7 +416,8 @@ class ExerciseResource(Resource):
                 logger.info("Inserting new exercise item", order_number=order_number, payload=payload_exercise_item)
 
                 # Todo: remove double chord code in new/update
-                riff = Riff.query.filter_by(id=exercise_item_dict["riff_id"]).first()
+                riff = Riff.query.filter(Riff.id == payload_exercise_item["riff_id"]).first()
+
                 if riff.chord_info:
                     # check transpose
                     tranposed_chord = transpose_chord_info(riff.chord_info, payload_exercise_item["pitch"], riff.number_of_bars)
