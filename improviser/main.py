@@ -88,9 +88,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 app.config["SQLALCHEMY_COMMIT_ON_TEARDOWN"] = True
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Replace the next six lines with your own SMTP server settings
-app.config["SECURITY_EMAIL_SENDER"] = (
-    os.getenv("SECURITY_EMAIL_SENDER") if os.getenv("SECURITY_EMAIL_SENDER") else "no-reply@example.com"
-)
+app.config["SECURITY_EMAIL_SENDER"] = (("iMproviser mailer",
+                                        os.getenv("SECURITY_EMAIL_SENDER") if os.getenv(
+                                            "SECURITY_EMAIL_SENDER") else "no-reply@example.com"))
 app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER") if os.getenv("MAIL_SERVER") else "smtp.gmail.com"
 app.config["MAIL_PORT"] = 465
 app.config["MAIL_USE_SSL"] = True
@@ -100,7 +100,6 @@ app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD") if os.getenv("MAIL_PASS
 # Needed for REST token login
 # Todo: check if we can fix this without completely disabling it: it's only needed when login request is not via .json
 app.config["WTF_CSRF_ENABLED"] = False
-
 
 # Setup Flask-Security with extended user registration
 security = Security(
@@ -119,7 +118,8 @@ def shutdown_session(exception=None):
 # flask-security views.
 @security.context_processor
 def security_context_processor():
-    return dict(admin_base_template=admin.base_template, admin_view=admin.index_view, h=admin_helpers, get_url=url_for,)
+    return dict(admin_base_template=admin.base_template, admin_view=admin.index_view, h=admin_helpers,
+                get_url=url_for, )
 
 
 # ensure that new users are in an role
@@ -203,6 +203,7 @@ def fix_all_exercise_chords(exercises, all):
     for index, exercise in enumerate(exercise_query.all()):
         logger.info("Working for exercise", name=exercise.name, counter=index)
         fix_exercise_chords(exercise)
+
 
 if __name__ == "__main__":
     app.run()
