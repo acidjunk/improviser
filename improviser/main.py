@@ -76,7 +76,7 @@ app.config["SECURITY_PASSWORD_SALT"] = (
     os.getenv("SECURITY_PASSWORD_SALT") if os.getenv("SECURITY_PASSWORD_SALT") else "SALTSALTSALT"
 )
 # More Flask Security settings
-app.config["SERVER_NAME"] = "localhost:5000"  # host + port
+app.config["SERVER_NAME"] = os.getenv("SERVER_NAME", "localhost:5000")  # host + port
 app.config["SECURITY_REGISTERABLE"] = True
 app.config["SECURITY_CONFIRMABLE"] = True
 app.config["SECURITY_RECOVERABLE"] = True
