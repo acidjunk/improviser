@@ -39,6 +39,7 @@ from database import (
     BackingTrack,
 )
 from database import User, Role, Riff, RiffExercise
+from flask_security.confirmable import send_confirmation_instructions, generate_confirmation_link
 from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
 
 from apis import api
@@ -75,6 +76,7 @@ app.config["SECURITY_PASSWORD_SALT"] = (
     os.getenv("SECURITY_PASSWORD_SALT") if os.getenv("SECURITY_PASSWORD_SALT") else "SALTSALTSALT"
 )
 # More Flask Security settings
+app.config["SERVER_NAME"] = "localhost:5000"  # host + port
 app.config["SECURITY_REGISTERABLE"] = True
 app.config["SECURITY_CONFIRMABLE"] = True
 app.config["SECURITY_RECOVERABLE"] = True
@@ -203,6 +205,30 @@ def fix_all_exercise_chords(exercises, all):
     for index, exercise in enumerate(exercise_query.all()):
         logger.info("Working for exercise", name=exercise.name, counter=index)
         fix_exercise_chords(exercise)
+
+
+@app.cli.command("resend-email-verification")
+@click.argument("emails", nargs=-1)
+@click.option("--all/--not-all", "-A", default=False)
+def resend_email_verification(emails, all):
+    if emails:
+        user_query = User.query
+
+        conditions = []
+        for item in emails:
+            conditions.append(User.email == item)
+        user_query = user_query.filter(or_(*conditions))
+    # elif all:
+    #     logger.info("Querying ALL exercises")
+    #     exercise_query = RiffExercise.query
+    else:
+        logger.warning("Cowardly refusing to run on all without `--all` mode set.")
+        return
+
+    for index, user in enumerate(user_query.all()):
+        logger.info("Working for user", email=user.email, counter=index)
+        # send_confirmation_instructions(user)
+        print(generate_confirmation_link(user))
 
 
 if __name__ == "__main__":

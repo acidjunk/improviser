@@ -12,7 +12,7 @@ from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abo
 
 from database import db, Riff, RiffExercise, RiffExerciseItem
 
-from .riffs import riff_fields
+from .riffs import riff_fields, riff_arguments
 
 logger = structlog.get_logger(__name__)
 
@@ -611,9 +611,31 @@ class CopyExerciseResource(Resource):
 @api.route("/scales")
 class ScaleTrainerResourceList(Resource):
     @marshal_with(riff_fields)
+    @api.expect(riff_arguments)
     def get(self):
-        riffs = Riff.query.filter(Riff.scale_trainer_enabled).all()
-        return riffs
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args)
+        filter = get_filter_from_args(args)
+
+        riffs_query = Riff.query.filter(Riff.scale_trainer_enabled)
+        if "admin" not in current_user.roles:
+            riffs_query = riffs_query.filter(Riff.render_valid)
+        else:
+            logger.debug(
+                "Showing unrendered riffs for non admin user",
+                user_id=current_user.id,
+                roles=[role.name for role in current_user.roles],
+            )
+
+        query_result, content_range = query_with_filters(
+            Riff, riffs_query, range, sort, filter, quick_search_columns=["name", "id"]
+        )
+
+        for riff in query_result:
+            riff.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
+            riff.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
+        return query_result, 200, {"Content-Range": content_range}
 
 
 @api.route("/transpose-riff")
