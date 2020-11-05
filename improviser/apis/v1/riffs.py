@@ -140,7 +140,7 @@ class RiffResourceList(Resource):
 
 @api.route("/<string:id>")
 class RiffResource(Resource):
-    @roles_accepted("admin", "moderator", "member", "student", "teacher")
+    # @roles_accepted("admin", "moderator", "member", "student", "teacher")
     @marshal_with(riff_detail_fields)
     def get(self, id):
         # Todo: check if riff is scaletrainer related otherwise block it for unauthorized users
@@ -152,13 +152,9 @@ class RiffResource(Resource):
         riff_copy = copy(riff)
         riff_copy.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
         riff_copy.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
+        print(current_user.__dict__)
+        if current_user.is_anonymous or "admin" not in current_user.roles:
 
-        if "admin" not in current_user.roles:
-            logger.debug(
-                "Disabling notes for non admin user",
-                user_id=current_user.id,
-                roles=[role.name for role in current_user.roles],
-            )
             riff_copy.notes = ""
 
         # Todo: add an parameter to the endpoint to show extended music_xml info or move to separate endpoint
