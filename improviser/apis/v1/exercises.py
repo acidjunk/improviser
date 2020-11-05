@@ -618,15 +618,7 @@ class ScaleTrainerResourceList(Resource):
         sort = get_sort_from_args(args)
         filter = get_filter_from_args(args)
 
-        riffs_query = Riff.query.filter(Riff.scale_trainer_enabled)
-        if "admin" not in current_user.roles:
-            riffs_query = riffs_query.filter(Riff.render_valid)
-        else:
-            logger.debug(
-                "Showing unrendered riffs for non admin user",
-                user_id=current_user.id,
-                roles=[role.name for role in current_user.roles],
-            )
+        riffs_query = Riff.query.filter(Riff.scale_trainer_enabled).filter(Riff.render_valid)
 
         query_result, content_range = query_with_filters(
             Riff, riffs_query, range, sort, filter, quick_search_columns=["name", "id"]

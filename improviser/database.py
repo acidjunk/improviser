@@ -114,7 +114,6 @@ class Riff(db.Model):
     scale_trainer_enabled = Column(Boolean, default=False)
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
-    # Todo: rename to created_at (to reflect naming convention)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     image_info = Column(JSON)
     riff_tags = relationship("Tag", secondary="riff_tags")
