@@ -328,7 +328,8 @@ class ExerciseResourceList(Resource):
 
         validate_exercise_items_and_error(len(exercise_items))
         user_exercises = RiffExercise.query.filter(RiffExercise.created_by == current_user.id).all()
-        validate_exercises_and_error(len(user_exercises))
+        if current_user.username != "acidjunk":
+            validate_exercises_and_error(len(user_exercises))
 
         # Todo: add instruments selection and instrument key
         exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
@@ -511,8 +512,8 @@ def validate_exercise_items_and_error(items_length):
 
 
 def validate_exercises_and_error(items_length):
-    if items_length > 60:
-        message = "Exercise constraint reached. Max 60 exercises for free accounts. Contact me if you need more."
+    if items_length > 10:
+        message = "Exercise constraint reached. Max 10 exercises for free accounts. Contact me if you need more."
         logger.error(message, items=items_length)
         abort(400, message)
 

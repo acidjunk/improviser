@@ -154,7 +154,6 @@ class RiffResource(Resource):
         riff_copy.image = f"https://www.improviser.education/static/rendered/120/riff_{riff.id}_c.png"
         print(current_user.__dict__)
         if current_user.is_anonymous or "admin" not in current_user.roles:
-
             riff_copy.notes = ""
 
         # Todo: add an parameter to the endpoint to show extended music_xml info or move to separate endpoint
