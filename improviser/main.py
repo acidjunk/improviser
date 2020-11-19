@@ -15,15 +15,14 @@ from admin_views import (
     RiffExerciseItemAdminView,
     BackingTrackAdminView,
 )
-from apis.v1.exercises import transpose_chord_info
 
-from flask import Flask, url_for, current_app
+from flask import Flask, url_for
 from flask_admin import Admin
 from flask_admin import helpers as admin_helpers
 
 from flask_cors import CORS
 from flask_login import LoginManager
-from flask_mail import Mail
+from flask_mail import Mail, Message
 from flask_migrate import Migrate
 from flask_security import Security, user_registered
 
@@ -40,7 +39,7 @@ from database import (
 )
 from database import User, Role, Riff, RiffExercise
 from flask_security.confirmable import send_confirmation_instructions, generate_confirmation_link
-from security import ExtendedRegisterForm, ExtendedJSONRegisterForm
+from security import ExtendedRegisterForm, ExtendedJSONRegisterForm, _security
 
 from apis import api
 from sqlalchemy import or_
@@ -226,9 +225,23 @@ def resend_email_verification(emails, all):
         return
 
     for index, user in enumerate(user_query.all()):
+
         logger.info("Working for user", email=user.email, counter=index)
-        # send_confirmation_instructions(user)
-        print(generate_confirmation_link(user))
+        confirmation_link, token = generate_confirmation_link(user)
+
+        _security.send_mail(
+            "fleomp",
+            user.email,
+            "reconfirm",
+            user=user,
+            confirmation_link=confirmation_link,
+        )
+        # # render_template("")
+        # msg = Message('Hello', sender=app.config["SECURITY_EMAIL_SENDER"], recipients=[user.email])
+        # msg.body = "Hello Flask message sent from Flask-Mail"
+        # mail.send(msg)
+        # return "Sent"
+
 
 
 if __name__ == "__main__":
