@@ -226,22 +226,19 @@ def resend_email_verification(emails, all):
 
     for index, user in enumerate(user_query.all()):
 
-        logger.info("Working for user", email=user.email, counter=index)
-        confirmation_link, token = generate_confirmation_link(user)
+        if not user.confirmed_at:
+            logger.info("Working for user", email=user.email, counter=index)
+            confirmation_link, token = generate_confirmation_link(user)
 
-        _security.send_mail(
-            "fleomp",
-            user.email,
-            "reconfirm",
-            user=user,
-            confirmation_link=confirmation_link,
-        )
-        # # render_template("")
-        # msg = Message('Hello', sender=app.config["SECURITY_EMAIL_SENDER"], recipients=[user.email])
-        # msg.body = "Hello Flask message sent from Flask-Mail"
-        # mail.send(msg)
-        # return "Sent"
-
+            _security.send_mail(
+                "Gentle reminder to verify your iMproviser account",
+                user.email,
+                "reconfirm_email_address",
+                user=user,
+                confirmation_link=confirmation_link,
+            )
+        else:
+            logger.info("Skipping already confirmed user", email=user.email, counter=index)
 
 
 if __name__ == "__main__":
