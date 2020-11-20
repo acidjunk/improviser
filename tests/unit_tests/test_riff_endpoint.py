@@ -10,7 +10,8 @@ def test_riffs_endpoint_without_auth(client):
 
 def test_riffs_detail_endpoint_without_auth(client, riff):
     response = client.get(f'/v1/riffs/{riff.id}', follow_redirects=True)
-    assert response.status_code == 403
+    assert response.status_code == 200
+    assert response.json["notes"] == ""
 
 
 def test_riffs_endpoint_with_auth(client, student_logged_in, riff, riff_unrendered, riff_multi_chord):

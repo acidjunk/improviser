@@ -210,24 +210,27 @@ def fix_all_exercise_chords(exercises, all):
 @click.argument("emails", nargs=-1)
 @click.option("--all/--not-all", "-A", default=False)
 def resend_email_verification(emails, all):
+    user_query = User.query
     if emails:
-        user_query = User.query
-
         conditions = []
         for item in emails:
             conditions.append(User.email == item)
         user_query = user_query.filter(or_(*conditions))
-    # elif all:
-    #     logger.info("Querying ALL exercises")
-    #     exercise_query = RiffExercise.query
+    elif all:
+        if "amazon" not in DATABASE_URI or "api.improviser.education" not in app.config["SERVER_NAME"]:
+            logger.warning("Cowardly refusing to run on all on local DB and/or local NAME.")
+            return
+        logger.info("Querying ALL users")
+        user_query = user_query.filter(User.confirmed_at.is_(None))
     else:
         logger.warning("Cowardly refusing to run on all without `--all` mode set.")
         return
 
+    done = 0
+    skipped = 0
     for index, user in enumerate(user_query.all()):
-
         if not user.confirmed_at:
-            logger.info("Working for user", email=user.email, counter=index)
+            logger.info("Working for user", email=user.email)
             confirmation_link, token = generate_confirmation_link(user)
 
             _security.send_mail(
@@ -237,8 +240,12 @@ def resend_email_verification(emails, all):
                 user=user,
                 confirmation_link=confirmation_link,
             )
+            done += 1
+            logger.info("Mail sent", email=user.email, done=index)
         else:
-            logger.info("Skipping already confirmed user", email=user.email, counter=index)
+            skipped += 1
+            logger.info("Skipping already confirmed user", email=user.email, skipped=skipped)
+    logger.info
 
 
 if __name__ == "__main__":

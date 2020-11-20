@@ -1,0 +1,11 @@
+Hi {{ first_name }},
+
+This is a gentle reminder to verify your e-mail address. So you can keep using your free iMproviser account.
+
+Follow this link to activate your account:
+
+{{ confirmation_link }}
+
+Kind Regards,
+
+the iMproviser
