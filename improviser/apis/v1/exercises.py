@@ -157,6 +157,8 @@ transpose_fields = {
     "chord_info_backing_track": fields.String,
 }
 
+transpose_fields_multi = fields.Nested(transpose_fields)
+
 
 parser = api.parser()
 parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
@@ -631,56 +633,70 @@ class ScaleTrainerResourceList(Resource):
         return query_result, 200, {"Content-Range": content_range}
 
 
+def transpose_api_item(payload):
+    pitch = payload["pitch"]
+
+    # If a riff_id is present the chord info from the DB wil be used.
+    riff_id = payload.get("riff_id")
+    if riff_id:
+        riff = Riff.query.filter(Riff.id == riff_id).first()
+        if riff.chord_info:
+            chord_info = transpose_chord_info(riff.chord_info, pitch)
+        else:
+            chord_info = transpose_chord_info(riff.chord, pitch)
+    else:
+        if payload.get("chord_info"):
+            chord_info = transpose_chord_info(payload["chord_info"], pitch)
+        else:
+            chord_info = ""
+
+    # If an exercise_item_id is present the alternate_chord info from the DB wil be used.
+    exercise_item_id = payload.get("exercise_item_id")
+    chord_info_alternate = payload.get("chord_info_alternate")
+    if chord_info_alternate:
+        logger.info("Alternate chord info found in payload", chord_info_alternate=chord_info_alternate)
+    if exercise_item_id and chord_info_alternate:
+        exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
+
+        # only existing alternate chord info is transposed
+        if exercise_item.chord_info_alternate:
+            chord_info_alternate = "TODO"
+            # Todo: implement relative transpose based on pitch in DB and desired new pitch.
+            # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
+
+        logger.info("Alternate chord info transposed", chord_info_alternate=chord_info_alternate)
+
+    chord_info_backing_track = payload.get("chord_info_backing_track")
+    if chord_info_backing_track:
+        logger.info("Backing track chord info found in payload", chord_info_backing_track=chord_info_backing_track)
+    if exercise_item_id and chord_info_alternate:
+        # Todo: refactor double DB query
+        exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
+
+        # only existing alternate chord info is transposed
+        if exercise_item.chord_info_backing_track:
+            chord_info_backing_track = "TODO"
+            # Todo: implement relative transpose based on pitch in DB and desired new pitch.
+            # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
+
+        logger.info("Backing track chord info transposed", chord_info_backing_track=chord_info_backing_track)
+
+    return {
+        "chord_info": chord_info,
+        "chord_info_alternate": chord_info_alternate,
+        "chord_info_backing_track": chord_info_backing_track,
+    }
+
+
 @api.route("/transpose-riff")
 class Transpose(Resource):
     @api.expect(transpose_fields)
     def post(self):
-        pitch = api.payload["pitch"]
+        return transpose_api_item(api.payload)
 
-        # If a riff_id is present the chord info from the DB wil be used.
-        riff_id = api.payload.get("riff_id")
-        if riff_id:
-            riff = Riff.query.filter(Riff.id == riff_id).first()
-            if riff.chord_info:
-                chord_info = transpose_chord_info(riff.chord_info, pitch)
-            else:
-                chord_info = transpose_chord_info(riff.chord, pitch)
-        else:
-            if api.payload.get("chord_info"):
-                chord_info = transpose_chord_info(api.payload["chord_info"], pitch)
-            else:
-                chord_info = ""
 
-        # If a exercise_item_id is present the alternate_chord info from the DB wil be used.
-        exercise_item_id = api.payload.get("exercise_item_id")
-        chord_info_alternate = api.payload.get("chord_info_alternate")
-        if chord_info_alternate:
-            logger.info("Alternate chord info found in payload", chord_info_alternate=chord_info_alternate)
-        if exercise_item_id and chord_info_alternate:
-            exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
-
-            # only existing alternate chord info is transposed
-            if exercise_item.chord_info_alternate:
-                chord_info_alternate = "TODO"
-                # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
-
-            logger.info("Alternate chord info transposed", chord_info_alternate=chord_info_alternate)
-
-        chord_info_backing_track = api.payload.get("chord_info_backing_track")
-        if chord_info_backing_track:
-            logger.info("Backing track chord info found in payload", chord_info_backing_track=chord_info_backing_track)
-        if exercise_item_id and chord_info_alternate:
-            exercise_item = RiffExerciseItem.query.filter(RiffExerciseItem.id == exercise_item_id).first()
-
-            # only existing alternate chord info is transposed
-            if exercise_item.chord_info_backing_track:
-                chord_info_backing_track = "TODO"
-                # chord_info_alternate = transpose_chord_info(riff.chord_info, pitch)
-
-            logger.info("Backing track chord info transposed", chord_info_backing_track=chord_info_backing_track)
-
-        return {
-            "chord_info": chord_info,
-            "chord_info_alternate": chord_info_alternate,
-            "chord_info_backing_track": chord_info_backing_track,
-        }
+@api.route("/transpose-riffs")
+class Transpose(Resource):
+    @api.expect(transpose_fields_multi)
+    def post(self):
+        return [transpose_api_item(item) for item in api.payload]
