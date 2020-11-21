@@ -56,6 +56,7 @@ exercise_list_serializer = api.model(
 exercise_item_serializer = api.model(
     "RiffExerciseItem",
     {
+        "id": fields.String(required=True),
         "riff_exercise_id": fields.String(required=True),
         "number_of_bars": fields.Integer(required=True),
         "pitch": fields.String(required=True),
