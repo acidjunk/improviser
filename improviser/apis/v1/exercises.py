@@ -10,7 +10,7 @@ from security import quick_token_required
 
 from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abort
 
-from database import db, Riff, RiffExercise, RiffExerciseItem
+from database import db, Riff, RiffExercise, RiffExerciseItem, Instrument
 
 from .riffs import riff_fields, riff_arguments
 
@@ -118,6 +118,7 @@ exercise_fields = {
     "name": fields.String,
     "description": fields.String,
     "root_key": fields.String,
+    "instruments": fields.List(fields.String),
     "is_public": fields.Boolean,
     "created_at": fields.DateTime,
     "created_by": fields.String,
@@ -328,6 +329,7 @@ class ExerciseResourceList(Resource):
     @api.expect(exercise_fields)
     def post(self):
         exercise_items = api.payload.pop("exercise_items", [])
+        instruments = api.payload.pop("instruments", [])
 
         validate_exercise_items_and_error(len(exercise_items))
         user_exercises = RiffExercise.query.filter(RiffExercise.created_by == current_user.id).all()
@@ -336,6 +338,11 @@ class ExerciseResourceList(Resource):
 
         # Todo: add instruments selection and instrument key
         exercise = RiffExercise(**api.payload, created_by=str(current_user.id))
+        if instruments:
+            for instrument in instruments:
+                instrument_instance = Instrument.query.filter(Instrument.id == instrument).first()
+                if instrument_instance:
+                    exercise.instruments.append(instrument_instance)
         exercise.modified_at = datetime.datetime.now()
         db.session.add(exercise)
 
@@ -397,9 +404,19 @@ class ExerciseResource(Resource):
     @api.expect(exercise_fields)
     def put(self, exercise_id):
         payload = api.payload
+        instruments = api.payload.pop("instruments", [])
+
         exercise = RiffExercise.query.filter_by(id=exercise_id).first()
         exercise.modified_at = datetime.datetime.now()
         exercise.name = payload["name"]
+
+        if instruments:
+            exercise.instruments = []
+            for instrument in instruments:
+                instrument_instance = Instrument.query.filter(Instrument.id == instrument).first()
+                if instrument_instance:
+                    exercise.instruments.append(instrument_instance)
+
         exercise.description = payload["description"]
         exercise.tempo = payload["tempo"]
         try:

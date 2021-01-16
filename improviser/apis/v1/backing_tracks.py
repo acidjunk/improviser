@@ -28,6 +28,7 @@ backing_track_serializer = api.model(
         "id": fields.String(),
         "name": fields.String(required=True, description="Name"),
         "chord_info": fields.String(description="Chord info in lilypond format"),
+        "number_of_bars": fields.Integer(description="Number of bars (chord loop length"),  # Todo: derive from chords
         "tempo": fields.Integer(description="Tempo in BPM [40-320]"),
         "file": fields.String(description="Backing track mp3"),
         "approved": fields.Boolean(description="Approve toggle for admins"),
@@ -38,6 +39,8 @@ backing_track_fields = {
     "id": fields.String,
     "name": fields.String,
     "chord_info": fields.String,
+    "number_of_bars": fields.Integer,  # loop length
+    "tempo": fields.Integer,
     "file": fields.String,
     "created_at": fields.DateTime,
     "modified_at": fields.DateTime,
