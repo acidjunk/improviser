@@ -149,10 +149,7 @@ class RiffExercise(db.Model):
 
     @property
     def get_normalised_chord_info(self):
-        print("Getiing normalised stuff")
-
         # chord_info: string of lilypond chord stuff / bar
-
         chord_info = []
         for item in self.riff_exercise_items:
             # First first check if chord_info is avail in item relation

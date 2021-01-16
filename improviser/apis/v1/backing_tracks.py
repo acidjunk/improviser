@@ -35,6 +35,8 @@ backing_track_serializer = api.model(
     },
 )
 
+
+
 backing_track_fields = {
     "id": fields.String,
     "name": fields.String,
@@ -47,6 +49,12 @@ backing_track_fields = {
     "approved": fields.Boolean,
     "approved_at": fields.DateTime,
 }
+
+wizard_fields = {
+    "full_match": fields.Nested(backing_track_fields),
+    "fuzzy_match": fields.Nested(backing_track_fields),
+}
+
 
 parser = api.parser()
 parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
@@ -69,7 +77,12 @@ class BackingTrackResourceList(Resource):
         filter = get_filter_from_args(args)
 
         query_result, content_range = query_with_filters(
-            BackingTrack, BackingTrack.query, range, sort, filter, quick_search_columns=["name", "file", "tempo"],
+            BackingTrack,
+            BackingTrack.query,
+            range,
+            sort,
+            filter,
+            quick_search_columns=["name", "file", "tempo"],
         )
 
         return query_result, 200, {"Content-Range": content_range}
@@ -135,32 +148,50 @@ class BackingTrackResource(Resource):
 @api.route("/for/<exercise_id>")
 class BackingTrackWizardResourceList(Resource):
     @roles_accepted("admin", "moderator", "member", "student", "teacher")
-    @marshal_with(backing_track_fields)
+    @marshal_with(wizard_fields)
     def get(self, exercise_id):
+        """
+
+        First check if a backing track is found that matches total length of exercise
+        Then check if backing tracks can be found for COMMON_MULTIPLIERS that match the beginning of this song
+
+        """
+
+        COMMON_MULTIPLIERS = [1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 64, 68, 72, 76, 80]
+
         exercise = load(RiffExercise, exercise_id)
-        chords = exercise.get_normalised_chord_info
-        number_of_chords = len(chords)
 
-        # songs need to be of certain lengths: 1,2,3,4,6,8 (prime or divisble)
-        # for each divide we will search backingtracks
-
-        largest_divider = 0
-        for i in range(2, number_of_chords):
-            if number_of_chords % i == 0:
-                largest_divider = i
-        # Todo: check if largest_divider is actually repeated
-
-        # loop_size = 12
-        print("*************************")
-        print("Doing backing track stuff, found chordlist:")
-        print(chords)
-        print(
-            f"number_of_chords: {len(chords)} number_of_items: {len(exercise.riff_exercise_items)}, loop_size: {largest_divider}"
-        )
-        print("*************************")
-        # Todo : implement a first simple version
+        # TODO:
         # convert all flats / "es" to sharps / "is"
 
+        chords = exercise.get_normalised_chord_info
+        chords_string = " ".join(chords)
+        number_of_bars = 0
+        for item in exercise.riff_exercise_items:
+            number_of_bars += item.number_of_bars
+        number_of_chords = len(chords)
+
+        print("\n*********************************")
+        print("**  Doing backing track stuff  **")
+        print("*********************************")
+        print("\nChord Info in selected exercise:")
+        print("--------------------------------")
+        print(
+            f"number_of_bars: {number_of_bars}\n"
+            f"umber_of_chords: {len(chords)}\n"
+            f"number_of_items: {len(exercise.riff_exercise_items)}\n"
+            f"chords: {chords}\n"
+        )
+        # Todo : implement a first simple version
+
+        print("\nSearching for full match:")
+        print("--------------------------------")
+        full_match = BackingTrack.query.filter(BackingTrack.chord_info == chords_string).all()
+
+        print(
+            f"complete chord string: {chords_string}\n"
+            f"results: {[bt.name for bt in full_match]}\n")
+
         # For now return all backing tracks
-        query_result = BackingTrack.query.all()
-        return query_result, 200
+        fuzzy_match = BackingTrack.query.all()
+        return {"full_match": full_match, "fuzzy_match": fuzzy_match}, 200
