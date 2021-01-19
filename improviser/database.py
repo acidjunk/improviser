@@ -236,7 +236,9 @@ class BackingTrack(db.Model):
     __tablename__ = "backing_tracks"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), nullable=False)
-    number_of_bars = Column(Integer())
+    intro_number_of_bars = Column(Integer(), default=0)  # amount of bars before loop
+    number_of_bars = Column(Integer())  # total amount of bars (with intro and coda)
+    coda_number_of_bars = Column(Integer(), default=0)  # amount of bars after loop
     tempo = Column(Integer, default=100)
     chord_info = Column(String, nullable=False)
     file = Column(String(255), unique=True, index=True)

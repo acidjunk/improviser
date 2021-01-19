@@ -35,13 +35,13 @@ backing_track_serializer = api.model(
     },
 )
 
-
-
 backing_track_fields = {
     "id": fields.String,
     "name": fields.String,
     "chord_info": fields.String,
-    "number_of_bars": fields.Integer,  # loop length
+    "intro_number_of_bars": fields.Integer,  # amount of bars before loop
+    "number_of_bars": fields.Integer,  # total amount of bars (with intro and coda)
+    "coda_number_of_bars": fields.Integer,  # amount of bars after loop
     "tempo": fields.Integer,
     "file": fields.String,
     "created_at": fields.DateTime,
@@ -50,9 +50,13 @@ backing_track_fields = {
     "approved_at": fields.DateTime,
 }
 
+backing_track_fields_wizard = {**backing_track_fields, "match_length": fields.Integer}
+
+
 wizard_fields = {
-    "full_match": fields.Nested(backing_track_fields),
-    "fuzzy_match": fields.Nested(backing_track_fields),
+    "full_match": fields.Nested(backing_track_fields_wizard),
+    "loop_match": fields.Nested(backing_track_fields_wizard),
+    "fuzzy_match": fields.Nested(backing_track_fields_wizard),
 }
 
 
@@ -182,16 +186,55 @@ class BackingTrackWizardResourceList(Resource):
             f"number_of_items: {len(exercise.riff_exercise_items)}\n"
             f"chords: {chords}\n"
         )
-        # Todo : implement a first simple version
 
         print("\nSearching for full match:")
         print("--------------------------------")
         full_match = BackingTrack.query.filter(BackingTrack.chord_info == chords_string).all()
-
         print(
             f"complete chord string: {chords_string}\n"
             f"results: {[bt.name for bt in full_match]}\n")
 
+        print("\nSearching for loop match:")
+        print("--------------------------------")
+        for multiplier in COMMON_MULTIPLIERS:
+            if multiplier < number_of_bars:
+                print(f"Searching for multiplier: {multiplier}")
+                looped_match = BackingTrack.query.filter(BackingTrack.chord_info.startswith(chords_string)).all()
+                if looped_match:
+                    print(f"found {len(looped_match)}")
+
         # For now return all backing tracks
         fuzzy_match = BackingTrack.query.all()
-        return {"full_match": full_match, "fuzzy_match": fuzzy_match}, 200
+        return {"full_match": full_match, "loop_match": {}, "fuzzy_match": fuzzy_match}, 200
+
+
+def get_number_of_bars(chord_string:str):
+    chords = chord_string.split(" ")
+    number_of_bars = 0
+    number_of_half_bars = 0
+    for chord in chords:
+        if "2" in chord:
+            number_of_half_bars += 1
+        if "1" in chord:
+            number_of_bars += 1
+
+    # Check correctness:
+    if number_of_half_bars %2 == 1:
+        raise ValueError(f"Chord string doesn't finish on a bar boundary: {chord_string}")
+
+    return number_of_bars + int(number_of_half_bars/2)
+
+
+def split_chord_string_on_bar(chord_string: str, bar_number_to_split: int):
+    chords = chord_string.split(" ")
+
+    number_of_bars = 0
+    number_of_half_bars = 0
+    for index, chord in enumerate(chords):
+        if "2" in chord:
+            number_of_half_bars += 1
+        if "1" in chord:
+            number_of_bars += 1
+        if number_of_half_bars %2 == 0 and number_of_bars + int(number_of_half_bars/2) >= bar_number_to_split:
+            return " ".join(chords[0:index])
+    return chord_string
