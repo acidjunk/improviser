@@ -193,9 +193,13 @@ class BackingTrackWizardResourceList(Resource):
         print(
             f"complete chord string: {chords_string}\n"
             f"results: {[bt.name for bt in full_match]}\n")
+        if full_match:
+            for item in full_match:
+                item.match_length = number_of_bars
 
         print("\nSearching for loop match:")
         print("--------------------------------")
+        # TODO: implement correctly
         for multiplier in COMMON_MULTIPLIERS:
             if multiplier < number_of_bars:
                 print(f"Searching for multiplier: {multiplier}")
@@ -203,11 +207,18 @@ class BackingTrackWizardResourceList(Resource):
                 if looped_match:
                     print(f"found {len(looped_match)}")
 
+        if looped_match:
+            for item in looped_match:
+                # Todo: implement -> returning a fake length for now
+                item.match_length = "4"
+
+
         # For now return all backing tracks
         fuzzy_match = BackingTrack.query.all()
-        return {"full_match": full_match, "loop_match": {}, "fuzzy_match": fuzzy_match}, 200
+        return {"full_match": full_match, "loop_match": looped_match, "fuzzy_match": fuzzy_match}, 200
 
 
+# Todo: test
 def get_number_of_bars(chord_string:str):
     chords = chord_string.split(" ")
     number_of_bars = 0
@@ -225,6 +236,7 @@ def get_number_of_bars(chord_string:str):
     return number_of_bars + int(number_of_half_bars/2)
 
 
+# Todo: test
 def split_chord_string_on_bar(chord_string: str, bar_number_to_split: int):
     chords = chord_string.split(" ")
 
