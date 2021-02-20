@@ -151,7 +151,7 @@ class BackingTrackResource(Resource):
 
 @api.route("/for/<exercise_id>")
 class BackingTrackWizardResourceList(Resource):
-    @roles_accepted("admin", "moderator", "member", "student", "teacher")
+    # @roles_accepted("admin", "moderator", "member", "student", "teacher")
     @marshal_with(wizard_fields)
     def get(self, exercise_id):
         """
@@ -211,7 +211,6 @@ class BackingTrackWizardResourceList(Resource):
             for item in looped_match:
                 # Todo: implement -> returning a fake length for now
                 item.match_length = "4"
-
 
         # For now return all backing tracks
         fuzzy_match = BackingTrack.query.all()
