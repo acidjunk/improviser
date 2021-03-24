@@ -9,7 +9,7 @@ from flask_security import RoleMixin, UserMixin, SQLAlchemySessionUserDatastore
 from flask_sqlalchemy import SQLAlchemy
 from libgravatar import Gravatar
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, JSON, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, Float, JSON, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
 
@@ -236,6 +236,7 @@ class BackingTrack(db.Model):
     __tablename__ = "backing_tracks"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), nullable=False)
+    count_in = Column(Float(), default=0) # amount of seconds before the music starts in the audio. E.g. 1.4 for 1.4s
     intro_number_of_bars = Column(Integer(), default=0)  # amount of bars before loop
     number_of_bars = Column(Integer())  # total amount of bars (with intro and coda)
     coda_number_of_bars = Column(Integer(), default=0)  # amount of bars after loop
