@@ -61,6 +61,7 @@ wizard_fields = {
     "full_match": fields.Nested(backing_track_fields_wizard),
     "loop_match": fields.Nested(backing_track_fields_wizard),
     "fuzzy_match": fields.Nested(backing_track_fields_wizard),
+    "atonal_match": fields.Nested(backing_track_fields_wizard)
 }
 
 
@@ -193,7 +194,7 @@ class BackingTrackWizardResourceList(Resource):
 
         print("\nSearching for full match:")
         print("--------------------------------")
-        full_match = BackingTrack.query.filter(BackingTrack.chord_info == chords_string).all()
+        full_match = BackingTrack.query.filter(BackingTrack.approved.is_(True)).filter(BackingTrack.chord_info == chords_string).all()
         print(
             f"complete chord string: {chords_string}\n"
             f"results: {[bt.name for bt in full_match]}\n")
@@ -207,7 +208,7 @@ class BackingTrackWizardResourceList(Resource):
         for multiplier in COMMON_MULTIPLIERS:
             if multiplier < number_of_bars:
                 print(f"Searching for multiplier: {multiplier}")
-                looped_match = BackingTrack.query.filter(BackingTrack.chord_info.startswith(chords_string)).all()
+                looped_match = BackingTrack.query.filter(BackingTrack.approved.is_(True)).filter(BackingTrack.chord_info.startswith(chords_string)).all()
                 if looped_match:
                     print(f"found {len(looped_match)}")
 
@@ -216,9 +217,12 @@ class BackingTrackWizardResourceList(Resource):
                 # Todo: implement -> returning a fake length for now
                 item.match_length = "4"
 
-        # For now return all backing tracks
-        fuzzy_match = BackingTrack.query.all()
-        return {"full_match": full_match, "loop_match": looped_match, "fuzzy_match": fuzzy_match}, 200
+        # For now return all backing tracks (indeed very fuzzy)
+        fuzzy_match = BackingTrack.query.filter(BackingTrack.approved.is_(True)).filter(BackingTrack.chord_info.isnot(None)).all()
+
+        # Atonal
+        atonal_match = BackingTrack.query.filter(BackingTrack.approved.is_(True)).filter(BackingTrack.chord_info.is_(None)).all()
+        return {"full_match": full_match, "loop_match": looped_match, "fuzzy_match": fuzzy_match, "atonal_match": atonal_match}, 200
 
 
 # Todo: test

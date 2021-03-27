@@ -241,7 +241,7 @@ class BackingTrack(db.Model):
     number_of_bars = Column(Integer())  # total amount of bars (with intro and coda)
     coda_number_of_bars = Column(Integer(), default=0)  # amount of bars after loop
     tempo = Column(Integer, default=100)
-    chord_info = Column(String, nullable=False)
+    chord_info = Column(String, nullable=True)
     file = Column(String(255), unique=True, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.datetime.utcnow)
