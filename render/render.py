@@ -19,6 +19,7 @@
 #
 # This script will produce a set of scales based on one predefined scale in all keys
 import os
+import structlog
 
 #SIZES = [60, 80, 100, 120, 140, 160, 180, 200, 220]
 SIZES = [80, 120]
@@ -38,21 +39,30 @@ TEMPLATE = """\\version "2.19.82"
     \override Staff.TimeSignature #'stencil = ##f
 }}
 
-<<
-
-\\transpose c {transpose} {{
-    \chords {{
-        {chords}
-    }}
+harmonies = \chordmode {{
+    {chords}
 }}
 
-\\transpose c {transpose} {{
-    {{
-        {notes}
+<<
+
+\\transpose c{octave_correction} {transpose} {{
+  \\new ChordNames {{
+    % \set chordChanges = ##t
+    \harmonies
+  }}
+}}
+
+\\new Staff {{
+    \\transpose c{octave_correction} {transpose} {{
+        {{
+            \clef {clef} {notes}
+        }}
     }}
 }}
 >>
 """
+
+logger = structlog.get_logger(__name__)
 
 
 class Render:
@@ -70,7 +80,7 @@ class Render:
         # render to all keys by default
         self.rootKeys = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
 
-        self.cleff = "treble"
+        self.clef = "treble"
 
         self.lilypond = "/usr/local/bin/lilypond"
         self.octaves = {"-1": ",", "0": None, "1": "'", "2": "''"}
@@ -80,8 +90,8 @@ class Render:
         self.rootkey = []  # init empty again to allow looped access
         self.rootKeys = rootKeys
 
-    def set_cleff(self, cleff):
-        self.cleff = cleff
+    def set_clef(self, clef):
+        self.clef = clef
 
     def addNotes(self, notes):
         self.notes = notes
@@ -112,12 +122,15 @@ class Render:
                 file_name = "%s_%s" % (file_name, file_postfix)
                 output_file_name = "%s_%s" % (self.name, file_postfix)
             else:
-                file_name = "%s" % file_name
+                file_name = "%s" % (file_name)
                 output_file_name = self.name
 
             tranpose = "%s%s" % (self.currentKey, octave if octave else "")
-            lilypond_string = TEMPLATE.format(transpose=tranpose, notes=self.notes, chords=self.chords)
-            print("%s.ly" % file_name)
+            octave_correction = "" if self.clef == "treble" else "''"
+            lilypond_string = TEMPLATE.format(transpose=tranpose, notes=self.notes, chords=self.chords, clef=self.clef, octave_correction=octave_correction)
+
+            #print("%s.ly" % file_name)
+            logger.info("Writing lilypond file", file_name="{}.ly".format(file_name))
             fHandle = open("%s.ly" % file_name, 'w')
             fHandle.write(lilypond_string)
             fHandle.close()
@@ -126,12 +139,17 @@ class Render:
                 cmd = "%s -s -dbackend=eps -dresolution=%s --png -o %s/%s/%s %s.ly" % (self.lilypond, size,
                                                                                        self.renderPath, size,
                                                                                        output_file_name, file_name)
+                #logger.info("Creating lilypond PNG file", size=size, file_name="{}.png".format(output_file_name))
+                #logger.debug("CMD lilypond PNG", cmd=cmd)
                 os.system(cmd)
-                #SVG
-                cmd = "%s -s -dbackend=svg -dcrop -o %s/svg/%s %s.ly" % (self.lilypond, self.renderPath, output_file_name,
-                                                                         file_name)
-                os.system(cmd)
-                # mv cropped file over paper sized file:
-                os.system('mv %s/svg/%s.cropped.svg %s/svg/%s.svg' % (self.renderPath, output_file_name,
-                                                                      self.renderPath, output_file_name))
+                
+            #SVG
+            cmd = "%s -s -dbackend=svg -dcrop -o %s/svg/%s %s.ly" % (self.lilypond, self.renderPath, output_file_name,
+                                                                     file_name)
+            # logger.debug("CMD lilypond SVG", cmd=cmd)
+            os.system(cmd)
+            # mv cropped file over paper sized file:
+            os.system('mv %s/svg/%s.cropped.svg %s/svg/%s.svg' % (self.renderPath, output_file_name,
+                                                                  self.renderPath, output_file_name))
+            logger.info("Creating lilypond SVG file", file_name="{}.svg".format(output_file_name), size="svg")
         return True

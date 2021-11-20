@@ -28,6 +28,7 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') 
 AWS_BUCKET_NAME = "improviser.education"
 KEYS = ['c', 'cis', 'd', 'dis', 'ees', 'e', 'f', 'fis', 'g', 'gis', 'aes', 'a', 'ais', 'bes', 'b']
+#KEYS = ['c']
 
 
 renderer = Render(renderPath=RENDER_PATH)
@@ -47,7 +48,7 @@ def render(riff):
         chords = riff["chord_info"] if riff["chord_info"] else ""
         renderer.addNotes(notes)
         renderer.addChords(chords)
-        renderer.set_cleff('treble')
+        renderer.set_clef('bass')
         renderer.doTranspose(key)
         if not renderer.render():
             print("Error: couldn't render riff.id: {}".format(riff['id']))
@@ -78,27 +79,28 @@ def sync():
         os.chdir(os.path.join(RENDER_PATH, str(size)))
         for file in glob.glob('*.png'):
             print("uploading file => {}".format(file)) 
-            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/{}/{}".format(str(size), file))
+            result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/bass/{}/{}".format(str(size), file))
     os.chdir(os.path.join(RENDER_PATH, "svg"))
     for file in glob.glob('*.svg'):
         print("uploading file => {}".format(file)) 
-        result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/svg/{}".format(file),
+        result = transfer.upload_file(file, AWS_BUCKET_NAME, "static/rendered/bass/svg/{}".format(file),
                                       extra_args={"ContentType": "image/svg+xml"})
     os.chdir(current_dir)
 
 
 def update_riffs(riff_ids, session, image_info=None):
-
     payload = {}
     for riff_id in riff_ids:
         # retrieve the riff first
         riff_response = session.get("{}/{}".format(ENDPOINT_RIFFS, riff_id))
-
+        print(riff_response.json())
+        current_image_info = [item for item in riff_response.json()["image_info"] if "_bass" not in item["key_octave"]]
         # payload = {'render_valid': True}
         if image_info:
-            payload["image_info"] = image_info[riff_id]
+            payload["image_info"] = current_image_info + image_info[riff_id]
             logger.debug("Update riff payload, with image metadata info", payload=payload)
         riff_endpoint = "{}/rendered/{}".format(ENDPOINT_RIFFS, riff_id)
+        print(riff_endpoint)
         response = session.put(riff_endpoint, json=payload)
         if response.status_code in [200, 201, 204]:
             logger.info("Updated render status and metadata of riff", id=riff_id, end_point=riff_endpoint,
@@ -138,9 +140,9 @@ def retrieve_metadata(riff_ids, session, skip_update=False):
         filelist = []
         for key in KEYS:
             for octave in ['-1', '1', '2']:
-                filelist.append(("{}_{}_bass".format(key, octave),
-                                 "rendered/svg/riff_{}_{}_{}_bass.svg".format(riff_id, key, octave)))
-            filelist.append(("{}_bass".format(key), "rendered/svg/riff_{}_{}_bass.svg".format(riff_id, key)))
+                filelist.append(("{}_{}".format(key, octave),
+                                 "rendered/svg/riff_{}_{}_{}.svg".format(riff_id, key, octave)))
+            filelist.append((key, "rendered/svg/riff_{}_{}.svg".format(riff_id, key)))
 
         riff_metadata = []
         for file_suffix, file_name in filelist:
@@ -167,7 +169,7 @@ def retrieve_metadata(riff_ids, session, skip_update=False):
                             staff_center=staff_center_x, suffix=file_suffix,
                             view_box=view_box)
 
-                riff_metadata.append({"key_octave": file_suffix, "width": width, "height": height,
+                riff_metadata.append({"key_octave": "{}_bass".format(file_suffix), "width": width, "height": height,
                                       "staff_center": metadata_staff_center})
             else:
                 logger.error("file not found", file=file_name)
@@ -199,17 +201,18 @@ if __name__ == '__main__':
 
     open(pidfile, 'w').write(pid)
 
-    response = session.get(ENDPOINT_RIFFS)
+    response = session.get("{}/".format(ENDPOINT_RIFFS))
     if response.status_code != 200:
         print("Unable to query riffs")
         os.unlink(pidfile)
         sys.exit()
 
     riffs = response.json()
-    print(riffs)
 
     rendered_riffs = []
-    for riff in riffs:
+    for index, item in enumerate(riffs):
+        # Fetch the riff so we have the notes.
+        riff = session.get("{}/{}".format(ENDPOINT_RIFFS, item["id"])).json()
         # Todo: fix after all riffs are done. Probably going to set all rendered to False? (impact unknown for the GUI)
         if riff["render_valid"]:
             print("Rendering {}".format(riff["name"]))
@@ -218,9 +221,11 @@ if __name__ == '__main__':
             rendered_riffs.append(riff["id"])
             if not LOCAL_RUN:
                 clean_garbage()
-                # sync()
+                sync()
                 retrieve_metadata(rendered_riffs, session)
-                # clean_png()
+                clean_png()
+            os.unlink(pidfile)
+        if index==10:
             sys.exit()
 
     os.unlink(pidfile)

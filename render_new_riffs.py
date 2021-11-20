@@ -47,7 +47,7 @@ def render(riff):
         chords = riff["chord_info"] if riff["chord_info"] else ""
         renderer.addNotes(notes)
         renderer.addChords(chords)
-        renderer.set_cleff('treble')
+        renderer.set_clef('treble')
         renderer.doTranspose(key)
         if not renderer.render():
             print("Error: couldn't render riff.id: {}".format(riff['id']))
