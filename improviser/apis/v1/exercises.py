@@ -279,9 +279,17 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
                     root_key = to_lilypond[root_key]
                 root_key = root_key + duration
                 result.append(f"{root_key}:{chord_mood}")
-            else:
-                logger.error("Expected ':' in chord", chord=chord, complete_chord_info=chord_info)
-                result.append(f"Error in:{chord}")
+            else:  # handle lilypond chords without mode like "c1"
+                root_key = chord
+                duration = root_key[1] if len(root_key) == 2 else ""
+                root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower()
+                if root_key in to_lilypond.keys():
+                    root_key = to_lilypond[root_key]
+                root_key = root_key + duration
+                result.append(root_key)
+            # else:
+            #     logger.error("Expected ':' in chord", chord=chord, complete_chord_info=chord_info)
+            #     result.append(f"Error in:{chord}")
         return " ".join(result)
 
 
