@@ -17,6 +17,7 @@ from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abo
 from database import BackingTrack, RiffExercise
 from flask_security import roles_accepted
 from werkzeug.datastructures import FileStorage
+from sqlalchemy import or_
 
 logger = structlog.get_logger(__name__)
 
@@ -64,6 +65,13 @@ wizard_fields = {
     "atonal_match": fields.Nested(backing_track_fields_wizard)
 }
 
+scale_chord_sub_fields = {
+    "chord": fields.String(required=True),
+}
+
+scale_chord_fields = {
+    "chords": fields.Nested(scale_chord_sub_fields),
+}
 
 parser = api.parser()
 parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
@@ -156,7 +164,7 @@ class BackingTrackResource(Resource):
 
 @api.route("/for/<exercise_id>")
 class BackingTrackWizardResourceList(Resource):
-    # @roles_accepted("admin", "moderator", "member", "student", "teacher")
+    @roles_accepted("admin", "moderator", "member", "student", "teacher")
     @marshal_with(wizard_fields)
     def get(self, exercise_id):
         """
@@ -223,6 +231,41 @@ class BackingTrackWizardResourceList(Resource):
         # Atonal
         atonal_match = BackingTrack.query.filter(BackingTrack.approved.is_(True)).filter(BackingTrack.chord_info.is_(None)).all()
         return {"full_match": full_match, "loop_match": looped_match, "fuzzy_match": fuzzy_match, "atonal_match": atonal_match}, 200
+
+
+@api.route("/scale/<scale_id>")
+class BackingTrackScaleResourceList(Resource):
+    # @roles_accepted("admin", "moderator", "member", "student", "teacher")
+    @api.expect(scale_chord_fields)
+    @marshal_with(wizard_fields)
+    def post(self, scale_id):
+        """
+        Do an exact match on chord info and return all atonal loops.
+        """
+        print(f"Searching for: {api.payload}")
+        # Todo implement check for the scale itself.
+
+        query = BackingTrack.query.filter(BackingTrack.approved.is_(True))
+        conditions = []
+        for item in api.payload["chords"]:
+            print(item)
+            conditions.append(BackingTrack.chord_info == item["chord"])
+            if ":" not in item["chord"] or ("maj" in item["chord"] and not "7" in item["chord"]):
+                # quick transpose hack: check for accidentals
+                new_pitch = item["chord"][0] if item["chord"][1] == "1" else item[0:3]
+                conditions.append(BackingTrack.chord_info == f"{new_pitch}1:maj7")
+
+        query = query.filter(or_(*conditions))
+        full_match = query.all()
+        print(
+            f"results: {[bt.name for bt in full_match]}\n")
+        if full_match:
+            for item in full_match:
+                item.match_length = 96  # todo fix before deploy?
+
+        # Atonal
+        atonal_match = BackingTrack.query.filter(BackingTrack.approved.is_(True)).filter(BackingTrack.chord_info.is_(None)).all()
+        return {"full_match": full_match, "loop_match": [], "fuzzy_match": [], "atonal_match": atonal_match}, 200
 
 
 # Todo: test
