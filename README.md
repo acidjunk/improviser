@@ -53,6 +53,28 @@ workon improviser_deploy
 zappa update
 ```
 
+Note: with python 3.8 I had to use a binary psycopg package that works with amazon lambda. Still not sure what changed, anyway, some instructions:
+
+Clone this somewhere:
+
+`git clone git@github.com:jkehler/awslambda-psycopg2.git`
+
+install all deps in your deploy ven with: 
+
+`pip install -r requirements/deploy.txt`
+
+Now go to the site-packafes in your `deploy/lib/python3.8` and copy the `psycopg2-3.8` folder from the cloned repo.
+
+Run this after the copy from inside the `site-packages` folder:
+
+```
+rm -rf psycopg2
+rm -rf psycopg2_binary-2.8.5.dist-info
+mv psycopg2-3.8 psycopg2
+```
+
+Now the deploy should be working nicely with postgres support again.
+
 ## Sync pictures: from inside SVG folder!
 ```
 rclone copy remote:improviser.education/static/rendered/svg .
