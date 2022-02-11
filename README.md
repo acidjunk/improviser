@@ -43,6 +43,11 @@ zappa deploy
 ```
 
 ## Update deployment
+
+
+Note: kinda broken somehow. Newest python I can use is 3.8 with the [pre-compiled binaries](https://github.com/jkehler/awslambda-psycopg2/tree/master/psycopg2-3.8) for psycopg2 manually installed in `improviser/improviser/psycopg2`
+Last succesful deploy from ec2 internship box.
+
 ```
 workon improviser_deploy
 zappa update
