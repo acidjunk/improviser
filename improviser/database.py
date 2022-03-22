@@ -118,6 +118,7 @@ class Riff(db.Model):
     image_info = Column(JSON)
     riff_tags = relationship("Tag", secondary="riff_tags")
     riff_to_tags = relationship("RiffTag")
+    is_public = Column(Boolean, default=False)
 
     def __repr__(self):
         return "<Riff %r %s bars, id:%s>" % (self.name, self.number_of_bars, self.id)
