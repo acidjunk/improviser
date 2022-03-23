@@ -46,10 +46,10 @@ zappa deploy
 
 
 Note: kinda broken somehow. Newest python I can use is 3.8 with the [pre-compiled binaries](https://github.com/jkehler/awslambda-psycopg2/tree/master/psycopg2-3.8) for psycopg2 manually installed in `improviser/improviser/psycopg2`
-Last succesful deploy from ec2 internship box.
 
 ```
-workon improviser_deploy
+source deploy/bin/activate
+cd improviser
 zappa update
 ```
 
@@ -63,7 +63,7 @@ install all deps in your deploy ven with:
 
 `pip install -r requirements/deploy.txt`
 
-Now go to the site-packafes in your `deploy/lib/python3.8` and copy the `psycopg2-3.8` folder from the cloned repo.
+Now go to the site-packages in your `deploy/lib/python3.8` and copy the `psycopg2-3.8` folder from the cloned repo.
 
 Run this after the copy from inside the `site-packages` folder:
 

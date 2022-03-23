@@ -75,6 +75,7 @@ riff_fields = {
     "created_at": fields.DateTime,
     "tags": fields.Nested(tag_info_marshaller),
     "is_public": fields.Boolean,
+    "created_by": fields.String(),
 }
 
 riff_detail_fields = {
@@ -129,7 +130,7 @@ class RiffResourceList(Resource):
     @api.expect(riff_serializer)
     @api.marshal_with(riff_serializer)
     def post(self):
-        riff = Riff(id=str(uuid.uuid4()), **api.payload)
+        riff = Riff(id=str(uuid.uuid4()), **api.payload, created_by=str(current_user.id))
         save(riff)
         return riff, 201
 
@@ -144,7 +145,10 @@ class RiffResource(Resource):
         except:
             abort(404, "riff not found")
 
-        if "admin" not in current_user.roles or not riff.is_public or not riff.created_by==current_user.id:
+        if "admin" in current_user.roles or riff.is_public or riff.created_by==current_user.id:
+            pass
+            # todo refactor to separate fucntion: so "bought riffs" can be handled
+        else:
             abort(403, "Not enough permission to view riff")
 
         riff_copy = copy(riff)
