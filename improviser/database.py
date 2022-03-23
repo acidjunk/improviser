@@ -115,6 +115,7 @@ class Riff(db.Model):
     render_valid = Column(Boolean, default=False)
     render_date = Column(DateTime)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_by = Column("created_by", UUID(as_uuid=True), ForeignKey("user.id"))
     image_info = Column(JSON)
     riff_tags = relationship("Tag", secondary="riff_tags")
     riff_to_tags = relationship("RiffTag")

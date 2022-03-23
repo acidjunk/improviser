@@ -1,8 +1,6 @@
 import datetime
-import re
 import uuid
 from copy import copy
-from typing import List, Tuple
 
 import structlog
 from apis.helpers import (
@@ -15,14 +13,10 @@ from apis.helpers import (
     update,
 )
 from database import db
-from flask import request
 from flask_login import current_user
 from flask_restx import Namespace, Resource, fields, marshal_with, reqparse, abort
 from database import Riff
-from flask_security import auth_token_required, roles_accepted
-from more_itertools import chunked
-from security import quick_token_required
-from sqlalchemy import cast, String
+from flask_security import roles_accepted
 
 logger = structlog.get_logger(__name__)
 
@@ -42,6 +36,7 @@ riff_serializer = api.model(
         "multi_chord": fields.Boolean(description="Multiple chords in this riff?"),
         "scale_trainer_enabled": fields.Boolean(description="Show this riff in the scale trainer?"),
         "chord_info": fields.String(),
+        "is_public": fields.Boolean(description="Public riff?"),
     },
 )
 
@@ -79,6 +74,7 @@ riff_fields = {
     "render_date": fields.DateTime,
     "created_at": fields.DateTime,
     "tags": fields.Nested(tag_info_marshaller),
+    "is_public": fields.Boolean,
 }
 
 riff_detail_fields = {
@@ -112,10 +108,10 @@ class RiffResourceList(Resource):
 
         riffs_query = Riff.query
         if "admin" not in current_user.roles:
-            riffs_query = riffs_query.filter(Riff.render_valid)
+            riffs_query = riffs_query.filter(Riff.render_valid).filter((Riff.created_by == current_user.id) | (Riff.is_public.is_(True)))
         else:
             logger.debug(
-                "Showing unrendered riffs for non admin user",
+                "Showing unrendered riffs for admin user",
                 user_id=current_user.id,
                 roles=[role.name for role in current_user.roles],
             )
@@ -143,11 +139,13 @@ class RiffResource(Resource):
     # @roles_accepted("admin", "moderator", "member", "student", "teacher")
     @marshal_with(riff_detail_fields)
     def get(self, id):
-        # Todo: check if riff is scaletrainer related otherwise block it for unauthorized users
         try:
             riff = Riff.query.filter(Riff.id == id).first()
         except:
             abort(404, "riff not found")
+
+        if "admin" not in current_user.roles or not riff.is_public or not riff.created_by==current_user.id:
+            abort(403, "Not enough permission to view riff")
 
         riff_copy = copy(riff)
         riff_copy.tags = [{"id": tag.id, "name": tag.tag.name} for tag in riff.riff_to_tags]
@@ -179,6 +177,7 @@ class RiffResource(Resource):
         item = load(Riff, id)
         delete(item)
         return "", 204
+
 
 @api.route("/unrendered")
 @api.doc("Show all unrendered riffs to users with sufficient rights.")

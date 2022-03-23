@@ -647,7 +647,7 @@ class ScaleTrainerResourceList(Resource):
         sort = get_sort_from_args(args)
         filter = get_filter_from_args(args)
 
-        riffs_query = Riff.query.filter(Riff.scale_trainer_enabled).filter(Riff.render_valid)
+        riffs_query = Riff.query.filter(Riff.scale_trainer_enabled).filter(Riff.render_valid).filter(Riff.is_public.is_(True))
 
         query_result, content_range = query_with_filters(
             Riff, riffs_query, range, sort, filter, quick_search_columns=["name", "id"]
