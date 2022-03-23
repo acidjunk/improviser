@@ -75,6 +75,7 @@ riff_fields = {
     "created_at": fields.DateTime,
     "tags": fields.Nested(tag_info_marshaller),
     "is_public": fields.Boolean,
+    "scale_trainer_enabled": fields.Boolean,
     "created_by": fields.String(),
 }
 
