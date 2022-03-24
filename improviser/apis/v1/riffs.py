@@ -146,7 +146,9 @@ class RiffResource(Resource):
         except:
             abort(404, "riff not found")
 
-        if "admin" in current_user.roles or riff.is_public or riff.created_by==current_user.id:
+        if riff.scale_trainer_enabled:
+            pass
+        elif (hasattr(current_user, "roles") and "admin" in current_user.roles) or riff.is_public or riff.created_by==current_user.id:
             pass
             # todo refactor to separate fucntion: so "bought riffs" can be handled
         else:
