@@ -44,7 +44,7 @@ def get_mode(chord_pattern):
         elif mode == "7":
             return "Dominant 7"
         elif mode == "maj7":
-            return "Dominant 7"
+            return "Major 7"
         else:
             print(f"Unsupported mode: {chord_pattern}")
             sys.exit()
