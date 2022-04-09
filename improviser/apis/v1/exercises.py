@@ -1,4 +1,5 @@
 import datetime
+import re
 import uuid
 import structlog
 from apis.helpers import query_with_filters, get_range_from_args, get_sort_from_args, get_filter_from_args
@@ -210,15 +211,28 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
         "b": "M7",
     }
     to_lilypond = {
+        "c": "c",
+        "cb": "b",
         "db": "des",
+        "d": "d",
         "eb": "ees",
+        "e": "e",
+        "a": "a",
         "ab": "aes",
+        "b": "b",
         "bb": "bes",
         "c#": "cis",
+        "c##": "d",
         "d#": "dis",
         "e#": "f",
+        "fb": "e",
+        "f": "f",
         "f#": "fis",
+        "f##": "g",
+        "g": "g",
+        "gb": "fis",
         "g#": "gis",
+        "g##": "a",
         "a#": "ais",
         "b#": "c",
     }
@@ -273,20 +287,69 @@ def transpose_chord_info(chord_info, pitch, number_of_bars=None):
         for chord in chords:
             if ":" in chord:
                 root_key, chord_mood = chord.split(":")
-                duration = root_key[1] if len(root_key) == 2 else ""
-                root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower()
-                if root_key in to_lilypond.keys():
-                    root_key = to_lilypond[root_key]
-                root_key = root_key + duration
-                result.append(f"{root_key}:{chord_mood}")
+                # 3 case: c1, cis2, c and cis
+                duration = ""
+                numbers = re.findall(r'\d+', root_key)
+                if len(numbers):
+                    # print(numbers)
+                    duration = numbers[0]
+                    # print(f"Duration: {duration}")
+                root_key = root_key.replace("1", "").replace("2", "").capitalize()
+                if root_key.endswith("is"):
+                    root_key = root_key[0] + "#"
+                if root_key.endswith("es"):
+                    root_key = root_key[0] + "b"
+
+                new_root_key = str(Note(root_key) + Interval(notes[pitch])).lower()
+                # print(new_root_key)
+                if new_root_key in to_lilypond.keys():
+                    new_root_key = to_lilypond[new_root_key]
+                    # simplify some chords
+                    if new_root_key == "dis":
+                        new_root_key = "ees"
+                    if new_root_key == "gis":
+                        new_root_key = "aes"
+                    if new_root_key == "ais":
+                        new_root_key = "bes"
+                    if new_root_key == "des":
+                        new_root_key = "cis"
+                    new_root_key = f"{new_root_key}{duration}"
+                else:
+                    print(f"Error with {new_root_key}")
+                    1/0
+                result.append(f"{new_root_key}:{chord_mood}")
             else:  # handle lilypond chords without mode like "c1"
                 root_key = chord
-                duration = root_key[1] if len(root_key) == 2 else ""
-                root_key = str(Note(root_key[0].upper()) + Interval(notes[pitch])).lower()
-                if root_key in to_lilypond.keys():
-                    root_key = to_lilypond[root_key]
-                root_key = root_key + duration
-                result.append(root_key)
+                duration = ""
+                numbers = re.findall(r'\d+', root_key)
+                if len(numbers):
+                    # print(numbers)
+                    duration = numbers[0]
+                    # print(f"Duration: {duration}")
+                root_key = root_key.replace("1", "").replace("2", "").capitalize()
+                if root_key.endswith("is"):
+                    root_key = root_key[0] + "#"
+                if root_key.endswith("es"):
+                    root_key = root_key[0] + "b"
+
+                new_root_key = str(Note(root_key) + Interval(notes[pitch])).lower()
+                # print(new_root_key)
+                if new_root_key in to_lilypond.keys():
+                    new_root_key = to_lilypond[new_root_key]
+                    # simplify some chords
+                    if new_root_key == "dis":
+                        new_root_key = "ees"
+                    if new_root_key == "gis":
+                        new_root_key = "aes"
+                    if new_root_key == "ais":
+                        new_root_key = "bes"
+                    if new_root_key == "des":
+                        new_root_key = "cis"
+                    new_root_key = f"{new_root_key}{duration}"
+                else:
+                    print(f"Error with {new_root_key}")
+                    1/0
+                result.append(new_root_key)
             # else:
             #     logger.error("Expected ':' in chord", chord=chord, complete_chord_info=chord_info)
             #     result.append(f"Error in:{chord}")
