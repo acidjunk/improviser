@@ -252,7 +252,7 @@ class BackingTrackScaleResourceList(Resource):
             conditions.append(BackingTrack.chord_info == item["chord"])
             if ":" not in item["chord"] or ("maj" in item["chord"] and not "7" in item["chord"]):
                 # quick transpose hack: check for accidentals
-                new_pitch = item["chord"][0] if item["chord"][1] == "1" else item[0:3]
+                new_pitch = item["chord"][0] if item["chord"][1] == "1" else item["chord"][0:3]
                 conditions.append(BackingTrack.chord_info == f"{new_pitch}1:maj7")
 
         query = query.filter(or_(*conditions))
