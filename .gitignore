@@ -111,3 +111,6 @@ ENV/
 *.tex
 *.texi
 create_test_db.sh
+
+.env
+improviser_prod.psql

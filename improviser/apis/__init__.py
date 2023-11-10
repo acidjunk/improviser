@@ -7,6 +7,8 @@ from .v1.riffs import api as riffs_ns
 from .v1.riffs_to_tags import api as riffs_to_tags_ns
 from .v1.exercises_to_tags import api as exercises_to_tags_ns
 from .v1.recent_exercises import api as recent_exercises_ns
+from .v1.schools import api as schools_ns
+from .v1.user_relations import api as user_relations_ns
 
 from .v1.tags import api as tags_ns
 from .v1.users import api as users_ns
@@ -25,3 +27,6 @@ api.add_namespace(backing_tracks_ns, path="/v1/backing-tracks")
 api.add_namespace(lessons_ns, path="/v1/lessons")
 
 api.add_namespace(users_ns, path="/v1/users")
+
+api.add_namespace(schools_ns, path="/v1/schools")
+api.add_namespace(user_relations_ns, path="/v1/user-relations")
