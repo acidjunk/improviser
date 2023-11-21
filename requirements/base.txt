@@ -18,4 +18,4 @@ SQLAlchemy==1.3.23
 werkzeug==2.0.3
 itsdangerous==2.0.1
 jinja2==3.0.3
-WTForms==3.0.1  # pinned for lambda deploy
+WTForms==3.0.1  # pinned for lambda deploy see notes in #20
