@@ -10,7 +10,7 @@ from apis.helpers import (
     delete,
     get_filter_from_args,
 )
-from database import School, User, UserRelation
+from database import School, RolesUsers, UserRelation
 from flask_restx import Namespace, Resource, abort, fields, marshal_with
 from flask_security import roles_accepted
 from flask_login import current_user
@@ -21,8 +21,7 @@ school_serializer = api.model(
     "School",
     {
         "id": fields.String(),
-        "name": fields.String(required=True, description="Name of the School"),
-        "user_id": fields.String(),
+        "name": fields.String(required=True, description="Name of the School")
     },
 )
 
@@ -47,34 +46,31 @@ class SchoolsResourceList(Resource):
         query_result, content_range = query_with_filters(School, School.query, range, sort, filter)
         return query_result, 200, {"Content-Range": content_range}
 
-    @roles_accepted("admin")
+    @roles_accepted("admin", "student")
     @api.expect(school_serializer)
     @api.marshal_with(school_serializer)
     def post(self):
-        user = User.query.filter(User.id == api.payload["user_id"]).first()
-
-        if not user:
-            abort(400, "User not found")
-
-        school = School(id=str(uuid.uuid4()), name=api.payload["name"], created_by=str(current_user.id))
-        relation = UserRelation(id=str(uuid.uuid4()), school_id=school.id, owner_id=user.id, created_by=str(current_user.id))
+        school = School(id=str(uuid.uuid4()), name=api.payload["name"], created_by=current_user.id)
+        relation = UserRelation(id=str(uuid.uuid4()), school_id=school.id, owner_id=current_user.id, created_by=current_user.id)
+        owner_role = RolesUsers(user_id=current_user.id, role_id='4ad72d68-357e-42c5-b58b-b77349114376')
 
         save(school)
         save(relation)
+        save(owner_role)
         return school, 201
 
 
 @api.route("/<id>")
 @api.doc("School detail operations.")
-class RiffsToTagsResource(Resource):
-    @roles_accepted("admin")
+class SchoolsResource(Resource):
+    @roles_accepted("admin", "school", "teacher")
     @marshal_with(school_serializer)
     def get(self, id):
         """List School"""
         item = load(School, id)
         return item, 200
 
-    @roles_accepted("admin")
+    @roles_accepted("admin", "school")
     @api.expect(school_serializer)
     @api.marshal_with(school_serializer)
     def put(self, id):
@@ -83,7 +79,7 @@ class RiffsToTagsResource(Resource):
         item = update(item, api.payload)
         return item, 201
 
-    @roles_accepted("admin")
+    @roles_accepted("admin", "school")
     def delete(self, id):
         """Delete School"""
         item = load(School, id)

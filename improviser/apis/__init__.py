@@ -9,6 +9,8 @@ from .v1.exercises_to_tags import api as exercises_to_tags_ns
 from .v1.recent_exercises import api as recent_exercises_ns
 from .v1.schools import api as schools_ns
 from .v1.user_relations import api as user_relations_ns
+from .v1.tables import api as tables_ns
+from .v1.licenses import api as licenses_ns
 
 from .v1.tags import api as tags_ns
 from .v1.users import api as users_ns
@@ -30,3 +32,5 @@ api.add_namespace(users_ns, path="/v1/users")
 
 api.add_namespace(schools_ns, path="/v1/schools")
 api.add_namespace(user_relations_ns, path="/v1/user-relations")
+api.add_namespace(tables_ns, path="/v1/tables")
+api.add_namespace(licenses_ns, path="/v1/licenses")

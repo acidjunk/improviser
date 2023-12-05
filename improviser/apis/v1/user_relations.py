@@ -58,7 +58,7 @@ parser.add_argument("filter", location="args", help="Filter default=[]")
 
 @api.route("/")
 @api.doc("Create user relations")
-class SchoolsResourceList(Resource):
+class UserRelationsResourceList(Resource):
     @marshal_with(user_relation_serializer_with_users)
     @api.doc(parser=parser)
     def get(self):
@@ -103,22 +103,29 @@ class SchoolsResourceList(Resource):
 
         return serialized_result, 200, {"Content-Range": content_range}
 
-    @roles_accepted("admin")
+    @roles_accepted("admin", "school", "teacher")
     @api.expect(user_relation_serializer)
     @api.marshal_with(user_relation_serializer)
     def post(self):
         owner = User.query.filter(User.id == api.payload["owner_id"]).first()
-        teacher = User.query.filter(User.id == api.payload["teacher_id"]).first()
 
-        if not owner or not teacher:
-            abort(400, "Owner or teacher not found")
+        if not owner:
+            abort(400, "Owner not found")
 
+        teacher_id = api.payload.get('teacher_id')
         student_id = api.payload.get('student_id')
         if student_id:
             student = User.query.filter(User.id == student_id).first()
+            teacher = User.query.filter(User.id == teacher_id).first()
 
-            if not student:
-                abort(400, "Student not found")
+            if not student or not teacher:
+                abort(400, "Student or teacher not found")
+
+        elif teacher_id:
+            teacher = User.query.filter(User.id == teacher_id).first()
+
+            if not teacher:
+                abort(400, "Teacher not found")
 
         relation = UserRelation(id=str(uuid.uuid4()), **api.payload)
 
@@ -128,8 +135,8 @@ class SchoolsResourceList(Resource):
 
 @api.route("/<id>")
 @api.doc("User Relation detail operations.")
-class RiffsToTagsResource(Resource):
-    @roles_accepted("admin")
+class UserRelationsResource(Resource):
+    @roles_accepted("admin", "school", "teacher")
     @marshal_with(user_relation_serializer_with_users)
     def get(self, id):
         """List User Relation"""
@@ -167,23 +174,19 @@ class RiffsToTagsResource(Resource):
 
 @api.route("/teacher/<id>")
 @api.doc("User Relation detail operations.")
-class RiffsToTagsResource(Resource):
-    @roles_accepted("admin")
+class UserRelationsResource(Resource):
+    @roles_accepted("admin", "school")
     @api.expect(user_relation_serializer)
     @api.marshal_with(user_relation_serializer)
     def delete(self, id):
         """Edit User Relation"""
         all_items = UserRelation.query.all()
 
-        print(id)
-
         payload = {
             "teacher_id": None
         }
 
         for item in all_items:
-            print(item.teacher_id)
-            print(str(item.teacher_id) == id)
             if str(item.teacher_id) == id:
                 update(item, payload)
 
@@ -192,11 +195,158 @@ class RiffsToTagsResource(Resource):
 
 @api.route("/student/<id>")
 @api.doc("User Relation detail operations.")
-class RiffsToTagsResource(Resource):
+class UserRelationsResource(Resource):
 
-    @roles_accepted("admin")
+    @roles_accepted("admin", "school", "teacher")
     def delete(self, id):
         """Delete User Relation"""
         item = load(UserRelation, id)
         delete(item)
         return "", 204
+
+
+@api.route("/owner/<owner_id>")
+@api.doc("User Relation detail operations.")
+class UserRelationsResource(Resource):
+    @roles_accepted("admin", "school")
+    @marshal_with(user_relation_serializer_with_users)
+    def get(self, owner_id):
+        """List User Relation"""
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args, "id")
+        filter = get_filter_from_args(args)
+
+        query_result, content_range = query_with_filters(UserRelation, UserRelation.query, range, sort, filter)
+
+        serialized_result = []
+        for relation in query_result:
+            if str(relation.owner_id) == str(owner_id):
+                serialized_relation = {
+                    "id": relation.id,
+                    "school": {
+                        "id": relation.school.id,
+                        "name": relation.school.name,
+                    },
+                    "owner": {
+                        "id": relation.owner.id,
+                        "first_name": relation.owner.first_name,
+                        "last_name": relation.owner.last_name,
+                    },
+                }
+
+                if relation.teacher:
+                    serialized_relation["teacher"] = {
+                        "id": relation.teacher.id,
+                        "first_name": relation.teacher.first_name,
+                        "last_name": relation.teacher.last_name,
+                    }
+
+                if relation.student:
+                    serialized_relation["student"] = {
+                        "id": relation.student.id,
+                        "first_name": relation.student.first_name,
+                        "last_name": relation.student.last_name,
+                    }
+
+                serialized_result.append(serialized_relation)
+
+        return serialized_result, 200, {"Content-Range": content_range}
+
+
+@api.route("/teacher/<teacher_id>")
+@api.doc("User Relation detail operations.")
+class UserRelationsResource(Resource):
+    @roles_accepted("admin", "school", "teacher")
+    @marshal_with(user_relation_serializer_with_users)
+    def get(self, teacher_id):
+        """List User Relation"""
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args, "id")
+        filter = get_filter_from_args(args)
+
+        query_result, content_range = query_with_filters(UserRelation, UserRelation.query, range, sort, filter)
+
+        serialized_result = []
+        for relation in query_result:
+            if str(relation.teacher_id) == str(teacher_id):
+                serialized_relation = {
+                    "id": relation.id,
+                    "school": {
+                        "id": relation.school.id,
+                        "name": relation.school.name,
+                    },
+                    "owner": {
+                        "id": relation.owner.id,
+                        "first_name": relation.owner.first_name,
+                        "last_name": relation.owner.last_name,
+                    },
+                }
+
+                if relation.teacher:
+                    serialized_relation["teacher"] = {
+                        "id": relation.teacher.id,
+                        "first_name": relation.teacher.first_name,
+                        "last_name": relation.teacher.last_name,
+                    }
+
+                if relation.student:
+                    serialized_relation["student"] = {
+                        "id": relation.student.id,
+                        "first_name": relation.student.first_name,
+                        "last_name": relation.student.last_name,
+                    }
+
+                serialized_result.append(serialized_relation)
+
+        return serialized_result, 200, {"Content-Range": content_range}
+
+
+@api.route("/school/<school_id>")
+@api.doc("User Relation detail operations.")
+class UserRelationsResource(Resource):
+    @roles_accepted("admin", "school", "teacher")
+    @marshal_with(user_relation_serializer_with_users)
+    def get(self, school_id):
+        """List User Relation"""
+        args = parser.parse_args()
+        range = get_range_from_args(args)
+        sort = get_sort_from_args(args, "id")
+        filter = get_filter_from_args(args)
+
+        query_result, content_range = query_with_filters(UserRelation, UserRelation.query, range, sort, filter)
+
+        serialized_result = []
+        for relation in query_result:
+            if str(relation.school_id) == str(school_id):
+                serialized_relation = {
+                    "id": relation.id,
+                    "school": {
+                        "id": relation.school.id,
+                        "name": relation.school.name,
+                    },
+                    "owner": {
+                        "id": relation.owner.id,
+                        "first_name": relation.owner.first_name,
+                        "last_name": relation.owner.last_name,
+                    },
+                }
+
+                if relation.teacher:
+                    serialized_relation["teacher"] = {
+                        "id": relation.teacher.id,
+                        "first_name": relation.teacher.first_name,
+                        "last_name": relation.teacher.last_name,
+                    }
+
+                if relation.student:
+                    serialized_relation["student"] = {
+                        "id": relation.student.id,
+                        "first_name": relation.student.first_name,
+                        "last_name": relation.student.last_name,
+                    }
+
+                serialized_result.append(serialized_relation)
+
+        return serialized_result, 200, {"Content-Range": content_range}
