@@ -21,19 +21,19 @@ class TableResource(Resource):
 
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         body = {'username': os.environ.get('PRICELIST_USER'), 'password': os.environ.get('PRICELIST_PASSWORD')}
-        r = requests.post(baseurl + 'login/access-token', data=body, headers=headers)
+        r = requests.post(baseurl + '/login/access-token', data=body, headers=headers)
         token = r.json().get('access_token')
 
         headers = {'Authorization': 'Bearer ' + token}
 
-        r = requests.get(baseurl + 'tables?filter=name%3A' + quote(email, encoding='utf-8') +
+        r = requests.get(baseurl + '/tables?filter=name%3A' + quote(email, encoding='utf-8') +
                 "&filter=shop_id%3Ac324e3f5-72ce-496f-a945-312cd493cf4c", headers=headers, data=None)
 
         tableId = ''
 
         if len(r.json()) is 0:
             body = {'name': email, 'shop_id': 'c324e3f5-72ce-496f-a945-312cd493cf4c'}
-            r = requests.post(baseurl + 'tables', headers=headers, data=json.dumps(body))
+            r = requests.post(baseurl + '/tables', headers=headers, data=json.dumps(body))
             tableId = r.json().get('id')
         else:
             tableId = r.json()[0].get('id')
