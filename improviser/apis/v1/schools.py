@@ -10,10 +10,11 @@ from apis.helpers import (
     delete,
     get_filter_from_args,
 )
-from database import School, RolesUsers, UserRelation
+from database import School, RolesUsers, Role, UserRelation
 from flask_restx import Namespace, Resource, abort, fields, marshal_with
 from flask_security import roles_accepted
 from flask_login import current_user
+from flask_sqlalchemy import SQLAlchemy
 
 api = Namespace("schools", description="School related operations")
 
@@ -30,6 +31,7 @@ parser.add_argument("range", location="args", help="Pagination: default=[0,19]")
 parser.add_argument("sort", location="args", help='Sort: default=["name","ASC"]')
 parser.add_argument("filter", location="args", help="Filter default=[]")
 
+db = SQLAlchemy()
 
 @api.route("/")
 @api.doc("Create schools")
@@ -51,12 +53,36 @@ class SchoolsResourceList(Resource):
     @api.marshal_with(school_serializer)
     def post(self):
         school = School(id=str(uuid.uuid4()), name=api.payload["name"], created_by=current_user.id)
-        relation = UserRelation(id=str(uuid.uuid4()), school_id=school.id, owner_id=current_user.id, created_by=current_user.id)
-        owner_role = RolesUsers(user_id=current_user.id, role_id='4ad72d68-357e-42c5-b58b-b77349114376')
+        relation = UserRelation(id=str(uuid.uuid4()), school_id=school.id, owner_id=current_user.id,
+                                created_by=current_user.id)
 
-        save(school)
-        save(relation)
-        save(owner_role)
+        school_role = (
+            Role.query.filter(Role.name == 'school').first()
+        )
+
+        user_has_school_role = (
+            RolesUsers.query.filter(RolesUsers.role_id == school_role.id)
+                            .filter(RolesUsers.user_id == current_user.id)
+                            .first()
+        )
+
+        if not user_has_school_role:
+            owner_role = RolesUsers(user_id=current_user.id, role_id=school_role.id)
+            try:
+                db.session.add(owner_role)
+                db.session.commit()
+            except Exception as error:
+                db.session.rollback()
+                abort(400, "DB error: {}".format(str(error)))
+
+        try:
+            db.session.add(school)
+            db.session.add(relation)
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
+            abort(400, "DB error: {}".format(str(error)))
+
         return school, 201
 
 

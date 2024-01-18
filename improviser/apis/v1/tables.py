@@ -30,8 +30,6 @@ class TableResource(Resource):
         r = requests.get(baseurl + '/tables?filter=name%3A' + quote(email, encoding='utf-8') +
                          "&filter=shop_id%3Ac324e3f5-72ce-496f-a945-312cd493cf4c", headers=headers, data=None)
 
-        table_id = ''
-
         if len(r.json()) == 0:
             body = {'name': email, 'shop_id': 'c324e3f5-72ce-496f-a945-312cd493cf4c'}
             r = requests.post(baseurl + '/tables', headers=headers, data=json.dumps(body))
