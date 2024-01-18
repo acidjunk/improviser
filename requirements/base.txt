@@ -5,7 +5,7 @@ Flask-Admin==1.5.6
 Flask-Cors==3.0.8
 Flask-Migrate==2.5.3
 flask-restx==1.1.0
-Flask-Security-Too==3.3.2
+Flask-Security-Too==5.3.3
 Flask-Login==0.4.1
 psycopg2-binary==2.8.5
 python-ly==0.9.5
