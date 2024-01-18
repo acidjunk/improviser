@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 api = Namespace("table", description="Table related operations")
 
+
 @api.route("/<email>")
 @api.doc("Table operations")
 class TableResource(Resource):
@@ -27,17 +28,16 @@ class TableResource(Resource):
         headers = {'Authorization': 'Bearer ' + token}
 
         r = requests.get(baseurl + '/tables?filter=name%3A' + quote(email, encoding='utf-8') +
-                "&filter=shop_id%3Ac324e3f5-72ce-496f-a945-312cd493cf4c", headers=headers, data=None)
+                         "&filter=shop_id%3Ac324e3f5-72ce-496f-a945-312cd493cf4c", headers=headers, data=None)
 
-        tableId = ''
+        table_id = ''
 
-        if len(r.json()) is 0:
+        if len(r.json()) == 0:
             body = {'name': email, 'shop_id': 'c324e3f5-72ce-496f-a945-312cd493cf4c'}
             r = requests.post(baseurl + '/tables', headers=headers, data=json.dumps(body))
-            tableId = r.json().get('id')
+            table_id = r.json().get('id')
         else:
-            tableId = r.json()[0].get('id')
+            table_id = r.json()[0].get('id')
 
-
-        response_data = {'table_id': tableId}
+        response_data = {'table_id': table_id}
         return response_data, 200
