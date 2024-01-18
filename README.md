@@ -53,7 +53,8 @@ cd improviser
 zappa update
 ```
 
-Note: with python 3.8 I had to use a binary psycopg package that works with amazon lambda. Still not sure what changed, anyway, some instructions:
+Note: with python 3.8 I had to use a binary psycopg package that works with amazon lambda. Still not sure what changed, 
+anyway, some instructions:
 
 Clone this somewhere:
 

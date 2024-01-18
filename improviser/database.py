@@ -295,4 +295,34 @@ class LessonItem(db.Model):
         return f"<LessonItem {self.item_type} with ID {self.id}>"
 
 
+class School(db.Model):
+    __tablename__ = "schools"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String(255), unique=True)
+    created_by = Column("created_by", UUID(as_uuid=True), ForeignKey("user.id"))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class UserRelation(db.Model):
+    __tablename__ = "user_relations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+
+    school_id = Column(UUID(as_uuid=True), ForeignKey('schools.id'))
+    school = relationship("School", foreign_keys=[school_id], backref=backref("schools", uselist=False))
+
+    owner_id = Column(UUID(as_uuid=True), ForeignKey('user.id'))
+    owner = relationship("User", foreign_keys=[owner_id], backref=backref("owner_relations", uselist=False))
+
+    teacher_id = Column(UUID(as_uuid=True), ForeignKey('user.id'))
+    teacher = relationship("User", foreign_keys=[teacher_id], backref=backref("teacher_relations", uselist=False))
+
+    student_id = Column(UUID(as_uuid=True), ForeignKey('user.id'))
+    student = relationship("User", foreign_keys=[student_id], backref=backref("student_relations", uselist=False))
+
+    created_by = Column("created_by", UUID(as_uuid=True), ForeignKey("user.id"))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
