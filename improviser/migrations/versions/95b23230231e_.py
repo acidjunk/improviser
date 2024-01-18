@@ -24,7 +24,7 @@ def upgrade():
             """INSERT INTO role (id, name, description) VALUES 
             (:id, :name, :description);"""
         ),
-        id=uuid.uuid4(),
+        id='4ad72d68-357e-42c5-b58b-b77349114376',
         name='school',
         description='Can view Riffs and Exercises and Lessons. Make and edit lessons and public exercises. Can manage teachers and students.',
     )
