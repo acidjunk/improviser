@@ -15,7 +15,6 @@ from apis.helpers import (
 from database import UserRelation, User
 from flask_restx import Namespace, Resource, abort, fields, marshal_with
 from flask_security import roles_accepted
-from flask_login import current_user
 
 api = Namespace("user_relations", description="User Relation related operations")
 
@@ -117,14 +116,13 @@ class UserRelationsResourceList(Resource):
         license = r.json()
 
         person_count = 0
-        query_result, content_range = query_with_filters(UserRelation, UserRelation.query)
-        for relation in query_result:
-            if str(relation.owner_id) == str(api.payload["owner_id"]):
+        relations = UserRelation.query.filter(UserRelation.owner_id == api.payload["owner_id"])
+
+        for relation in relations:
+            if relation.teacher or relation.student:
                 person_count += 1
 
-        print(person_count - 1)
-
-        if person_count - 1 >= license.seats:
+        if person_count >= license['seats']:
             abort(400, "Seat limit reached for this School")
 
         if not owner:
