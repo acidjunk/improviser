@@ -1,12 +1,9 @@
 import requests
-import json
 import os
 
 from flask_restx import Namespace, Resource, abort, fields, marshal_with
 from flask_security import roles_accepted
 from flask_login import current_user
-
-from urllib.parse import quote
 
 api = Namespace("license", description="License related operations")
 
@@ -19,6 +16,7 @@ license_serializer = {
     "start_date": fields.String,
     "end_date": fields.String,
 }
+
 
 @api.route("/")
 @api.doc("License operations")
@@ -36,5 +34,4 @@ class LicenseResource(Resource):
 
         license = r.json()
 
-        response_data = {'license': license}
         return license, 200

@@ -1,4 +1,6 @@
+import requests
 import uuid
+import os
 
 from apis.helpers import (
     get_range_from_args,
@@ -108,6 +110,22 @@ class UserRelationsResourceList(Resource):
     @api.marshal_with(user_relation_serializer)
     def post(self):
         owner = User.query.filter(User.id == api.payload["owner_id"]).first()
+
+        baseurl = os.environ.get('API_URL') + os.environ.get('API_VERSION')
+        headers = {'Content-Type': 'application/json'}
+        r = requests.get(baseurl + '/licenses/improviser/' + str(api.payload["owner_id"]), headers=headers)
+        license = r.json()
+
+        person_count = 0
+        query_result, content_range = query_with_filters(UserRelation, UserRelation.query)
+        for relation in query_result:
+            if str(relation.owner_id) == str(api.payload["owner_id"]):
+                person_count += 1
+
+        print(person_count - 1)
+
+        if person_count - 1 >= license.seats:
+            abort(400, "Seat limit reached for this School")
 
         if not owner:
             abort(400, "Owner not found")
