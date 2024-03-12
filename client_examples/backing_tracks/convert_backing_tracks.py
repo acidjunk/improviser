@@ -13,6 +13,6 @@ for file in os.listdir(OUTPUT_PATH):
         os.system(cmd)
         # add some id3 v1 and v2 tags
         cmd = f'id3tag -aiMproviser --album="iMproviser backingtracks" --song="iMproviser backing track {file_name}" ' \
-              f'--desc="Comment=Copyright 2022, iMproviser, all rights reserved." --comment="Comment=Copyright 2022, ' \
+              f'--desc="Comment=Copyright 2024, iMproviser, all rights reserved." --comment="Comment=Copyright 2024, ' \
               f'iMproviser, all rights reserved." "{output_file}"'
         os.system(cmd)

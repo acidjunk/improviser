@@ -1,7 +1,7 @@
 """
 This script collects all chord files and uses the api to create the new backing tracks
 
-It will output the mp3's with correct naming in `output/s3`. You can easily uipload it from there in
+It will output the mp3's with correct naming in `output/s3`. You can easily upload it from there in
 bulk to the corresponding Amazon S3 bucket.
 """
 import os
